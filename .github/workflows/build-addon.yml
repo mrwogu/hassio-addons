@@ -35,7 +35,7 @@ jobs:
       name: ${{ steps.info.outputs.name }}
       registry_prefix: ${{ steps.normalize.outputs.registry_prefix }}
       url: ${{ steps.info.outputs.url }}
-      version: ${{ steps.info.outputs.version }}
+      version: ${{ steps.version.outputs.version }}
     permissions:
       contents: read
     steps:
@@ -50,6 +50,15 @@ jobs:
         with:
           path: ./${{ inputs.addon }}
 
+      - name: Normalize add-on version
+        id: version
+        env:
+          VERSION: ${{ steps.info.outputs.version }}
+        run: |
+          version=${VERSION#\"}
+          version=${version%\"}
+          echo "version=$version" >>"$GITHUB_OUTPUT"
+
       - name: Read source metadata
         id: source
         run: echo "created=$(git show -s --format=%cI "$GITHUB_SHA")" >>"$GITHUB_OUTPUT"
@@ -58,7 +67,7 @@ jobs:
         if: inputs.publish
         env:
           ADDON: ${{ inputs.addon }}
-          VERSION: ${{ steps.info.outputs.version }}
+          VERSION: ${{ steps.version.outputs.version }}
           GH_TOKEN: ${{ github.token }}
         run: |
           remote_version=$(gh api "repos/${{ github.repository }}/contents/$ADDON/config.yaml?ref=main" \
@@ -75,7 +84,7 @@ jobs:
       - name: Protect immutable release tag
         if: inputs.publish
         env:
-          TAG: ${{ steps.info.outputs.slug }}/${{ steps.info.outputs.version }}
+          TAG: ${{ steps.info.outputs.slug }}/${{ steps.version.outputs.version }}
         run: |
           if git ls-remote --exit-code --tags origin "refs/tags/$TAG" \
             >/dev/null 2>&1
