@@ -378,6 +378,7 @@ jobs:
         with:
           python-version: "3.14"
           cache: pip
+          cache-dependency-path: requirements-dev.txt
 
       - name: Install release dependency
         run: python -m pip install PyYAML==6.0.3
