@@ -1,0 +1,134 @@
+#!/bin/sh
+set -eu
+
+OPTIONS_PATH=${BONDS_OPTIONS_PATH:-/data/options.json}
+CONFIG_DIR=${BONDS_CONFIG_DIR:-/config}
+BONDS_BIN=${BONDS_EXECUTABLE:-/app/bonds-server}
+SECRETS_FILE="${CONFIG_DIR}/.secrets"
+
+log() {
+    printf '%s\n' "[bonds-addon] $*" >&2
+}
+
+fail() {
+    log "Error: $*"
+    exit 1
+}
+
+random_secret() {
+    value=$(od -An -N 32 -tx1 /dev/urandom | tr -d ' \n')
+    case "$value" in
+        *[!0-9a-f]*|"") fail "Cannot generate secret" ;;
+    esac
+    [ "${#value}" -eq 64 ] || fail "Cannot generate secret"
+    printf '%s' "$value"
+}
+
+write_secrets() {
+    temporary=$(mktemp "${SECRETS_FILE}.tmp.XXXXXX") ||
+        fail "Cannot create secrets temporary file"
+    if ! jq -n \
+        --arg jwt_secret "$stored_jwt_secret" \
+        --arg settings_encryption_key "$stored_settings_key" \
+        '{
+            jwt_secret: $jwt_secret,
+            settings_encryption_key: $settings_encryption_key
+        }' >"$temporary"; then
+        rm -f "$temporary"
+        fail "Cannot write secrets file"
+    fi
+    chmod 0600 "$temporary" || {
+        rm -f "$temporary"
+        fail "Cannot secure secrets file"
+    }
+    mv -f "$temporary" "$SECRETS_FILE" || {
+        rm -f "$temporary"
+        fail "Cannot install secrets file"
+    }
+}
+
+[ -r "$OPTIONS_PATH" ] || fail "Options file is not readable: $OPTIONS_PATH"
+command -v jq >/dev/null 2>&1 || fail "jq is required"
+[ -x "$BONDS_BIN" ] || fail "Bonds executable is not executable: $BONDS_BIN"
+
+if ! jq -e '
+    type == "object" and
+    (.app_url | type == "string" and length > 0) and
+    ((.jwt_secret // "") | type == "string") and
+    ((.settings_encryption_key // "") | type == "string") and
+    (.storage_max_size_mb |
+        type == "number" and floor == . and . > 0) and
+    ((.backup_cron // "0 3 * * *") | type == "string") and
+    (.backup_retention_days |
+        type == "number" and floor == . and . > 0) and
+    (.debug | type == "boolean")
+' "$OPTIONS_PATH" >/dev/null 2>&1; then
+    fail "Invalid options structure or numeric value"
+fi
+
+umask 077
+mkdir -p "$CONFIG_DIR"
+
+stored_jwt_secret=
+stored_settings_key=
+if [ -e "$SECRETS_FILE" ]; then
+    [ -r "$SECRETS_FILE" ] || fail "Secrets file is not readable"
+    if ! jq -e '
+        type == "object" and
+        ((.jwt_secret // "") | type == "string") and
+        ((.settings_encryption_key // "") | type == "string")
+    ' "$SECRETS_FILE" >/dev/null 2>&1; then
+        fail "Secrets file is invalid"
+    fi
+    stored_jwt_secret=$(jq -r '.jwt_secret // ""' "$SECRETS_FILE")
+    stored_settings_key=$(jq -r '.settings_encryption_key // ""' "$SECRETS_FILE")
+    chmod 0600 "$SECRETS_FILE" || fail "Cannot secure secrets file"
+fi
+
+option_jwt_secret=$(jq -r '.jwt_secret // ""' "$OPTIONS_PATH")
+option_settings_key=$(jq -r '.settings_encryption_key // ""' "$OPTIONS_PATH")
+secrets_changed=false
+
+if [ -n "$option_jwt_secret" ]; then
+    jwt_secret=$option_jwt_secret
+elif [ -n "$stored_jwt_secret" ]; then
+    jwt_secret=$stored_jwt_secret
+else
+    stored_jwt_secret=$(random_secret)
+    jwt_secret=$stored_jwt_secret
+    secrets_changed=true
+fi
+
+if [ -n "$option_settings_key" ]; then
+    settings_key=$option_settings_key
+elif [ -n "$stored_settings_key" ]; then
+    settings_key=$stored_settings_key
+else
+    stored_settings_key=$(random_secret)
+    settings_key=$stored_settings_key
+    secrets_changed=true
+fi
+
+if [ "$secrets_changed" = true ]; then
+    write_secrets
+fi
+
+export SERVER_PORT=8080
+export SERVER_HOST=0.0.0.0
+export DB_DRIVER=sqlite
+export "DB_DSN=${CONFIG_DIR}/bonds.db"
+export "JWT_SECRET=$jwt_secret"
+export "SETTINGS_ENC_KEY=$settings_key"
+export APP_ENV=production
+export "DEBUG=$(jq -r '.debug' "$OPTIONS_PATH")"
+export "APP_URL=$(jq -r '.app_url' "$OPTIONS_PATH")"
+export "STORAGE_UPLOAD_DIR=${CONFIG_DIR}/uploads"
+export "STORAGE_MAX_SIZE_MB=$(jq -r '.storage_max_size_mb' "$OPTIONS_PATH")"
+export "BLEVE_INDEX_PATH=${CONFIG_DIR}/bonds.bleve"
+export "BACKUP_DIR=${CONFIG_DIR}/backups"
+backup_cron=$(jq -r '.backup_cron // "0 3 * * *"' "$OPTIONS_PATH")
+export "BACKUP_CRON=$backup_cron"
+export "BACKUP_RETENTION=$(jq -r '.backup_retention_days' "$OPTIONS_PATH")"
+
+log "Configuration validated; starting Bonds"
+exec "$BONDS_BIN" "$@"

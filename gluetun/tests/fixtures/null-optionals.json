@@ -1,0 +1,61 @@
+{
+  "vpn_service_provider": "custom",
+  "vpn_type": "openvpn",
+  "openvpn": {
+    "username": null,
+    "password": null,
+    "endpoint_ip": null,
+    "endpoint_port": null,
+    "protocol": null,
+    "custom_config": null
+  },
+  "server": {
+    "regions": null,
+    "countries": null,
+    "cities": null,
+    "hostnames": null,
+    "names": null,
+    "categories": null
+  },
+  "port_forwarding": {
+    "enabled": null,
+    "provider": null,
+    "listening_ports": null,
+    "ports_count": null
+  },
+  "firewall": {
+    "outbound_subnets": null,
+    "vpn_input_ports": null
+  },
+  "dns": {
+    "enabled": null,
+    "resolver_type": null,
+    "upstream_resolvers": null,
+    "plain_addresses": null,
+    "block_malicious": null,
+    "block_ads": null,
+    "caching": null,
+    "ipv6": null
+  },
+  "log_level": null,
+  "timezone": null,
+  "http_proxy": {
+    "enabled": null,
+    "username": null,
+    "password": null,
+    "stealth": null,
+    "log": null
+  },
+  "socks5": {
+    "enabled": null,
+    "username": null,
+    "password": null
+  },
+  "shadowsocks": {
+    "enabled": null,
+    "password": null,
+    "cipher": null,
+    "log": null
+  },
+  "env_vars": []
+}

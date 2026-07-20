@@ -1,0 +1,25 @@
+---
+configuration:
+  app_url:
+    name: Adres URL aplikacji
+    description: Pełny adres URL dostępu do Bonds, wraz z portem bezpośrednim.
+  jwt_secret:
+    name: Sekret JWT
+    description: Opcjonalny sekret podpisu. Pozostaw pusty, aby wygenerować i trwale zapisać go automatycznie.
+  settings_encryption_key:
+    name: Klucz szyfrowania ustawień
+    description: Opcjonalny klucz szyfrowania. Pozostaw pusty, aby wygenerować i trwale zapisać go automatycznie.
+  storage_max_size_mb:
+    name: Maksymalny rozmiar wysyłanego pliku
+    description: Maksymalny rozmiar wysyłanego pliku w megabajtach.
+  backup_cron:
+    name: Harmonogram kopii zapasowych
+    description: Opcjonalne wyrażenie cron dla automatycznych kopii zapasowych.
+  backup_retention_days:
+    name: Retencja kopii zapasowych
+    description: Liczba dni przechowywania kopii zapasowych aplikacji.
+  debug:
+    name: Tryb debugowania
+    description: Włącza szczegółową diagnostykę Bonds na potrzeby rozwiązywania problemów.
+network:
+  8080/tcp: Interfejs internetowy Bonds

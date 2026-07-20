@@ -1,0 +1,15 @@
+{
+  "vpn_service_provider": "custom",
+  "vpn_type": "wireguard",
+  "wireguard": {
+    "private_key": "fixture-wireguard-private",
+    "preshared_key": "fixture-wireguard-preshared",
+    "public_key": "fixture-wireguard-public",
+    "addresses": "10.64.1.2/32",
+    "endpoint_ip": "203.0.113.20",
+    "endpoint_port": 51820,
+    "allowed_ips": "0.0.0.0/0,::/0",
+    "mtu": 1420
+  },
+  "env_vars": []
+}

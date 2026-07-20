@@ -1,0 +1,53 @@
+---
+configuration:
+  vpn_service_provider:
+    name: VPN service provider
+    description: Gluetun provider identifier, such as protonvpn, mullvad, or custom.
+  vpn_type:
+    name: VPN type
+    description: Select OpenVPN, WireGuard, or AmneziaWG.
+  openvpn:
+    name: OpenVPN
+    description: OpenVPN credentials, endpoint, protocol, and optional custom configuration path.
+  wireguard:
+    name: WireGuard
+    description: WireGuard keys, addresses, endpoint, routes, and MTU.
+  amneziawg:
+    name: AmneziaWG
+    description: AmneziaWG keys, addresses, endpoint, routes, MTU, and obfuscation parameters.
+  server:
+    name: Server filters
+    description: Optional region, country, city, hostname, server name, and category filters.
+  port_forwarding:
+    name: VPN port forwarding
+    description: Request provider port forwarding and configure forwarded ports.
+  firewall:
+    name: Firewall and LAN
+    description: Subnets reachable outside VPN and ports accepted from VPN.
+  dns:
+    name: DNS
+    description: Resolver mode, upstream servers, caching, IPv6, and threat blocking.
+  log_level:
+    name: Log level
+    description: Gluetun logging verbosity.
+  timezone:
+    name: Time zone
+    description: IANA time zone, such as Europe/Warsaw.
+  http_proxy:
+    name: HTTP proxy
+    description: Built-in HTTP proxy listener and optional authentication.
+  socks5:
+    name: SOCKS5 proxy
+    description: Built-in SOCKS5 listener and optional authentication.
+  shadowsocks:
+    name: Shadowsocks
+    description: Built-in Shadowsocks listener, cipher, and password.
+  env_vars:
+    name: Advanced environment variables
+    description: Extra upstream variables. Managed and protected names cannot be overridden.
+network:
+  8888/tcp: HTTP proxy
+  8388/tcp: Shadowsocks TCP
+  8388/udp: Shadowsocks UDP
+  1080/tcp: SOCKS5 TCP
+  1080/udp: SOCKS5 UDP

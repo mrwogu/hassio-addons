@@ -1,0 +1,59 @@
+---
+name: Build
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: Detect changed add-ons
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      addons: ${{ steps.filter.outputs.addons }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Select changed add-ons
+        id: filter
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          changed=$(git diff --name-only "$BASE" "$GITHUB_SHA")
+          if printf '%s\n' "$changed" |
+            grep -Eq '^\.github/workflows/(build|build-addon)\.yml$'
+          then
+            addons='["bonds","gluetun"]'
+          else
+            addons='[]'
+            for addon in bonds gluetun; do
+              if printf '%s\n' "$changed" | grep -q "^${addon}/"; then
+                addons=$(jq -c --arg addon "$addon" '. + [$addon]' <<<"$addons")
+              fi
+            done
+          fi
+          echo "addons=$addons" >>"$GITHUB_OUTPUT"
+
+  addon:
+    name: ${{ matrix.addon }}
+    needs: changes
+    if: needs.changes.outputs.addons != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        addon: ${{ fromJSON(needs.changes.outputs.addons) }}
+    uses: ./.github/workflows/build-addon.yml
+    with:
+      addon: ${{ matrix.addon }}
+      publish: false

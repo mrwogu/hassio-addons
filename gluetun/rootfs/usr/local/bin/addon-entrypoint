@@ -1,0 +1,285 @@
+#!/bin/sh
+set -eu
+
+OPTIONS_PATH=${ADDON_OPTIONS_PATH:-/data/options.json}
+SECRETS_DIR=${ADDON_SECRETS_DIR:-/run/secrets/home-assistant}
+GLUETUN_BIN=${GLUETUN_ENTRYPOINT:-/gluetun-entrypoint}
+
+MANAGED_ENV="VPN_SERVICE_PROVIDER VPN_TYPE OPENVPN_USER OPENVPN_USER_SECRETFILE OPENVPN_PASSWORD OPENVPN_PASSWORD_SECRETFILE OPENVPN_ENDPOINT_IP OPENVPN_ENDPOINT_PORT OPENVPN_PROTOCOL OPENVPN_CUSTOM_CONFIG WIREGUARD_PRIVATE_KEY WIREGUARD_PRIVATE_KEY_SECRETFILE WIREGUARD_PRESHARED_KEY WIREGUARD_PRESHARED_KEY_SECRETFILE WIREGUARD_PUBLIC_KEY WIREGUARD_ADDRESSES WIREGUARD_ADDRESSES_SECRETFILE WIREGUARD_ENDPOINT_IP WIREGUARD_ENDPOINT_PORT WIREGUARD_ALLOWED_IPS WIREGUARD_MTU AMNEZIAWG_PRIVATE_KEY AMNEZIAWG_PRIVATE_KEY_SECRETFILE AMNEZIAWG_PRESHARED_KEY AMNEZIAWG_PRESHARED_KEY_SECRETFILE AMNEZIAWG_PUBLIC_KEY AMNEZIAWG_ADDRESSES AMNEZIAWG_ADDRESSES_SECRETFILE AMNEZIAWG_ENDPOINT_IP AMNEZIAWG_ENDPOINT_PORT AMNEZIAWG_ALLOWED_IPS AMNEZIAWG_MTU AMNEZIAWG_JC AMNEZIAWG_JMIN AMNEZIAWG_JMAX AMNEZIAWG_S1 AMNEZIAWG_S2 AMNEZIAWG_S3 AMNEZIAWG_S4 AMNEZIAWG_H1 AMNEZIAWG_H2 AMNEZIAWG_H3 AMNEZIAWG_H4 SERVER_REGIONS SERVER_COUNTRIES SERVER_CITIES SERVER_HOSTNAMES SERVER_NAMES SERVER_CATEGORIES VPN_PORT_FORWARDING VPN_PORT_FORWARDING_PROVIDER VPN_PORT_FORWARDING_LISTENING_PORTS VPN_PORT_FORWARDING_PORTS_COUNT FIREWALL_OUTBOUND_SUBNETS FIREWALL_VPN_INPUT_PORTS DNS_SERVER DNS_UPSTREAM_RESOLVER_TYPE DNS_UPSTREAM_RESOLVERS DNS_UPSTREAM_PLAIN_ADDRESSES BLOCK_MALICIOUS BLOCK_ADS DNS_CACHING DNS_UPSTREAM_IPV6 LOG_LEVEL TZ HTTPPROXY HTTPPROXY_LISTENING_ADDRESS HTTPPROXY_USER HTTPPROXY_USER_SECRETFILE HTTPPROXY_PASSWORD HTTPPROXY_PASSWORD_SECRETFILE HTTPPROXY_STEALTH HTTPPROXY_LOG SOCKS5_ENABLED SOCKS5_LISTENING_ADDRESS SOCKS5_USER SOCKS5_PASSWORD SHADOWSOCKS SHADOWSOCKS_LISTENING_ADDRESS SHADOWSOCKS_PASSWORD SHADOWSOCKS_PASSWORD_SECRETFILE SHADOWSOCKS_CIPHER SHADOWSOCKS_LOG"
+PROTECTED_ENV="ADDON_OPTIONS_PATH ADDON_SECRETS_DIR GLUETUN_ENTRYPOINT PATH HOME IFS ENV BASH_ENV LD_PRELOAD LD_LIBRARY_PATH"
+
+log() {
+    printf '%s\n' "[gluetun-addon] $*" >&2
+}
+
+fail() {
+    log "Error: $*"
+    exit 1
+}
+
+is_listed() {
+    list=$1
+    candidate=$2
+    case " $list " in
+        *" $candidate "*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+json_string() {
+    query=$1
+    jq -er "$query | select(type == \"string\" and length > 0)" "$OPTIONS_PATH" 2>/dev/null
+}
+
+json_integer() {
+    query=$1
+    jq -er "$query | select(type == \"number\" and floor == .)" "$OPTIONS_PATH" 2>/dev/null
+}
+
+json_positive_integer() {
+    query=$1
+    jq -er "$query | select(type == \"number\" and floor == . and . > 0)" "$OPTIONS_PATH" 2>/dev/null
+}
+
+json_list() {
+    query=$1
+    jq -er "$query | select(type == \"array\") | map(select(type == \"string\" and length > 0)) | join(\",\") | select(length > 0)" "$OPTIONS_PATH" 2>/dev/null
+}
+
+json_bool() {
+    query=$1
+    jq -er "$query | select(type == \"boolean\") | if . then \"on\" else \"off\" end" "$OPTIONS_PATH" 2>/dev/null
+}
+
+set_string_env() {
+    query=$1
+    name=$2
+    if value=$(json_string "$query"); then
+        export "$name=$value"
+    fi
+}
+
+set_integer_env() {
+    query=$1
+    name=$2
+    if value=$(json_integer "$query"); then
+        export "$name=$value"
+    fi
+}
+
+set_positive_integer_env() {
+    query=$1
+    name=$2
+    if value=$(json_positive_integer "$query"); then
+        export "$name=$value"
+    fi
+}
+
+set_list_env() {
+    query=$1
+    name=$2
+    if value=$(json_list "$query"); then
+        export "$name=$value"
+    fi
+}
+
+set_bool_env() {
+    query=$1
+    name=$2
+    if value=$(json_bool "$query"); then
+        export "$name=$value"
+    fi
+}
+
+write_secret() {
+    target=$1
+    value=$2
+    temporary=$(mktemp "${target}.tmp.XXXXXX") || fail "Cannot create secret temporary file"
+    if ! printf '%s' "$value" >"$temporary"; then
+        rm -f "$temporary"
+        fail "Cannot write secret file"
+    fi
+    chmod 0600 "$temporary" || {
+        rm -f "$temporary"
+        fail "Cannot secure secret file"
+    }
+    mv -f "$temporary" "$target" || {
+        rm -f "$temporary"
+        fail "Cannot install secret file"
+    }
+}
+
+set_secret_env() {
+    query=$1
+    name=$2
+    filename=$3
+    target="${SECRETS_DIR}/${filename}"
+    if value=$(json_string "$query"); then
+        write_secret "$target" "$value"
+        export "$name=$target"
+    else
+        rm -f "$target"
+    fi
+}
+
+[ -r "$OPTIONS_PATH" ] || fail "Options file is not readable: $OPTIONS_PATH"
+command -v jq >/dev/null 2>&1 || fail "jq is required"
+[ -x "$GLUETUN_BIN" ] || fail "Gluetun executable is not executable: $GLUETUN_BIN"
+
+if ! jq -e '
+    type == "object" and
+    (.vpn_service_provider | type == "string" and length > 0) and
+    (.vpn_type | type == "string" and IN("openvpn", "wireguard", "amneziawg")) and
+    ((.env_vars // []) |
+        type == "array" and
+        all(.[]; type == "object" and
+            (.name | type == "string") and
+            (.value | type == "string")))
+' "$OPTIONS_PATH" >/dev/null 2>&1; then
+    fail "Invalid options structure"
+fi
+
+umask 077
+mkdir -p "$SECRETS_DIR"
+chmod 0700 "$SECRETS_DIR"
+for filename in \
+    openvpn_user openvpn_password \
+    wireguard_private_key wireguard_preshared_key wireguard_addresses \
+    amneziawg_private_key amneziawg_preshared_key amneziawg_addresses \
+    httpproxy_user httpproxy_password shadowsocks_password
+do
+    rm -f "${SECRETS_DIR}/${filename}"
+done
+
+set_string_env '.vpn_service_provider' VPN_SERVICE_PROVIDER
+set_string_env '.vpn_type' VPN_TYPE
+
+vpn_type=$(json_string '.vpn_type')
+case "$vpn_type" in
+    openvpn)
+        set_secret_env '.openvpn.username' OPENVPN_USER_SECRETFILE openvpn_user
+        set_secret_env '.openvpn.password' OPENVPN_PASSWORD_SECRETFILE openvpn_password
+        set_string_env '.openvpn.endpoint_ip' OPENVPN_ENDPOINT_IP
+        set_positive_integer_env '.openvpn.endpoint_port' OPENVPN_ENDPOINT_PORT
+        set_string_env '.openvpn.protocol' OPENVPN_PROTOCOL
+        set_string_env '.openvpn.custom_config' OPENVPN_CUSTOM_CONFIG
+        ;;
+    wireguard)
+        set_secret_env '.wireguard.private_key' WIREGUARD_PRIVATE_KEY_SECRETFILE wireguard_private_key
+        set_secret_env '.wireguard.preshared_key' WIREGUARD_PRESHARED_KEY_SECRETFILE wireguard_preshared_key
+        set_secret_env '.wireguard.addresses' WIREGUARD_ADDRESSES_SECRETFILE wireguard_addresses
+        set_string_env '.wireguard.public_key' WIREGUARD_PUBLIC_KEY
+        set_string_env '.wireguard.endpoint_ip' WIREGUARD_ENDPOINT_IP
+        set_positive_integer_env '.wireguard.endpoint_port' WIREGUARD_ENDPOINT_PORT
+        set_string_env '.wireguard.allowed_ips' WIREGUARD_ALLOWED_IPS
+        set_positive_integer_env '.wireguard.mtu' WIREGUARD_MTU
+        ;;
+    amneziawg)
+        set_secret_env '.amneziawg.private_key' AMNEZIAWG_PRIVATE_KEY_SECRETFILE amneziawg_private_key
+        set_secret_env '.amneziawg.preshared_key' AMNEZIAWG_PRESHARED_KEY_SECRETFILE amneziawg_preshared_key
+        set_secret_env '.amneziawg.addresses' AMNEZIAWG_ADDRESSES_SECRETFILE amneziawg_addresses
+        set_string_env '.amneziawg.public_key' AMNEZIAWG_PUBLIC_KEY
+        set_string_env '.amneziawg.endpoint_ip' AMNEZIAWG_ENDPOINT_IP
+        set_positive_integer_env '.amneziawg.endpoint_port' AMNEZIAWG_ENDPOINT_PORT
+        set_string_env '.amneziawg.allowed_ips' AMNEZIAWG_ALLOWED_IPS
+        set_positive_integer_env '.amneziawg.mtu' AMNEZIAWG_MTU
+        set_integer_env '.amneziawg.jc' AMNEZIAWG_JC
+        set_integer_env '.amneziawg.jmin' AMNEZIAWG_JMIN
+        set_integer_env '.amneziawg.jmax' AMNEZIAWG_JMAX
+        set_integer_env '.amneziawg.s1' AMNEZIAWG_S1
+        set_integer_env '.amneziawg.s2' AMNEZIAWG_S2
+        set_integer_env '.amneziawg.s3' AMNEZIAWG_S3
+        set_integer_env '.amneziawg.s4' AMNEZIAWG_S4
+        set_string_env '.amneziawg.h1' AMNEZIAWG_H1
+        set_string_env '.amneziawg.h2' AMNEZIAWG_H2
+        set_string_env '.amneziawg.h3' AMNEZIAWG_H3
+        set_string_env '.amneziawg.h4' AMNEZIAWG_H4
+        ;;
+esac
+
+set_list_env '.server.regions' SERVER_REGIONS
+set_list_env '.server.countries' SERVER_COUNTRIES
+set_list_env '.server.cities' SERVER_CITIES
+set_list_env '.server.hostnames' SERVER_HOSTNAMES
+set_list_env '.server.names' SERVER_NAMES
+set_list_env '.server.categories' SERVER_CATEGORIES
+
+set_bool_env '.port_forwarding.enabled' VPN_PORT_FORWARDING
+set_string_env '.port_forwarding.provider' VPN_PORT_FORWARDING_PROVIDER
+set_string_env '.port_forwarding.listening_ports' VPN_PORT_FORWARDING_LISTENING_PORTS
+set_positive_integer_env '.port_forwarding.ports_count' VPN_PORT_FORWARDING_PORTS_COUNT
+
+set_list_env '.firewall.outbound_subnets' FIREWALL_OUTBOUND_SUBNETS
+set_string_env '.firewall.vpn_input_ports' FIREWALL_VPN_INPUT_PORTS
+
+set_bool_env '.dns.enabled' DNS_SERVER
+if resolver_type=$(json_string '.dns.resolver_type'); then
+    case "$resolver_type" in
+        dot) export DNS_UPSTREAM_RESOLVER_TYPE=DoT ;;
+        doh) export DNS_UPSTREAM_RESOLVER_TYPE=DoH ;;
+        plain) export DNS_UPSTREAM_RESOLVER_TYPE=plain ;;
+        *) fail "Invalid DNS resolver type" ;;
+    esac
+fi
+set_list_env '.dns.upstream_resolvers' DNS_UPSTREAM_RESOLVERS
+set_list_env '.dns.plain_addresses' DNS_UPSTREAM_PLAIN_ADDRESSES
+set_bool_env '.dns.block_malicious' BLOCK_MALICIOUS
+set_bool_env '.dns.block_ads' BLOCK_ADS
+set_bool_env '.dns.caching' DNS_CACHING
+set_bool_env '.dns.ipv6' DNS_UPSTREAM_IPV6
+
+set_string_env '.log_level' LOG_LEVEL
+set_string_env '.timezone' TZ
+
+set_bool_env '.http_proxy.enabled' HTTPPROXY
+export HTTPPROXY_LISTENING_ADDRESS=:8888
+set_secret_env '.http_proxy.username' HTTPPROXY_USER_SECRETFILE httpproxy_user
+set_secret_env '.http_proxy.password' HTTPPROXY_PASSWORD_SECRETFILE httpproxy_password
+set_bool_env '.http_proxy.stealth' HTTPPROXY_STEALTH
+set_bool_env '.http_proxy.log' HTTPPROXY_LOG
+
+set_bool_env '.socks5.enabled' SOCKS5_ENABLED
+export SOCKS5_LISTENING_ADDRESS=:1080
+set_string_env '.socks5.username' SOCKS5_USER
+set_string_env '.socks5.password' SOCKS5_PASSWORD
+
+set_bool_env '.shadowsocks.enabled' SHADOWSOCKS
+export SHADOWSOCKS_LISTENING_ADDRESS=:8388
+set_secret_env '.shadowsocks.password' SHADOWSOCKS_PASSWORD_SECRETFILE shadowsocks_password
+set_string_env '.shadowsocks.cipher' SHADOWSOCKS_CIPHER
+set_bool_env '.shadowsocks.log' SHADOWSOCKS_LOG
+
+env_count=$(jq -r '(.env_vars // []) | length' "$OPTIONS_PATH")
+index=0
+while [ "$index" -lt "$env_count" ]; do
+    name=$(jq -r ".env_vars[$index].name" "$OPTIONS_PATH")
+    value=$(jq -r ".env_vars[$index].value" "$OPTIONS_PATH")
+
+    case "$name" in
+        [A-Z]*)
+            if ! printf '%s' "$name" | grep -Eq '^[A-Z][A-Z0-9_]*$'; then
+                fail "Invalid custom environment variable name: $name"
+            fi
+            ;;
+        *) fail "Invalid custom environment variable name: $name" ;;
+    esac
+
+    if is_listed "$MANAGED_ENV" "$name"; then
+        fail "Custom environment variable overrides managed variable: $name"
+    fi
+    if is_listed "$PROTECTED_ENV" "$name"; then
+        fail "Custom environment variable overrides protected variable: $name"
+    fi
+    if ! jq -en --arg value "$value" \
+        '$value | test("[\u0000-\u001F\u007F]") | not' \
+        >/dev/null 2>&1; then
+        fail "Custom environment variable contains control characters: $name"
+    fi
+
+    export "$name=$value"
+    log "Exported custom environment variable: $name"
+    index=$((index + 1))
+done
+
+log "Configuration validated; starting Gluetun"
+exec "$GLUETUN_BIN" "$@"

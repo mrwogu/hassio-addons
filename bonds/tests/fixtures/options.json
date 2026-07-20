@@ -1,0 +1,9 @@
+{
+  "app_url": "https://bonds.example.test:8080",
+  "jwt_secret": "",
+  "settings_encryption_key": "",
+  "storage_max_size_mb": 256,
+  "backup_cron": "15 2 * * *",
+  "backup_retention_days": 14,
+  "debug": true
+}

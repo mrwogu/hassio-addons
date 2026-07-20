@@ -1,0 +1,205 @@
+---
+name: Gluetun VPN
+version: "3.41.1-1"
+slug: gluetun
+description: VPN client with firewall, DNS, and proxy services
+url: https://github.com/mrwogu/hassio-addons/tree/main/gluetun
+image: ghcr.io/mrwogu/hassio-gluetun
+arch:
+  - aarch64
+  - amd64
+init: false
+startup: services
+privileged:
+  - NET_ADMIN
+devices:
+  - /dev/net/tun
+map:
+  - type: addon_config
+    read_only: false
+ports:
+  8888/tcp: null
+  8388/tcp: null
+  8388/udp: null
+  1080/tcp: null
+  1080/udp: null
+ports_description:
+  8888/tcp: HTTP proxy
+  8388/tcp: Shadowsocks TCP
+  8388/udp: Shadowsocks UDP
+  1080/tcp: SOCKS5 TCP
+  1080/udp: SOCKS5 UDP
+options:
+  vpn_service_provider: custom
+  vpn_type: openvpn
+  openvpn:
+    username: ""
+    password: ""
+    endpoint_ip: ""
+    endpoint_port: 1194
+    protocol: udp
+    custom_config: ""
+  wireguard:
+    private_key: ""
+    preshared_key: ""
+    public_key: ""
+    addresses: ""
+    endpoint_ip: ""
+    endpoint_port: 51820
+    allowed_ips: 0.0.0.0/0,::/0
+    mtu: 0
+  amneziawg:
+    private_key: ""
+    preshared_key: ""
+    public_key: ""
+    addresses: ""
+    endpoint_ip: ""
+    endpoint_port: 51820
+    allowed_ips: 0.0.0.0/0,::/0
+    mtu: 0
+    jc: 0
+    jmin: 0
+    jmax: 0
+    s1: 0
+    s2: 0
+    s3: 0
+    s4: 0
+    h1: ""
+    h2: ""
+    h3: ""
+    h4: ""
+  server:
+    regions: []
+    countries: []
+    cities: []
+    hostnames: []
+    names: []
+    categories: []
+  port_forwarding:
+    enabled: false
+    provider: ""
+    listening_ports: ""
+    ports_count: 1
+  firewall:
+    outbound_subnets: []
+    vpn_input_ports: ""
+  dns:
+    enabled: true
+    resolver_type: dot
+    upstream_resolvers:
+      - cloudflare
+    plain_addresses: []
+    block_malicious: true
+    block_ads: false
+    caching: true
+    ipv6: false
+  log_level: info
+  timezone: UTC
+  http_proxy:
+    enabled: false
+    username: ""
+    password: ""
+    stealth: false
+    log: false
+  socks5:
+    enabled: false
+    username: ""
+    password: ""
+  shadowsocks:
+    enabled: false
+    password: ""
+    cipher: chacha20-ietf-poly1305
+    log: false
+  env_vars: []
+schema:
+  vpn_service_provider: str
+  vpn_type: list(openvpn|wireguard|amneziawg)
+  openvpn:
+    username: str?
+    password: password?
+    endpoint_ip: str?
+    endpoint_port: port
+    protocol: list(udp|tcp)
+    custom_config: str?
+  wireguard:
+    private_key: password?
+    preshared_key: password?
+    public_key: str?
+    addresses: str?
+    endpoint_ip: str?
+    endpoint_port: port
+    allowed_ips: str?
+    mtu: int(0,)
+  amneziawg:
+    private_key: password?
+    preshared_key: password?
+    public_key: str?
+    addresses: str?
+    endpoint_ip: str?
+    endpoint_port: port
+    allowed_ips: str?
+    mtu: int(0,)
+    jc: int(0,)
+    jmin: int(0,)
+    jmax: int(0,)
+    s1: int(0,)
+    s2: int(0,)
+    s3: int(0,)
+    s4: int(0,)
+    h1: str?
+    h2: str?
+    h3: str?
+    h4: str?
+  server:
+    regions:
+      - str
+    countries:
+      - str
+    cities:
+      - str
+    hostnames:
+      - str
+    names:
+      - str
+    categories:
+      - str
+  port_forwarding:
+    enabled: bool
+    provider: str?
+    listening_ports: str?
+    ports_count: int(1,)
+  firewall:
+    outbound_subnets:
+      - str
+    vpn_input_ports: str?
+  dns:
+    enabled: bool
+    resolver_type: list(dot|doh|plain)
+    upstream_resolvers:
+      - str
+    plain_addresses:
+      - str
+    block_malicious: bool
+    block_ads: bool
+    caching: bool
+    ipv6: bool
+  log_level: list(error|warning|info|debug)
+  timezone: str
+  http_proxy:
+    enabled: bool
+    username: str?
+    password: password?
+    stealth: bool
+    log: bool
+  socks5:
+    enabled: bool
+    username: str?
+    password: password?
+  shadowsocks:
+    enabled: bool
+    password: password?
+    cipher: list(aes-128-gcm|aes-256-gcm|chacha20-ietf-poly1305)
+    log: bool
+  env_vars:
+    - name: str
+      value: str

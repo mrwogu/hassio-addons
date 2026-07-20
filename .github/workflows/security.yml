@@ -1,0 +1,87 @@
+---
+name: Security
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "21 4 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dependencies:
+    name: Dependency review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Review dependencies
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294  # v5.0.0
+        with:
+          fail-on-severity: high
+
+  image:
+    name: Image ${{ matrix.addon }} (${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - addon: bonds
+            arch: amd64
+            image: hassio-bonds
+            os: ubuntu-24.04
+          - addon: bonds
+            arch: aarch64
+            image: hassio-bonds
+            os: ubuntu-24.04-arm
+          - addon: gluetun
+            arch: amd64
+            image: hassio-gluetun
+            os: ubuntu-24.04
+          - addon: gluetun
+            arch: aarch64
+            image: hassio-gluetun
+            os: ubuntu-24.04-arm
+    env:
+      IMAGE_REF: >-
+        ${{
+          github.event_name == 'schedule'
+          && format('ghcr.io/mrwogu/{0}:latest', matrix.image)
+          || format('local/{0}:{1}-scan', matrix.image, matrix.arch)
+        }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Build image
+        if: github.event_name != 'schedule'
+        run: docker build --tag "$IMAGE_REF" "./${{ matrix.addon }}"
+
+      - name: Scan image
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
+        with:
+          image-ref: ${{ env.IMAGE_REF }}
+          format: table
+          scanners: vuln,secret
+          severity: CRITICAL,HIGH
+          trivyignores: ./${{ matrix.addon }}/.trivyignore.yaml
+          exit-code: "1"

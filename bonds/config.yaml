@@ -1,0 +1,36 @@
+---
+name: Bonds
+version: "0.15.13-1"
+slug: bonds
+description: Personal relationship manager built with Go and React
+url: https://github.com/mrwogu/hassio-addons/tree/main/bonds
+image: ghcr.io/mrwogu/hassio-bonds
+arch:
+  - aarch64
+  - amd64
+init: false
+startup: services
+webui: http://[HOST]:[PORT:8080]
+map:
+  - type: addon_config
+    read_only: false
+ports:
+  8080/tcp: 8080
+ports_description:
+  8080/tcp: Bonds web interface
+options:
+  app_url: http://homeassistant.local:8080
+  jwt_secret: ""
+  settings_encryption_key: ""
+  storage_max_size_mb: 100
+  backup_cron: "0 3 * * *"
+  backup_retention_days: 30
+  debug: false
+schema:
+  app_url: str
+  jwt_secret: password?
+  settings_encryption_key: password?
+  storage_max_size_mb: int(1,)
+  backup_cron: str?
+  backup_retention_days: int(1,)
+  debug: bool

@@ -1,0 +1,66 @@
+{
+  "vpn_service_provider": "protonvpn",
+  "vpn_type": "openvpn",
+  "openvpn": {
+    "username": "fixture-openvpn-user",
+    "password": "fixture-openvpn-password",
+    "endpoint_ip": "198.51.100.10",
+    "endpoint_port": 1194,
+    "protocol": "udp",
+    "custom_config": ""
+  },
+  "server": {
+    "regions": ["Europe"],
+    "countries": ["Poland", "Germany"],
+    "cities": ["Warsaw"],
+    "hostnames": [],
+    "names": [],
+    "categories": ["p2p"]
+  },
+  "port_forwarding": {
+    "enabled": true,
+    "provider": "protonvpn",
+    "listening_ports": "42000",
+    "ports_count": 1
+  },
+  "firewall": {
+    "outbound_subnets": ["192.168.1.0/24", "10.0.0.0/8"],
+    "vpn_input_ports": "42000"
+  },
+  "dns": {
+    "enabled": true,
+    "resolver_type": "dot",
+    "upstream_resolvers": ["cloudflare", "quad9"],
+    "plain_addresses": [],
+    "block_malicious": true,
+    "block_ads": true,
+    "caching": true,
+    "ipv6": false
+  },
+  "log_level": "debug",
+  "timezone": "Europe/Warsaw",
+  "http_proxy": {
+    "enabled": true,
+    "username": "fixture-http-user",
+    "password": "fixture-http-password",
+    "stealth": true,
+    "log": false
+  },
+  "socks5": {
+    "enabled": true,
+    "username": "fixture-socks-user",
+    "password": "fixture-socks-password"
+  },
+  "shadowsocks": {
+    "enabled": true,
+    "password": "fixture-shadowsocks-password",
+    "cipher": "chacha20-ietf-poly1305",
+    "log": false
+  },
+  "env_vars": [
+    {
+      "name": "HEALTH_TARGET_ADDRESSES",
+      "value": "vpn-check.invalid:443"
+    }
+  ]
+}

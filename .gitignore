@@ -1,0 +1,10 @@
+.DS_Store
+.code-review-graph/
+.venv/
+__pycache__/
+*.py[cod]
+*.logstrip.log
+.pytest_cache/
+.ruff_cache/
+coverage/
+reports/

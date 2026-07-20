@@ -1,0 +1,25 @@
+---
+configuration:
+  app_url:
+    name: Application URL
+    description: Full URL used to access Bonds, including the direct port.
+  jwt_secret:
+    name: JWT secret
+    description: Optional signing secret. Leave blank to generate and persist one automatically.
+  settings_encryption_key:
+    name: Settings encryption key
+    description: Optional encryption key. Leave blank to generate and persist one automatically.
+  storage_max_size_mb:
+    name: Maximum upload size
+    description: Maximum uploaded file size in megabytes.
+  backup_cron:
+    name: Backup schedule
+    description: Optional cron expression used for automatic backups.
+  backup_retention_days:
+    name: Backup retention
+    description: Number of days to retain application backups.
+  debug:
+    name: Debug mode
+    description: Enable detailed Bonds diagnostics for troubleshooting.
+network:
+  8080/tcp: Bonds web interface

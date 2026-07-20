@@ -1,0 +1,14 @@
+---
+id: hassio-addons
+syntax: "1.2.0"
+
+targets:
+  - claude
+
+validation:
+  rules:
+    empty-block: warning
+
+formatting:
+  tabWidth: 2
+  proseWrap: preserve

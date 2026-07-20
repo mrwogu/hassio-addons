@@ -1,0 +1,220 @@
+# CLAUDE.md
+
+<!-- PromptScript 2026-07-20T13:03:39.983Z | source: .promptscript/project.prs | target: claude - do not edit -->
+
+## Project
+
+You are a maintainer of a public Home Assistant add-on repository. Build
+small, secure adapters around immutable upstream images. Preserve upstream
+behavior, licenses, persistent data, and user secrets. Follow the repository
+release automation instead of publishing artifacts manually.
+
+## Tech Stack
+
+python, shell, yaml, dockerfile
+
+## Code Style
+
+- Pin every upstream image by both an explicit version and sha256 digest
+- Use package versions in the exact form <upstream-version>-<positive-revision>
+- Keep Dockerfile, upstream.yaml, config.yaml, and CHANGELOG.md synchronized
+- Support aarch64 and amd64 in that order
+- Keep init false and provide a writable addon_config mapping
+- Store all mutable application data and generated secrets under /config
+- Create generated secrets atomically with mode 0600 and never log their values
+- Preserve upstream licenses and attribution in every add-on
+- Grant no capabilities by default
+- Gluetun may use only NET_ADMIN and /dev/net/tun with its bounded AppArmor profile
+- Reject control characters, unsafe custom environment names, and overrides of managed variables
+- Pin every external GitHub Action to a full 40-character commit SHA
+- Keep Trivy exceptions CVE-specific, path-scoped, justified, and valid for no more than 30 days
+- Run make check after repository changes
+- Run yamllint and actionlint after YAML or workflow changes
+- Run ShellCheck after shell changes
+- Build and smoke-test every changed architecture when runtime behavior changes
+
+## Commands
+
+```
+/validate  - Run all repository validators relevant to the current changes
+/new-addon - Apply the complete new add-on checklist from these instructions
+/release   - Verify version, changelog, security gates, and automated release readiness
+```
+
+# Repository workflow
+
+## Working on an existing add-on
+
+1. Start from `main` and inspect the add-on's `config.yaml`, `Dockerfile`,
+   `upstream.yaml`, entrypoint, tests, documentation, translations, changelog,
+   license, and Trivy policy before editing.
+
+2. Keep changes in the Home Assistant adapter layer. Do not change upstream
+   application code.
+
+3. Validate every new option in the entrypoint. Quote shell values, avoid
+   command construction, redact secrets, persist mutable state under
+   `/config`, and preserve final `exec` behavior.
+
+4. Update adapter fixtures for valid, invalid, omitted, persistence, and
+   secret-handling paths. Update English and Polish translations and user
+   documentation whenever configuration or behavior changes.
+
+5. For a packaging-only change, run:
+
+```sh
+     make bump ADDON=<slug> MESSAGE="<one-line description>"
+```
+
+The message is required, one line, and at most 160 characters. The helper
+atomically increments the packaging revision and updates `config.yaml`,
+`upstream.yaml`, and `CHANGELOG.md`.
+
+6. For an upstream tag or digest change, edit only `UPSTREAM_VERSION` and
+   `UPSTREAM_DIGEST` in the Dockerfile, then run:
+
+```sh
+     python3 scripts/sync_addon_version.py <slug>
+```
+
+A new upstream version starts at revision `1`. A digest-only update
+increments the current revision. The helper is idempotent and repairs an
+interrupted metadata, config, or changelog synchronization.
+
+7. Run the validation gate:
+
+```sh
+     make check
+     yamllint .
+     actionlint .github/workflows/*.yml
+     find bonds gluetun -type f \
+       \( -name '*.sh' -o -name 'addon-entrypoint' \) -print0 |
+       xargs -0 shellcheck
+     promptscript validate
+     promptscript compile
+     promptscript diff
+```
+
+CI also runs the official Home Assistant add-on linter, native
+architecture builds, dependency review, and Trivy. Use the protected,
+manual `vpn-integration` workflow for a real WireGuard test.
+
+## Adding a new add-on
+
+1. Confirm that the upstream license permits redistribution and include its
+   exact license and notices. Document material restrictions.
+
+2. Choose a lowercase stable slug and `ghcr.io/mrwogu/hassio-<slug>`.
+3. Create `<slug>/` with all required files:
+
+- `config.yaml`
+- `Dockerfile`
+- `README.md`
+- `DOCS.md`
+- `CHANGELOG.md`
+- `LICENSE.upstream`
+- `icon.png`
+- `logo.png`
+- `upstream.yaml`
+- `translations/en.yaml`
+- `translations/pl.yaml`
+- `.trivyignore.yaml`
+- `rootfs/usr/local/bin/addon-entrypoint`
+- `tests/run.sh`
+
+4. In `config.yaml`, set the required metadata, exact architecture order,
+   `init: false`, writable `addon_config`, minimal ports, and only required
+   devices or capabilities. Add `apparmor.txt` only when a bounded profile is
+   needed.
+
+5. In the Dockerfile, place the Renovate annotation immediately before
+   `UPSTREAM_VERSION` and `UPSTREAM_DIGEST`, then use
+   `FROM <image>:${UPSTREAM_VERSION}@${UPSTREAM_DIGEST}`. Keep the wrapper
+   minimal and add a native healthcheck.
+
+6. In `upstream.yaml`, provide `image`, `version`, `digest`,
+   `package_version`, `source`, and `release_url`. Add
+   `release_tag_prefix` when upstream release tags require it.
+
+7. Implement persistence, upgrades, secret generation, option validation,
+   health behavior, and signal forwarding. Add realistic adapter tests and
+   architecture smoke tests.
+
+8. Update every explicit add-on registry:
+
+- `scripts/validate_addons.py`: slug, image, and any narrowly justified
+  privilege policy.
+
+- `Makefile`: bump allowlist, shell paths, and adapter test loop.
+- `.github/workflows/lint.yml`: shell paths and add-on linter matrix.
+- `.github/workflows/build.yml`: all-addons list and changed-add-on loop.
+- `.github/workflows/security.yml`: both architecture matrix rows and
+  image name.
+
+- `.github/workflows/publish.yml`: shell paths, Home Assistant linter, and
+  unreleased-add-on loop.
+
+- `.github/renovate.json5`: Dockerfile manager pattern, post-upgrade
+  commands, and automerge policy consumed by the Renovate GitHub App.
+
+- `.github/CODEOWNERS`, `README.md`, `CONTRIBUTING.md`, and `SECURITY.md`.
+
+9. Start `.trivyignore.yaml` with an empty vulnerability list. Add an
+   exception only for an unavoidable upstream finding, with exact affected
+   image paths, rationale, and an expiry no more than 30 days away.
+
+10. Run the complete local and CI validation gates before merge. After first
+    publication, make the GHCR package public and link it to this repository.
+
+## Release process
+
+### Automated upstream releases
+
+Renovate runs as the hosted GitHub App on `mrwogu/hassio-addons` and checks
+upstream image tags and digests every six hours. Updates without a
+trustworthy release timestamp are rejected. Timestamped updates wait three
+days before a pull request is opened. The custom Docker manager updates the
+pinned tag and digest, then runs `scripts/sync_addon_version.py`. Tooling
+and GitHub Action updates never automerge. Upstream add-on pull requests
+automerge without review only after
+all required checks pass.
+
+### Packaging releases
+
+Maintainer-authored adapter changes use `make bump` and a normal pull
+request. Every push to `main` searches for add-on versions without the
+immutable Git tag `<slug>/<version>`, so a failed or cancelled publication is
+retried on a later push.
+
+The reusable release workflow validates the repository, builds each
+architecture natively, scans the local image for HIGH and CRITICAL
+vulnerabilities and secrets, and only then pushes and signs the architecture
+image. It generates an SBOM and attaches it as an OCI attestation. After all
+architectures succeed, it creates and signs immutable version and `latest`
+multi-architecture manifests. Reusing a version manifest during recovery is
+allowed only when its architecture digests and source revision match the
+current commit.
+
+Finally, the workflow creates the immutable `<slug>/<version>` Git tag and a
+GitHub Release using the matching changelog section, upstream release link,
+image tag, and manifest digest. Never create these artifacts manually to
+bypass failed checks.
+
+### Recovery and support
+
+Before major upstream upgrades, preserve Home Assistant add-on backups.
+Roll back by selecting a previous immutable add-on version and restoring the
+matching configuration backup while the add-on is stopped. Previous images
+remain available for rollback, but only the latest published version receives
+security support. Remove expired Trivy exceptions as soon as upstream fixes
+are available.
+
+## Don'ts
+
+- Don't copy, fork, or patch upstream application source in an add-on
+- Don't use an unpinned image, a latest base tag, or a mutable GitHub Action reference
+- Don't expose credentials, VPN keys, generated secrets, tokens, personal data, or production configuration in code, tests, or logs
+- Don't add full_access, host_network, a device, or a capability without a documented runtime requirement and validator coverage
+- Don't publish or move latest before vulnerability and secret scans pass
+- Don't reuse or overwrite a released package version or Git tag
+- Don't edit AGENTS.md or generated .factory content directly; edit .promptscript sources and run promptscript compile

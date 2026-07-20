@@ -1,0 +1,121 @@
+---
+name: VPN integration
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vpn-integration
+  cancel-in-progress: false
+
+jobs:
+  wireguard:
+    name: Custom WireGuard
+    if: >-
+      github.repository == 'mrwogu/hassio-addons'
+      && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: vpn-integration
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Validate secrets
+        env:
+          ENDPOINT_IP: ${{ secrets.GLUETUN_TEST_WIREGUARD_ENDPOINT_IP }}
+          PRIVATE_KEY: ${{ secrets.GLUETUN_TEST_WIREGUARD_PRIVATE_KEY }}
+          PUBLIC_KEY: ${{ secrets.GLUETUN_TEST_WIREGUARD_PUBLIC_KEY }}
+          VPN_ADDRESSES: ${{ secrets.GLUETUN_TEST_WIREGUARD_ADDRESSES }}
+        run: |
+          test -n "$ENDPOINT_IP"
+          test -n "$PRIVATE_KEY"
+          test -n "$PUBLIC_KEY"
+          test -n "$VPN_ADDRESSES"
+
+      - name: Build image
+        run: docker build --tag local/gluetun:integration ./gluetun
+
+      - name: Create test options
+        env:
+          ENDPOINT_IP: ${{ secrets.GLUETUN_TEST_WIREGUARD_ENDPOINT_IP }}
+          PRESHARED_KEY: ${{ secrets.GLUETUN_TEST_WIREGUARD_PRESHARED_KEY }}
+          PRIVATE_KEY: ${{ secrets.GLUETUN_TEST_WIREGUARD_PRIVATE_KEY }}
+          PUBLIC_KEY: ${{ secrets.GLUETUN_TEST_WIREGUARD_PUBLIC_KEY }}
+          VPN_ADDRESSES: ${{ secrets.GLUETUN_TEST_WIREGUARD_ADDRESSES }}
+        run: |
+          install -d -m 0700 integration/config
+          jq -n \
+            --arg endpoint_ip "$ENDPOINT_IP" \
+            --arg preshared_key "$PRESHARED_KEY" \
+            --arg private_key "$PRIVATE_KEY" \
+            --arg public_key "$PUBLIC_KEY" \
+            --arg addresses "$VPN_ADDRESSES" \
+            '{
+              vpn_service_provider: "custom",
+              vpn_type: "wireguard",
+              wireguard: {
+                private_key: $private_key,
+                preshared_key: $preshared_key,
+                public_key: $public_key,
+                addresses: $addresses,
+                endpoint_ip: $endpoint_ip,
+                endpoint_port: 51820,
+                allowed_ips: "0.0.0.0/0,::/0",
+                mtu: 0
+              },
+              env_vars: []
+            }' >integration/options.json
+          chmod 0600 integration/options.json
+
+      - name: Load AppArmor profile
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes apparmor-utils
+          sed 's/profile ADDON_SLUG/profile mrwogu-gluetun-integration/' \
+            gluetun/apparmor.txt >integration/apparmor.txt
+          sudo apparmor_parser --replace integration/apparmor.txt
+
+      - name: Start Gluetun
+        run: |
+          docker run --detach \
+            --name gluetun-integration \
+            --cap-add NET_ADMIN \
+            --device /dev/net/tun \
+            --security-opt apparmor=mrwogu-gluetun-integration \
+            --volume "$PWD/integration/options.json:/data/options.json:ro" \
+            --volume "$PWD/integration/config:/config" \
+            local/gluetun:integration
+
+      - name: Wait for healthy VPN
+        run: |
+          for _ in $(seq 1 60); do
+            status=$(docker inspect \
+              --format '{{if .State.Health}}{{.State.Health.Status}}{{end}}' \
+              gluetun-integration)
+            if [ "$status" = "healthy" ]; then
+              exit 0
+            fi
+            if [ "$status" = "unhealthy" ]; then
+              exit 1
+            fi
+            sleep 5
+          done
+          exit 1
+
+      - name: Inspect failure
+        if: failure()
+        run: docker inspect gluetun-integration
+
+      - name: Clean up
+        if: always()
+        run: |
+          docker rm --force gluetun-integration >/dev/null 2>&1 || true
+          sudo apparmor_parser --remove integration/apparmor.txt \
+            >/dev/null 2>&1 || true
+          rm -f integration/options.json

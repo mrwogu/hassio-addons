@@ -1,0 +1,69 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "helpers:pinGitHubActionDigests"
+  ],
+  "baseBranchPatterns": ["main"],
+  "schedule": ["every 6 hours"],
+  "enabledManagers": [
+    "custom.regex",
+    "github-actions",
+    "pip_requirements"
+  ],
+  "dependencyDashboard": true,
+  "labels": ["dependencies"],
+  "minimumReleaseAge": "3 days",
+  "minimumReleaseAgeBehaviour": "timestamp-required",
+  "prConcurrentLimit": 4,
+  "prHourlyLimit": 2,
+  "rebaseWhen": "behind-base-branch",
+  "semanticCommits": "enabled",
+  "semanticCommitType": "chore",
+  "semanticCommitScope": "deps",
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update pinned upstream add-on images",
+      "managerFilePatterns": ["/(^|/)(bonds|gluetun)/Dockerfile$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+) versioning=(?<versioning>\\S+)\\nARG UPSTREAM_VERSION=\"(?<currentValue>[^\"]+)\"\\nARG UPSTREAM_DIGEST=\"(?<currentDigest>sha256:[a-f0-9]{64})\""
+      ],
+      "autoReplaceStringTemplate": "# renovate: datasource={{{datasource}}} depName={{{depName}}} versioning={{{versioning}}}\nARG UPSTREAM_VERSION=\"{{{newValue}}}\"\nARG UPSTREAM_DIGEST=\"{{{newDigest}}}\""
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Synchronize and automerge validated upstream add-on updates",
+      "matchManagers": ["custom.regex"],
+      "matchDatasources": ["docker"],
+      "matchFileNames": [
+        "bonds/Dockerfile",
+        "gluetun/Dockerfile"
+      ],
+      "matchUpdateTypes": ["digest", "patch", "minor", "major"],
+      "labels": ["dependencies", "addon-upstream", "automerge"],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": false,
+      "ignoreTests": false,
+      "postUpgradeTasks": {
+        "commands": [
+          "python3 scripts/sync_addon_version.py {{{packageFileDir}}}"
+        ],
+        "fileFilters": [
+          "{{{packageFileDir}}}/Dockerfile",
+          "{{{packageFileDir}}}/config.yaml",
+          "{{{packageFileDir}}}/upstream.yaml",
+          "{{{packageFileDir}}}/CHANGELOG.md"
+        ],
+        "executionMode": "update"
+      }
+    },
+    {
+      "description": "Never automerge repository tooling",
+      "matchManagers": ["github-actions", "pip_requirements"],
+      "automerge": false
+    }
+  ]
+}

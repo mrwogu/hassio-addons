@@ -1,0 +1,60 @@
+#include <tunables/global>
+
+profile ADDON_SLUG flags=(attach_disconnected,mediate_deleted) {
+  #include <abstractions/base>
+  #include <abstractions/nameservice>
+
+  capability chown,
+  capability dac_override,
+  capability net_admin,
+  capability net_raw,
+  capability setgid,
+  capability setuid,
+
+  network inet,
+  network inet6,
+  network netlink raw,
+  network unix,
+
+  signal,
+
+  /usr/local/bin/addon-entrypoint ix,
+  /gluetun-entrypoint ix,
+  /bin/busybox ix,
+  /bin/sh ix,
+  /sbin/ip ix,
+  /usr/bin/jq ix,
+  /usr/sbin/ip6tables* ix,
+  /usr/sbin/iptables* ix,
+  /usr/sbin/openvpn* ix,
+  /usr/sbin/xtables-legacy-multi ix,
+  /usr/sbin/xtables-nft-multi ix,
+
+  /bin/** mr,
+  /lib/** mr,
+  /sbin/** mr,
+  /usr/bin/** mr,
+  /usr/lib/** mr,
+  /usr/sbin/** mr,
+
+  /dev/net/tun rw,
+  /etc/** r,
+  /etc/resolv.conf rw,
+  /proc/** r,
+  /proc/sys/net/** rw,
+  /sys/class/net/** r,
+  /sys/devices/** r,
+
+  /config/ rw,
+  /config/** rwk,
+  /data/ r,
+  /data/** r,
+  /gluetun/ rw,
+  /gluetun/** rwk,
+  /run/ rw,
+  /run/** rwk,
+  /tmp/ rw,
+  /tmp/** rwk,
+  /var/run/ rw,
+  /var/run/** rwk,
+}

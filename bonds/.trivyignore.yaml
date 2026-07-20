@@ -1,0 +1,54 @@
+---
+vulnerabilities:
+  - id: CVE-2026-25681
+    paths: [app/bonds-server]
+    statement: Temporary upstream binary exception pending a Bonds release.
+    expired_at: 2026-08-02
+  - id: CVE-2026-27136
+    paths: [app/bonds-server]
+    statement: Temporary upstream binary exception pending a Bonds release.
+    expired_at: 2026-08-02
+  - id: CVE-2026-33814
+    paths: [app/bonds-server]
+    statement: Temporary upstream binary exception pending a Bonds release.
+    expired_at: 2026-08-02
+  - id: CVE-2026-39821
+    paths: [app/bonds-server]
+    statement: Temporary upstream binary exception pending a Bonds release.
+    expired_at: 2026-08-02
+  - id: CVE-2026-39828
+    paths: [app/bonds-server]
+    statement: Temporary upstream binary exception pending a Bonds release.
+    expired_at: 2026-08-02
+  - id: CVE-2026-39829
+    paths: [app/bonds-server]
+    statement: Temporary upstream binary exception pending a Bonds release.
+    expired_at: 2026-08-02
+  - id: CVE-2026-39830
+    paths: [app/bonds-server]
+    statement: Temporary upstream binary exception pending a Bonds release.
+    expired_at: 2026-08-02
+  - id: CVE-2026-39831
+    paths: [app/bonds-server]
+    statement: Temporary upstream binary exception pending a Bonds release.
+    expired_at: 2026-08-02
+  - id: CVE-2026-39832
+    paths: [app/bonds-server]
+    statement: Temporary upstream binary exception pending a Bonds release.
+    expired_at: 2026-08-02
+  - id: CVE-2026-39835
+    paths: [app/bonds-server]
+    statement: Temporary upstream binary exception pending a Bonds release.
+    expired_at: 2026-08-02
+  - id: CVE-2026-42508
+    paths: [app/bonds-server]
+    statement: Temporary upstream binary exception pending a Bonds release.
+    expired_at: 2026-08-02
+  - id: CVE-2026-46595
+    paths: [app/bonds-server]
+    statement: Temporary upstream binary exception pending a Bonds release.
+    expired_at: 2026-08-02
+  - id: CVE-2026-46597
+    paths: [app/bonds-server]
+    statement: Temporary upstream binary exception pending a Bonds release.
+    expired_at: 2026-08-02

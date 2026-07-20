@@ -1,0 +1,405 @@
+---
+name: Build add-on
+
+on:
+  workflow_call:
+    inputs:
+      addon:
+        required: true
+        type: string
+      publish:
+        required: true
+        type: boolean
+    outputs:
+      digest:
+        description: Published multi-architecture manifest digest
+        value: ${{ jobs.manifest.outputs.digest }}
+      image:
+        description: Published multi-architecture image
+        value: ${{ jobs.manifest.outputs.image }}
+      version:
+        description: Published add-on version
+        value: ${{ jobs.prepare.outputs.version }}
+
+jobs:
+  prepare:
+    name: Prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      architectures: ${{ steps.info.outputs.architectures }}
+      build_matrix: ${{ steps.matrix.outputs.matrix }}
+      created: ${{ steps.source.outputs.created }}
+      description: ${{ steps.info.outputs.description }}
+      image_name: ${{ steps.normalize.outputs.image_name }}
+      name: ${{ steps.info.outputs.name }}
+      registry_prefix: ${{ steps.normalize.outputs.registry_prefix }}
+      url: ${{ steps.info.outputs.url }}
+      version: ${{ steps.info.outputs.version }}
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Read add-on information
+        id: info
+        uses: home-assistant/actions/helpers/info@f4ca6f671bd429efb108c0f2fa0ae8af0215986c  # master
+        with:
+          path: ./${{ inputs.addon }}
+
+      - name: Read source metadata
+        id: source
+        run: echo "created=$(git show -s --format=%cI "$GITHUB_SHA")" >>"$GITHUB_OUTPUT"
+
+      - name: Protect current release version
+        if: inputs.publish
+        env:
+          ADDON: ${{ inputs.addon }}
+          VERSION: ${{ steps.info.outputs.version }}
+        run: |
+          git fetch --no-tags --depth=1 origin main
+          current_version=$(git show "FETCH_HEAD:$ADDON/config.yaml" |
+            sed -n 's/^version: "\(.*\)"$/\1/p')
+          if [ "$current_version" != "$VERSION" ]; then
+            echo "::error::$ADDON $VERSION is no longer current on main"
+            exit 1
+          fi
+
+      - name: Protect immutable release tag
+        if: inputs.publish
+        env:
+          TAG: ${{ steps.info.outputs.slug }}/${{ steps.info.outputs.version }}
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" \
+            >/dev/null 2>&1
+          then
+            echo "::error::Release tag $TAG already exists"
+            exit 1
+          else
+            status=$?
+          fi
+          if [ "$status" -ne 2 ]; then
+            echo "::error::Could not verify immutable release tag $TAG"
+            exit 1
+          fi
+
+      - name: Normalize image information
+        id: normalize
+        env:
+          IMAGE: ${{ steps.info.outputs.image }}
+        run: |
+          image_name=${IMAGE##*/}
+          image_name=${image_name#\{arch\}-}
+          echo "image_name=$image_name" >> "$GITHUB_OUTPUT"
+          echo "registry_prefix=${IMAGE%/*}" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare architecture matrix
+        id: matrix
+        uses: home-assistant/builder/actions/prepare-multi-arch-matrix@4de35182ce1e329181bffcbcc84d33db5e2c7e10  # 2026.06.0
+        with:
+          architectures: ${{ steps.info.outputs.architectures }}
+          image-name: ${{ steps.normalize.outputs.image_name }}
+          registry-prefix: ${{ steps.normalize.outputs.registry_prefix }}
+
+  build:
+    name: Build ${{ matrix.arch }}
+    needs: prepare
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.prepare.outputs.build_matrix) }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Build image for validation
+        id: build
+        uses: home-assistant/builder/actions/build-image@4de35182ce1e329181bffcbcc84d33db5e2c7e10  # 2026.06.0
+        with:
+          arch: ${{ matrix.arch }}
+          container-registry-password: ${{ secrets.GITHUB_TOKEN }}
+          context: ./${{ inputs.addon }}
+          cosign: false
+          image: ${{ matrix.image }}
+          image-tags: ${{ needs.prepare.outputs.version }}
+          labels: |
+            io.hass.type=app
+            io.hass.name=${{ needs.prepare.outputs.name }}
+            io.hass.description=${{ needs.prepare.outputs.description }}
+            io.hass.url=${{ needs.prepare.outputs.url }}
+            org.opencontainers.image.created=${{ needs.prepare.outputs.created }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          load: ${{ inputs.publish }}
+          push: false
+          version: ${{ needs.prepare.outputs.version }}
+
+      - name: Scan image before publication
+        if: inputs.publish
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
+        with:
+          image-ref: ${{ matrix.image }}:${{ needs.prepare.outputs.version }}
+          format: table
+          scanners: vuln,secret
+          severity: CRITICAL,HIGH
+          trivyignores: ./${{ inputs.addon }}/.trivyignore.yaml
+          exit-code: "1"
+
+      - name: Log in to container registry
+        if: inputs.publish
+        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee  # v4.2.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Cosign
+        if: inputs.publish
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6  # v4.1.2
+
+      - name: Publish or reuse validated image
+        if: inputs.publish
+        id: publish
+        env:
+          ARCH: ${{ matrix.arch }}
+          IMAGE: ${{ matrix.image }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          if output=$(docker manifest inspect "$IMAGE:$VERSION" 2>&1); then
+            revision=$(docker buildx imagetools inspect "$IMAGE:$VERSION" \
+              --format '{{json .Image.Config.Labels}}' |
+              jq -r '."org.opencontainers.image.revision" // empty')
+            image_arch=$(docker buildx imagetools inspect "$IMAGE:$VERSION" \
+              --format '{{json .Image.Config.Labels}}' |
+              jq -r '."io.hass.arch" // empty')
+            if [ "$revision" != "$GITHUB_SHA" ] || [ "$image_arch" != "$ARCH" ]; then
+              echo "::error::$IMAGE:$VERSION is immutable and belongs to another build"
+              exit 1
+            fi
+            echo "Reusing $IMAGE:$VERSION from the current commit"
+          elif ! printf '%s\n' "$output" |
+            grep -Eiq 'manifest unknown|no such manifest'
+          then
+            printf '%s\n' "$output" >&2
+            echo "::error::Could not verify immutable architecture tag"
+            exit 1
+          else
+            docker push "$IMAGE:$VERSION"
+          fi
+          digest=$(docker buildx imagetools inspect "$IMAGE:$VERSION" |
+            awk '$1 == "Digest:" { print $2; exit }')
+          if ! printf '%s\n' "$digest" |
+            grep -Eq '^sha256:[0-9a-f]{64}$'
+          then
+            echo "::error::Could not resolve published image digest"
+            exit 1
+          fi
+          cosign sign --yes "$IMAGE@$digest"
+          echo "digest=$digest" >>"$GITHUB_OUTPUT"
+
+      - name: Generate SBOM
+        if: inputs.publish
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610  # v0.24.0
+        with:
+          image: ${{ matrix.image }}@${{ steps.publish.outputs.digest }}
+          output-file: sbom-${{ inputs.addon }}-${{ matrix.arch }}.spdx.json
+          registry-password: ${{ secrets.GITHUB_TOKEN }}
+          registry-username: ${{ github.repository_owner }}
+          upload-artifact: false
+          upload-release-assets: false
+
+      - name: Attest SBOM
+        if: inputs.publish
+        env:
+          IMAGE: ${{ matrix.image }}@${{ steps.publish.outputs.digest }}
+          PREDICATE: sbom-${{ inputs.addon }}-${{ matrix.arch }}.spdx.json
+        run: cosign attest --yes --type spdxjson --predicate "$PREDICATE" "$IMAGE"
+
+  manifest:
+    name: Publish manifest
+    needs:
+      - prepare
+      - build
+    if: inputs.publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      id-token: write
+      packages: write
+    outputs:
+      digest: ${{ steps.metadata.outputs.digest }}
+      image: ${{ steps.metadata.outputs.image }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Log in to container registry
+        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee  # v4.2.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5  # v4.1.0
+        with:
+          version: v0.32.1
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6  # v4.1.2
+
+      - name: Check immutable manifest tag
+        id: manifest
+        env:
+          ARCHITECTURES: ${{ needs.prepare.outputs.architectures }}
+          IMAGE_NAME: ${{ needs.prepare.outputs.image_name }}
+          REGISTRY_PREFIX: ${{ needs.prepare.outputs.registry_prefix }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          IMAGE="$REGISTRY_PREFIX/$IMAGE_NAME"
+          if output=$(docker manifest inspect "$IMAGE:$VERSION" 2>&1); then
+            expected_count=$(jq 'length' <<<"$ARCHITECTURES")
+            actual_count=$(jq '.manifests | length' <<<"$output")
+            if [ "$actual_count" -ne "$expected_count" ]; then
+              echo "::error::Existing manifest has unexpected architecture count"
+              exit 1
+            fi
+            while IFS= read -r arch; do
+              source_image="$REGISTRY_PREFIX/$arch-$IMAGE_NAME:$VERSION"
+              source_digest=$(docker buildx imagetools inspect "$source_image" |
+                awk '$1 == "Digest:" { print $2; exit }')
+              if ! printf '%s\n' "$source_digest" |
+                grep -Eq '^sha256:[0-9a-f]{64}$'
+              then
+                echo "::error::Could not resolve $source_image digest"
+                exit 1
+              fi
+              revision=$(docker buildx imagetools inspect "$source_image" \
+                --format '{{json .Image.Config.Labels}}' |
+                jq -r '."org.opencontainers.image.revision" // empty')
+              if [ "$revision" != "$GITHUB_SHA" ]; then
+                echo "::error::$source_image was not built from $GITHUB_SHA"
+                exit 1
+              fi
+              if ! jq -e --arg digest "$source_digest" \
+                '.manifests[]?.digest == $digest' <<<"$output" >/dev/null
+              then
+                echo "::error::Existing manifest does not use $source_image"
+                exit 1
+              fi
+              platform_arch=$(jq -r --arg digest "$source_digest" \
+                '.manifests[] | select(.digest == $digest) |
+                .platform.architecture' <<<"$output")
+              expected_platform_arch=$arch
+              if [ "$arch" = "aarch64" ]; then
+                expected_platform_arch=arm64
+              fi
+              if [ "$platform_arch" != "$expected_platform_arch" ]; then
+                echo "::error::$source_image has unexpected manifest architecture"
+                exit 1
+              fi
+            done < <(jq -r '.[]' <<<"$ARCHITECTURES")
+            echo "exists=true" >>"$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! printf '%s\n' "$output" |
+            grep -Eiq 'manifest unknown|no such manifest'
+          then
+            printf '%s\n' "$output" >&2
+            echo "::error::Could not verify immutable version tag"
+            exit 1
+          fi
+          echo "exists=false" >>"$GITHUB_OUTPUT"
+
+      - name: Publish multi-architecture manifest
+        if: steps.manifest.outputs.exists != 'true'
+        uses: home-assistant/builder/actions/publish-multi-arch-manifest@4de35182ce1e329181bffcbcc84d33db5e2c7e10  # 2026.06.0
+        with:
+          architectures: ${{ needs.prepare.outputs.architectures }}
+          container-registry-password: ${{ secrets.GITHUB_TOKEN }}
+          image-name: ${{ needs.prepare.outputs.image_name }}
+          image-tags: |
+            ${{ needs.prepare.outputs.version }}
+            latest
+          registry-prefix: ${{ needs.prepare.outputs.registry_prefix }}
+
+      - name: Restore latest manifest after recovery
+        if: steps.manifest.outputs.exists == 'true'
+        env:
+          IMAGE: >-
+            ${{ needs.prepare.outputs.registry_prefix }}/${{ needs.prepare.outputs.image_name }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          docker buildx imagetools create \
+            --tag "$IMAGE:latest" \
+            "$IMAGE:$VERSION"
+          digest=$(docker buildx imagetools inspect "$IMAGE:$VERSION" |
+            awk '$1 == "Digest:" { print $2; exit }')
+          if ! printf '%s\n' "$digest" |
+            grep -Eq '^sha256:[0-9a-f]{64}$'
+          then
+            echo "::error::Could not resolve recovered manifest digest"
+            exit 1
+          fi
+          cosign sign --yes "$IMAGE@$digest"
+
+      - name: Read published manifest metadata
+        id: metadata
+        env:
+          IMAGE: >-
+            ${{ needs.prepare.outputs.registry_prefix }}/${{ needs.prepare.outputs.image_name }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          digest=$(docker buildx imagetools inspect "$IMAGE:$VERSION" |
+            awk '$1 == "Digest:" { print $2; exit }')
+          if ! printf '%s\n' "$digest" |
+            grep -Eq '^sha256:[0-9a-f]{64}$'
+          then
+            echo "::error::Could not resolve published manifest digest"
+            exit 1
+          fi
+          echo "digest=$digest" >>"$GITHUB_OUTPUT"
+          echo "image=$IMAGE" >>"$GITHUB_OUTPUT"
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
+        with:
+          python-version: "3.14"
+          cache: pip
+
+      - name: Install release dependency
+        run: python -m pip install PyYAML==6.0.3
+
+      - name: Render GitHub Release
+        id: release
+        env:
+          ADDON: ${{ inputs.addon }}
+          DIGEST: ${{ steps.metadata.outputs.digest }}
+        run: |
+          python scripts/render_release_notes.py "$ADDON" \
+            --digest "$DIGEST" \
+            --notes-file release-notes.md \
+            --github-output "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+          RELEASE_TITLE: ${{ steps.release.outputs.title }}
+        run: |
+          gh release create "$RELEASE_TAG" \
+            --target "$GITHUB_SHA" \
+            --title "$RELEASE_TITLE" \
+            --notes-file release-notes.md

@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+
+: "${TEST_ENV_OUTPUT:?}"
+: "${TEST_ARGS_OUTPUT:?}"
+
+env | LC_ALL=C sort >"$TEST_ENV_OUTPUT"
+printf '%s\n' "$*" >"$TEST_ARGS_OUTPUT"

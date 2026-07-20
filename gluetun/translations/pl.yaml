@@ -1,0 +1,53 @@
+---
+configuration:
+  vpn_service_provider:
+    name: Dostawca usługi VPN
+    description: Identyfikator dostawcy Gluetun, na przykład protonvpn, mullvad lub custom.
+  vpn_type:
+    name: Typ VPN
+    description: Wybierz OpenVPN, WireGuard lub AmneziaWG.
+  openvpn:
+    name: OpenVPN
+    description: Dane logowania, punkt końcowy, protokół i opcjonalna ścieżka konfiguracji OpenVPN.
+  wireguard:
+    name: WireGuard
+    description: Klucze, adresy, punkt końcowy, trasy i MTU WireGuard.
+  amneziawg:
+    name: AmneziaWG
+    description: Klucze, adresy, punkt końcowy, trasy, MTU i parametry zaciemniania AmneziaWG.
+  server:
+    name: Filtry serwerów
+    description: Opcjonalne filtry regionu, kraju, miasta, hosta, nazwy serwera i kategorii.
+  port_forwarding:
+    name: Przekierowanie portów VPN
+    description: Włącza przekierowanie portów dostawcy i określa przekierowane porty.
+  firewall:
+    name: Zapora i LAN
+    description: Podsieci dostępne poza VPN oraz porty przyjmowane z VPN.
+  dns:
+    name: DNS
+    description: Tryb resolvera, serwery nadrzędne, pamięć podręczna, IPv6 i blokowanie zagrożeń.
+  log_level:
+    name: Poziom logowania
+    description: Szczegółowość logów Gluetun.
+  timezone:
+    name: Strefa czasowa
+    description: Strefa czasowa IANA, na przykład Europe/Warsaw.
+  http_proxy:
+    name: Proxy HTTP
+    description: Wbudowany serwer proxy HTTP i opcjonalne uwierzytelnianie.
+  socks5:
+    name: Proxy SOCKS5
+    description: Wbudowany serwer SOCKS5 i opcjonalne uwierzytelnianie.
+  shadowsocks:
+    name: Shadowsocks
+    description: Wbudowany serwer Shadowsocks, szyfr i hasło.
+  env_vars:
+    name: Zaawansowane zmienne środowiskowe
+    description: Dodatkowe zmienne upstream. Nie można nadpisać nazw zarządzanych ani chronionych.
+network:
+  8888/tcp: Proxy HTTP
+  8388/tcp: Shadowsocks TCP
+  8388/udp: Shadowsocks UDP
+  1080/tcp: SOCKS5 TCP
+  1080/udp: SOCKS5 UDP

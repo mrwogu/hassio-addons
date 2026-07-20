@@ -1,0 +1,10 @@
+{
+  "vpn_service_provider": "custom",
+  "vpn_type": "openvpn",
+  "env_vars": [
+    {
+      "name": "CUSTOM_VALUE",
+      "value": "first line\nsecond line"
+    }
+  ]
+}

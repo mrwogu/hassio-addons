@@ -1,0 +1,26 @@
+{
+  "vpn_service_provider": "custom",
+  "vpn_type": "amneziawg",
+  "amneziawg": {
+    "private_key": "fixture-amnezia-private",
+    "preshared_key": "fixture-amnezia-preshared",
+    "public_key": "fixture-amnezia-public",
+    "addresses": "10.8.0.2/32",
+    "endpoint_ip": "192.0.2.30",
+    "endpoint_port": 51820,
+    "allowed_ips": "0.0.0.0/0",
+    "mtu": 1280,
+    "jc": 4,
+    "jmin": 40,
+    "jmax": 70,
+    "s1": 0,
+    "s2": 0,
+    "s3": 0,
+    "s4": 0,
+    "h1": "1",
+    "h2": "2",
+    "h3": "3",
+    "h4": "4"
+  },
+  "env_vars": []
+}
