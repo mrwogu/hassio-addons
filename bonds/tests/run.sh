@@ -54,7 +54,8 @@ assert_env "BACKUP_RETENTION=14"
 
 SECRETS_FILE="${CONFIG_DIR}/.secrets"
 [ -f "$SECRETS_FILE" ] || fail "Secrets file was not created"
-[ "$(stat -f '%Lp' "$SECRETS_FILE" 2>/dev/null || stat -c '%a' "$SECRETS_FILE")" = "600" ] ||
+secrets_mode=$(stat -c '%a' "$SECRETS_FILE" 2>/dev/null || stat -f '%Lp' "$SECRETS_FILE")
+[ "$secrets_mode" = "600" ] ||
     fail "Secrets file mode is not 600"
 
 JWT_SECRET=$(jq -r '.jwt_secret' "$SECRETS_FILE")
