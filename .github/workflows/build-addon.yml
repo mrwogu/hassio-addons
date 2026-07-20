@@ -59,12 +59,16 @@ jobs:
         env:
           ADDON: ${{ inputs.addon }}
           VERSION: ${{ steps.info.outputs.version }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          git fetch --no-tags --depth=1 origin main
-          current_version=$(git show "FETCH_HEAD:$ADDON/config.yaml" |
-            sed -n 's/^version: "\(.*\)"$/\1/p')
-          if [ "$current_version" != "$VERSION" ]; then
-            echo "::error::$ADDON $VERSION is no longer current on main"
+          remote_version=$(gh api "repos/${{ github.repository }}/contents/$ADDON/config.yaml?ref=main" \
+            --jq '.content' | base64 -d | sed -n 's/^version: "\(.*\)"$/\1/p')
+          if [ -z "$remote_version" ]; then
+            echo "::error::Could not read $ADDON version from main"
+            exit 1
+          fi
+          if [ "$remote_version" != "$VERSION" ]; then
+            echo "::error::$ADDON $VERSION is no longer current on main (main has $remote_version)"
             exit 1
           fi
 
