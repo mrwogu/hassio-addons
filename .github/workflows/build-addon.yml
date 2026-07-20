@@ -30,12 +30,12 @@ jobs:
       architectures: ${{ steps.info.outputs.architectures }}
       build_matrix: ${{ steps.matrix.outputs.matrix }}
       created: ${{ steps.source.outputs.created }}
-      description: ${{ steps.info.outputs.description }}
+      description: ${{ steps.metadata.outputs.description }}
       image_name: ${{ steps.normalize.outputs.image_name }}
-      name: ${{ steps.info.outputs.name }}
+      name: ${{ steps.metadata.outputs.name }}
       registry_prefix: ${{ steps.normalize.outputs.registry_prefix }}
-      url: ${{ steps.info.outputs.url }}
-      version: ${{ steps.version.outputs.version }}
+      url: ${{ steps.metadata.outputs.url }}
+      version: ${{ steps.metadata.outputs.version }}
     permissions:
       contents: read
     steps:
@@ -50,14 +50,25 @@ jobs:
         with:
           path: ./${{ inputs.addon }}
 
-      - name: Normalize add-on version
-        id: version
+      - name: Normalize add-on metadata
+        id: metadata
         env:
           VERSION: ${{ steps.info.outputs.version }}
+          NAME: ${{ steps.info.outputs.name }}
+          DESCRIPTION: ${{ steps.info.outputs.description }}
+          URL: ${{ steps.info.outputs.url }}
+          SLUG: ${{ steps.info.outputs.slug }}
+          IMAGE: ${{ steps.info.outputs.image }}
         run: |
-          version=${VERSION#\"}
-          version=${version%\"}
-          echo "version=$version" >>"$GITHUB_OUTPUT"
+          strip() { local v=$1; v=${v#\"}; v=${v%\"}; printf '%s' "$v"; }
+          {
+            echo "version=$(strip "$VERSION")"
+            echo "name=$(strip "$NAME")"
+            echo "description=$(strip "$DESCRIPTION")"
+            echo "url=$(strip "$URL")"
+            echo "slug=$(strip "$SLUG")"
+            echo "image=$(strip "$IMAGE")"
+          } >>"$GITHUB_OUTPUT"
 
       - name: Read source metadata
         id: source
@@ -67,7 +78,7 @@ jobs:
         if: inputs.publish
         env:
           ADDON: ${{ inputs.addon }}
-          VERSION: ${{ steps.version.outputs.version }}
+          VERSION: ${{ steps.metadata.outputs.version }}
           GH_TOKEN: ${{ github.token }}
         run: |
           remote_version=$(gh api "repos/${{ github.repository }}/contents/$ADDON/config.yaml?ref=main" \
@@ -84,7 +95,7 @@ jobs:
       - name: Protect immutable release tag
         if: inputs.publish
         env:
-          TAG: ${{ steps.info.outputs.slug }}/${{ steps.version.outputs.version }}
+          TAG: ${{ steps.metadata.outputs.slug }}/${{ steps.metadata.outputs.version }}
         run: |
           if git ls-remote --exit-code --tags origin "refs/tags/$TAG" \
             >/dev/null 2>&1
@@ -102,7 +113,7 @@ jobs:
       - name: Normalize image information
         id: normalize
         env:
-          IMAGE: ${{ steps.info.outputs.image }}
+          IMAGE: ${{ steps.metadata.outputs.image }}
         run: |
           image_name=${IMAGE##*/}
           image_name=${image_name#\{arch\}-}
