@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.41.1-3
+
+- Make VPN endpoint_port optional so named providers pick the endpoint
+
 ## 3.41.1-2
 
 - Grant read on addon-entrypoint in AppArmor so /bin/sh can load the script

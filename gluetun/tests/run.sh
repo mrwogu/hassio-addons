@@ -150,6 +150,7 @@ run_success null-optionals.json
 assert_env VPN_SERVICE_PROVIDER custom
 assert_env VPN_TYPE openvpn
 assert_env_absent OPENVPN_USER_SECRETFILE
+assert_env_absent OPENVPN_ENDPOINT_PORT
 assert_env_absent LOG_LEVEL
 if grep -Eq '^[A-Z][A-Z0-9_]*=null$' "$ENV_OUTPUT"; then
     fail "Null optional value became string null"
