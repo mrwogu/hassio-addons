@@ -1,2 +1,106 @@
 ---
-vulnerabilities: []
+vulnerabilities:
+  - id: CVE-2024-47554
+    paths: [app/lib/velocity-engine-core-2.3.jar]
+    statement: Temporary upstream image dependency pending a Stirling-PDF release.
+    expired_at: 2026-08-21
+  - id: CVE-2026-41066
+    paths: [opt/venv/lib/python3.12/site-packages/lxml-6.0.2.dist-info/METADATA]
+    statement: Temporary upstream image dependency pending a Stirling-PDF release.
+    expired_at: 2026-08-21
+  - id: CVE-2026-42198
+    paths: [app/lib/postgresql-42.7.10.jar]
+    statement: Temporary upstream image dependency pending a Stirling-PDF release.
+    expired_at: 2026-08-21
+  - id: CVE-2026-42579
+    paths: [app/lib/netty-codec-dns-4.2.12.Final.jar]
+    statement: Temporary upstream image dependency pending a Stirling-PDF release.
+    expired_at: 2026-08-21
+  - id: CVE-2026-42583
+    paths: [app/lib/netty-codec-compression-4.2.12.Final.jar]
+    statement: Temporary upstream image dependency pending a Stirling-PDF release.
+    expired_at: 2026-08-21
+  - id: CVE-2026-42584
+    paths: [app/lib/netty-codec-http-4.2.12.Final.jar]
+    statement: Temporary upstream image dependency pending a Stirling-PDF release.
+    expired_at: 2026-08-21
+  - id: CVE-2026-42587
+    paths: [app/lib/netty-codec-http-4.2.12.Final.jar, app/lib/netty-codec-http2-4.2.12.Final.jar]
+    statement: Temporary upstream image dependency pending a Stirling-PDF release.
+    expired_at: 2026-08-21
+  - id: CVE-2026-44249
+    paths: [app/lib/netty-handler-4.2.12.Final.jar]
+    statement: Temporary upstream image dependency pending a Stirling-PDF release.
+    expired_at: 2026-08-21
+  - id: CVE-2026-45416
+    paths: [app/lib/netty-handler-4.2.12.Final.jar]
+    statement: Temporary upstream image dependency pending a Stirling-PDF release.
+    expired_at: 2026-08-21
+  - id: CVE-2026-45674
+    paths: [app/lib/netty-resolver-dns-4.2.12.Final.jar]
+    statement: Temporary upstream image dependency pending a Stirling-PDF release.
+    expired_at: 2026-08-21
+  - id: CVE-2026-47691
+    paths: [app/lib/netty-resolver-dns-4.2.12.Final.jar]
+    statement: Temporary upstream image dependency pending a Stirling-PDF release.
+    expired_at: 2026-08-21
+  - id: CVE-2026-50010
+    paths: [app/lib/netty-handler-4.2.12.Final.jar]
+    statement: Temporary upstream image dependency pending a Stirling-PDF release.
+    expired_at: 2026-08-21
+  - id: CVE-2026-54058
+    paths: [opt/venv/lib/python3.12/site-packages/pillow-12.2.0.dist-info/METADATA]
+    statement: Temporary upstream image dependency pending a Stirling-PDF release.
+    expired_at: 2026-08-21
+  - id: CVE-2026-54059
+    paths: [opt/venv/lib/python3.12/site-packages/pillow-12.2.0.dist-info/METADATA]
+    statement: Temporary upstream image dependency pending a Stirling-PDF release.
+    expired_at: 2026-08-21
+  - id: CVE-2026-54060
+    paths: [opt/venv/lib/python3.12/site-packages/pillow-12.2.0.dist-info/METADATA]
+    statement: Temporary upstream image dependency pending a Stirling-PDF release.
+    expired_at: 2026-08-21
+  - id: CVE-2026-54291
+    paths: [app/lib/postgresql-42.7.10.jar]
+    statement: Temporary upstream image dependency pending a Stirling-PDF release.
+    expired_at: 2026-08-21
+  - id: CVE-2026-54512
+    paths: [app/lib/jackson-databind-2.21.2.jar, app/lib/jackson-databind-3.1.2.jar]
+    statement: Temporary upstream image dependency pending a Stirling-PDF release.
+    expired_at: 2026-08-21
+  - id: CVE-2026-54513
+    paths: [app/lib/jackson-databind-2.21.2.jar, app/lib/jackson-databind-3.1.2.jar]
+    statement: Temporary upstream image dependency pending a Stirling-PDF release.
+    expired_at: 2026-08-21
+  - id: CVE-2026-55379
+    paths: [opt/venv/lib/python3.12/site-packages/pillow-12.2.0.dist-info/METADATA]
+    statement: Temporary upstream image dependency pending a Stirling-PDF release.
+    expired_at: 2026-08-21
+  - id: CVE-2026-55380
+    paths: [opt/venv/lib/python3.12/site-packages/pillow-12.2.0.dist-info/METADATA]
+    statement: Temporary upstream image dependency pending a Stirling-PDF release.
+    expired_at: 2026-08-21
+  - id: CVE-2026-59197
+    paths: [opt/venv/lib/python3.12/site-packages/pillow-12.2.0.dist-info/METADATA]
+    statement: Temporary upstream image dependency pending a Stirling-PDF release.
+    expired_at: 2026-08-21
+  - id: CVE-2026-59199
+    paths: [opt/venv/lib/python3.12/site-packages/pillow-12.2.0.dist-info/METADATA]
+    statement: Temporary upstream image dependency pending a Stirling-PDF release.
+    expired_at: 2026-08-21
+  - id: CVE-2026-59200
+    paths: [opt/venv/lib/python3.12/site-packages/pillow-12.2.0.dist-info/METADATA]
+    statement: Temporary upstream image dependency pending a Stirling-PDF release.
+    expired_at: 2026-08-21
+  - id: CVE-2026-59204
+    paths: [opt/venv/lib/python3.12/site-packages/pillow-12.2.0.dist-info/METADATA]
+    statement: Temporary upstream image dependency pending a Stirling-PDF release.
+    expired_at: 2026-08-21
+  - id: CVE-2026-59205
+    paths: [opt/venv/lib/python3.12/site-packages/pillow-12.2.0.dist-info/METADATA]
+    statement: Temporary upstream image dependency pending a Stirling-PDF release.
+    expired_at: 2026-08-21
+  - id: GHSA-537c-gmf6-5ccf
+    paths: [opt/venv/lib/python3.12/site-packages/cryptography-46.0.6.dist-info/METADATA]
+    statement: Temporary upstream image dependency pending a Stirling-PDF release.
+    expired_at: 2026-08-21

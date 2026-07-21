@@ -9,9 +9,12 @@ LABEL \
     org.opencontainers.image.source="https://github.com/mrwogu/hassio-addons" \
     org.opencontainers.image.licenses="MIT"
 
-# jq parses the add-on options; the base image is Debian-based.
+# jq parses the add-on options; the base image is Debian-based. The OpenSSL
+# upgrade patches CVE-2026-45447 (fixed in the Ubuntu archive, not yet in the
+# pinned base image).
 RUN apt-get update \
     && apt-get install -y --no-install-recommends jq \
+    && apt-get install -y --only-upgrade libssl3t64 openssl \
     && rm -rf /var/lib/apt/lists/*
 
 COPY rootfs/usr/local/bin/addon-entrypoint /usr/local/bin/addon-entrypoint
