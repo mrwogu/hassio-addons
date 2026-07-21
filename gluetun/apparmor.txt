@@ -40,6 +40,8 @@ profile ADDON_SLUG flags=(attach_disconnected,mediate_deleted) {
   /dev/net/tun rw,
   /etc/** r,
   /etc/group rw,
+  /etc/openvpn/ rw,
+  /etc/openvpn/** rwk,
   /etc/passwd rw,
   /etc/resolv.conf rw,
   /proc/** r,
