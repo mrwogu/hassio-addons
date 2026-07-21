@@ -1,0 +1,19 @@
+---
+configuration:
+  default_locale:
+    name: Domyślny język
+    description: Język i ustawienia regionalne interfejsu, na przykład en-US lub pl-PL.
+  app_name:
+    name: Nazwa aplikacji
+    description: Nazwa wyświetlana w tytule i pasku nawigacji interfejsu.
+  home_description:
+    name: Opis strony głównej
+    description: Opcjonalny podtytuł na stronie głównej. Pozostaw pusty, aby użyć domyślnego.
+  enable_security:
+    name: Włącz logowanie
+    description: Włącza system logowania i konta użytkowników Stirling-PDF.
+  metrics_enabled:
+    name: Włącz metryki
+    description: Udostępnia punkt końcowy metryk Prometheus.
+network:
+  8080/tcp: Interfejs internetowy Stirling-PDF

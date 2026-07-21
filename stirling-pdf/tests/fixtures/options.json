@@ -1,0 +1,7 @@
+{
+  "default_locale": "pl-PL",
+  "app_name": "Stirling PDF",
+  "home_description": "Twoje lokalne centrum obsługi PDF",
+  "enable_security": false,
+  "metrics_enabled": true
+}

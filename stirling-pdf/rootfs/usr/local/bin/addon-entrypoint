@@ -1,0 +1,82 @@
+#!/bin/sh
+set -eu
+
+OPTIONS_PATH=${STIRLING_OPTIONS_PATH:-/data/options.json}
+CONFIG_DIR=${STIRLING_CONFIG_DIR:-/config}
+# LINK_ROOT is empty in the container so state links resolve to /configs,
+# /storage, and so on. Tests point it at a temporary tree.
+LINK_ROOT=${STIRLING_LINK_ROOT:-}
+STIRLING_INIT=${STIRLING_INIT:-/scripts/init.sh}
+
+log() {
+    printf '%s\n' "[stirling-pdf-addon] $*" >&2
+}
+
+fail() {
+    log "Error: $*"
+    exit 1
+}
+
+# Redirect an upstream fixed path to a persistent directory under /config so
+# settings, custom files, pipelines, stored files, and OCR languages survive
+# restarts and are captured by Home Assistant backups.
+link_persist() {
+    target=$1
+    link_path=$2
+    mkdir -p "$target"
+    # ponytail: seed once. Upstream normally creates these empty at runtime,
+    # but if a future image ships defaults, migrate them before linking.
+    if [ -e "$link_path" ] && [ ! -L "$link_path" ]; then
+        if [ -d "$link_path" ]; then
+            cp -an "$link_path/." "$target/" 2>/dev/null || true
+        fi
+        rm -rf "$link_path"
+    fi
+    ln -sfn "$target" "$link_path"
+}
+
+[ -r "$OPTIONS_PATH" ] || fail "Options file is not readable: $OPTIONS_PATH"
+command -v jq >/dev/null 2>&1 || fail "jq is required"
+
+if ! jq -e '
+    def control_free: (explode | map(select(. < 32 or . == 127)) | length) == 0;
+    type == "object" and
+    (.default_locale |
+        type == "string" and
+        test("^[A-Za-z]{2,3}([_-][A-Za-z0-9]{2,8})?$")) and
+    (.app_name |
+        type == "string" and length > 0 and length <= 64 and control_free) and
+    ((.home_description // "") |
+        type == "string" and length <= 256 and control_free) and
+    (.enable_security | type == "boolean") and
+    (.metrics_enabled | type == "boolean")
+' "$OPTIONS_PATH" >/dev/null 2>&1; then
+    fail "Invalid options: check locale, app name, or description"
+fi
+
+umask 022
+mkdir -p "$CONFIG_DIR"
+
+link_persist "${CONFIG_DIR}/configs" "${LINK_ROOT}/configs"
+link_persist "${CONFIG_DIR}/customFiles" "${LINK_ROOT}/customFiles"
+link_persist "${CONFIG_DIR}/pipeline" "${LINK_ROOT}/pipeline"
+link_persist "${CONFIG_DIR}/storage" "${LINK_ROOT}/storage"
+link_persist "${CONFIG_DIR}/tessdata" "${LINK_ROOT}/usr/share/tessdata"
+
+app_name=$(jq -r '.app_name' "$OPTIONS_PATH")
+home_description=$(jq -r '.home_description // ""' "$OPTIONS_PATH")
+
+export "SYSTEM_DEFAULTLOCALE=$(jq -r '.default_locale' "$OPTIONS_PATH")"
+export "DOCKER_ENABLE_SECURITY=$(jq -r '.enable_security' "$OPTIONS_PATH")"
+export "METRICS_ENABLED=$(jq -r '.metrics_enabled' "$OPTIONS_PATH")"
+export "UI_APPNAME=$app_name"
+export "UI_APPNAVBARNAME=$app_name"
+if [ -n "$home_description" ]; then
+    export "UI_HOMEDESCRIPTION=$home_description"
+fi
+# Managed: Home Assistant owns updates and no usage data should leave the host.
+export SYSTEM_SHOWUPDATE=false
+export SYSTEM_ENABLEANALYTICS=false
+
+log "Configuration validated; starting Stirling-PDF"
+exec "$STIRLING_INIT" "$@"
