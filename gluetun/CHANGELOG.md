@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.41.1-2
+
+- Grant read on addon-entrypoint in AppArmor so /bin/sh can load the script
+
 ## 3.41.1-1
 
 - Initial Home Assistant addon based on Gluetun v3.41.1.
