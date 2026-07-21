@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.41.1-6
+
+- Allow AppArmor writes to /etc/openvpn for OpenVPN config generation
+
 ## 3.41.1-5
 
 - Allow AppArmor writes to /etc/passwd and /etc/group for gluetun user creation
