@@ -39,6 +39,8 @@ profile ADDON_SLUG flags=(attach_disconnected,mediate_deleted) {
 
   /dev/net/tun rw,
   /etc/** r,
+  /etc/group rw,
+  /etc/passwd rw,
   /etc/resolv.conf rw,
   /proc/** r,
   /proc/sys/net/** rw,

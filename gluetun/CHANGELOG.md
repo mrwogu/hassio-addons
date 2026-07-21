@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.41.1-5
+
+- Allow AppArmor writes to /etc/passwd and /etc/group for gluetun user creation
+
 ## 3.41.1-4
 
 - Drop forced endpoint_port default so it stays unset for named providers
