@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.41.1-4
+
+- Drop forced endpoint_port default so it stays unset for named providers
+
 ## 3.41.1-3
 
 - Make VPN endpoint_port optional so named providers pick the endpoint

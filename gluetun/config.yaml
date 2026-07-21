@@ -1,6 +1,6 @@
 ---
 name: Gluetun VPN
-version: "3.41.1-3"
+version: "3.41.1-4"
 slug: gluetun
 description: VPN client with firewall, DNS, and proxy services
 url: https://github.com/mrwogu/hassio-addons/tree/main/gluetun
@@ -36,7 +36,6 @@ options:
     username: ""
     password: ""
     endpoint_ip: ""
-    endpoint_port: 1194
     protocol: udp
     custom_config: ""
   wireguard:
@@ -45,7 +44,6 @@ options:
     public_key: ""
     addresses: ""
     endpoint_ip: ""
-    endpoint_port: 51820
     allowed_ips: 0.0.0.0/0,::/0
     mtu: 0
   amneziawg:
@@ -54,7 +52,6 @@ options:
     public_key: ""
     addresses: ""
     endpoint_ip: ""
-    endpoint_port: 51820
     allowed_ips: 0.0.0.0/0,::/0
     mtu: 0
     jc: 0
