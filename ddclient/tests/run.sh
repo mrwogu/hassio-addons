@@ -48,9 +48,9 @@ cmp -s "$CONF_FILE" "${TEMP_DIR}/expected.conf" ||
     fail "ddclient.conf content does not match the config option"
 [ "$(file_mode "$CONF_FILE")" = "600" ] ||
     fail "ddclient.conf is not owner-only (0600)"
-expected_args="-foreground -file ${CONF_FILE} -cache ${CACHE_FILE}"
+expected_args="-foreground -daemon=300 -file ${CONF_FILE} -cache ${CACHE_FILE}"
 [ "$(cat "$ARGS_FILE")" = "$expected_args" ] ||
-    fail "ddclient was not invoked in the foreground against the config and cache"
+    fail "ddclient was not invoked as a foreground daemon against the config and cache"
 
 # The provider credential is never written to the log.
 if grep -Fq "cloudflare-secret-token" "$LOG_FILE"; then
@@ -77,6 +77,14 @@ jq '.config = "protocol=duckdns\nuse=web\npassword=duck-token\nexample\n"' \
 run_entrypoint "$NODAEMON"
 grep -Fq -- "-daemon=300" "$ARGS_FILE" ||
     fail "Missing daemon interval was not defaulted for foreground operation"
+
+# A configured daemon interval is passed through on the command line.
+INTERVAL="${TEMP_DIR}/interval.json"
+jq '.config = "daemon=900\nprotocol=duckdns\nuse=web\npassword=duck-token\nexample\n"' \
+    "$OPTIONS" >"$INTERVAL"
+run_entrypoint "$INTERVAL"
+grep -Fq -- "-daemon=900" "$ARGS_FILE" ||
+    fail "Configured daemon interval was not forwarded to ddclient"
 
 # An empty configuration is rejected.
 EMPTY="${TEMP_DIR}/empty.json"

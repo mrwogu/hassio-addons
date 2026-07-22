@@ -53,20 +53,23 @@ mv -f "$temporary" "$CONF_FILE" || {
     fail "Cannot install ddclient configuration"
 }
 
-# ddclient only loops in the foreground when a daemon interval is set. Without
-# one it runs a single update and exits, which restarts the add-on container in
-# a loop, so fall back to a sane interval when the configuration omits daemon.
-daemon_flag=""
-if ! grep -Eq '^[[:space:]]*daemon[[:space:]]*=' "$CONF_FILE"; then
-    daemon_flag="-daemon=300"
-    log "No daemon interval in configuration; defaulting to 300s"
-fi
+# The daemon interval must be passed on the command line: with only a config
+# "daemon=" value, ddclient does not keep looping in the foreground and the
+# container exits after one update, restarting in a loop. Read the interval from
+# the configuration when present and fall back to 300s otherwise.
+daemon_interval=$(sed -n \
+    's/^[[:space:]]*daemon[[:space:]]*=[[:space:]]*\([0-9][0-9]*\).*/\1/p' \
+    "$CONF_FILE" | head -n1)
+case "$daemon_interval" in
+    '' | 0)
+        daemon_interval=300
+        ;;
+esac
 
-log "Configuration written to ${CONF_FILE}; starting ddclient"
-# Run in the foreground so ddclient stays PID 1 and honors the daemon interval.
-# The cache persists under the writable config mapping.
-# shellcheck disable=SC2086
-exec "$ADDON_DDCLIENT_BIN" -foreground $daemon_flag \
+log "Configuration written to ${CONF_FILE}; starting ddclient (interval ${daemon_interval}s)"
+# Run in the foreground with an explicit daemon interval so ddclient stays PID 1
+# and loops. The cache persists under the writable config mapping.
+exec "$ADDON_DDCLIENT_BIN" -foreground "-daemon=${daemon_interval}" \
     -file "$CONF_FILE" \
     -cache "$CACHE_FILE" \
     "$@"

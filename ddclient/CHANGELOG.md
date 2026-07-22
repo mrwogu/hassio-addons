@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.11.2-3
+
+- Pass daemon interval explicitly so ddclient loops in the foreground
+
 ## 3.11.2-2
 
 - Keep ddclient running as a foreground daemon (fix restart loop)
