@@ -28,7 +28,7 @@ Personal relationship manager built with Go and React.
 Dynamic DNS client that updates DNS records for many providers from your current IP address.
 
 - Architectures: `amd64`, `aarch64`
-- Upstream: [ddclient/ddclient](https://github.com/ddclient/ddclient) via the [LinuxServer.io image](https://github.com/linuxserver/docker-ddclient)
+- Upstream: [ddclient/ddclient](https://github.com/ddclient/ddclient), installed from the Alpine community package on a digest-pinned Alpine base
 - License: GPL-2.0-or-later
 - No ports; provide the full `ddclient.conf` through the add-on configuration.
 
