@@ -1,0 +1,19 @@
+---
+configuration:
+  default_locale:
+    name: Default locale
+    description: Interface language and locale, for example en-US or pl-PL.
+  app_name:
+    name: Application name
+    description: Name shown in the interface title and navigation bar.
+  home_description:
+    name: Home description
+    description: Optional subtitle on the home page. Leave blank for the default.
+  enable_security:
+    name: Enable login
+    description: Enable the Stirling-PDF login system and user accounts.
+  metrics_enabled:
+    name: Enable metrics
+    description: Expose the Prometheus metrics endpoint.
+network:
+  8080/tcp: Stirling-PDF web interface

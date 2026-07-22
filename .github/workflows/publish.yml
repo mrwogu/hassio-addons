@@ -46,7 +46,7 @@ jobs:
 
       - name: Validate shell
         run: |
-          find authentik bonds gluetun -type f \
+          find authentik bonds gluetun stirling-pdf -type f \
             \( -name '*.sh' -o -name 'addon-entrypoint' \) \
             -print0 | xargs -0 shellcheck
 
@@ -68,6 +68,11 @@ jobs:
         with:
           path: ./gluetun
 
+      - name: Validate Stirling-PDF metadata
+        uses: frenck/action-addon-linter@f995494fd84fae6310d23617e66d0e37de4f14eb  # v2.21
+        with:
+          path: ./stirling-pdf
+
   changes:
     name: Detect unreleased add-ons
     runs-on: ubuntu-latest
@@ -87,7 +92,7 @@ jobs:
         id: filter
         run: |
           addons='[]'
-          for addon in authentik bonds gluetun; do
+          for addon in authentik bonds gluetun stirling-pdf; do
             version=$(sed -n 's/^version: "\(.*\)"$/\1/p' "$addon/config.yaml")
             if [ -z "$version" ]; then
               echo "::error::Could not read $addon version"

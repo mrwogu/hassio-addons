@@ -51,7 +51,7 @@ jobs:
 
       - name: Validate shell
         run: |
-          find authentik bonds gluetun -type f \
+          find authentik bonds gluetun stirling-pdf -type f \
             \( -name '*.sh' -o -name 'addon-entrypoint' \) \
             -print0 | xargs -0 shellcheck
 
@@ -69,6 +69,7 @@ jobs:
           - authentik
           - bonds
           - gluetun
+          - stirling-pdf
     steps:
       - name: Check out repository
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0

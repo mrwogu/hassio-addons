@@ -6,7 +6,7 @@ Do not open public issues for vulnerabilities.
 
 Use GitHub private vulnerability reporting for `mrwogu/hassio-addons`. Include affected add-on version, Home Assistant version, architecture, impact, and reproduction steps.
 
-Report vulnerabilities in Gluetun, Bonds, or authentik directly to their upstream maintainers when the issue is not caused by this packaging.
+Report vulnerabilities in Gluetun, Bonds, Stirling-PDF, or authentik directly to their upstream maintainers when the issue is not caused by this packaging.
 
 ## Supported versions
 

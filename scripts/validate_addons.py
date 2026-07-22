@@ -15,6 +15,7 @@ ADDONS = {
     "authentik": "ghcr.io/mrwogu/hassio-authentik",
     "bonds": "ghcr.io/mrwogu/hassio-bonds",
     "gluetun": "ghcr.io/mrwogu/hassio-gluetun",
+    "stirling-pdf": "ghcr.io/mrwogu/hassio-stirling-pdf",
 }
 REQUIRED_ADDON_FILES = (
     "config.yaml",
