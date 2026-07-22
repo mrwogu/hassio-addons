@@ -37,7 +37,9 @@ env_value() {
 }
 
 file_mode() {
-    stat -f '%Lp' "$1" 2>/dev/null || stat -c '%a' "$1"
+    # GNU stat first (Linux CI); fall back to BSD stat (macOS). The BSD form
+    # does not fail cleanly on GNU, so it must not come first.
+    stat -c '%a' "$1" 2>/dev/null || stat -f '%Lp' "$1"
 }
 
 chmod 0755 "$FAKE_INIT"
@@ -93,8 +95,9 @@ SECRET_FILE="${CONFIG_DIR}/secret_key"
 first_secret=$(env_value "AUTHENTIK_SECRET_KEY")
 run_entrypoint "$OPTIONS"
 second_secret=$(env_value "AUTHENTIK_SECRET_KEY")
-[ -n "$first_secret" ] && [ "$first_secret" = "$second_secret" ] ||
+if [ -z "$first_secret" ] || [ "$first_secret" != "$second_secret" ]; then
     fail "Generated secret key was not stable across restarts"
+fi
 
 # Secrets are never written to the log.
 if grep -Fq "$first_secret" "$LOG_FILE"; then
