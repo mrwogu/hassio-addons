@@ -1,0 +1,57 @@
+#!/bin/sh
+set -eu
+
+OPTIONS_PATH=${ADDON_OPTIONS_PATH:-/data/options.json}
+CONFIG_DIR=${ADDON_CONFIG_DIR:-/config}
+# ADDON_INIT is the upstream s6-overlay init; tests override it with a recorder.
+ADDON_INIT=${ADDON_INIT:-/init}
+CONF_FILE="${CONFIG_DIR}/ddclient.conf"
+
+log() {
+    printf '%s\n' "[ddclient-addon] $*" >&2
+}
+
+fail() {
+    log "Error: $*"
+    exit 1
+}
+
+[ -r "$OPTIONS_PATH" ] || fail "Options file is not readable: $OPTIONS_PATH"
+command -v jq >/dev/null 2>&1 || fail "jq is required"
+
+# Validate options. The config is written verbatim to ddclient.conf, so reject
+# an empty value and control characters other than tab, newline, and carriage
+# return that could corrupt the file or hide injected directives.
+if ! jq -e '
+    type == "object"
+    and (.config | type == "string" and length > 0
+        and ((explode
+            | map(select((. < 32 and . != 9 and . != 10 and . != 13) or . == 127))
+            | length) == 0))
+' "$OPTIONS_PATH" >/dev/null 2>&1; then
+    fail "Invalid options: config must be a non-empty string without control characters"
+fi
+
+umask 077
+mkdir -p "$CONFIG_DIR"
+
+# Write ddclient.conf privately; it carries provider credentials, so the value
+# is never logged. The upstream init keeps this file (it only seeds a default
+# when absent) and re-owns it to the service user before starting ddclient.
+temporary=$(mktemp "${CONFIG_DIR}/.ddclient.conf.XXXXXX") ||
+    fail "Cannot create configuration temporary file"
+if ! jq -r '.config' "$OPTIONS_PATH" >"$temporary"; then
+    rm -f "$temporary"
+    fail "Cannot write ddclient configuration"
+fi
+chmod 0600 "$temporary" || {
+    rm -f "$temporary"
+    fail "Cannot secure ddclient configuration"
+}
+mv -f "$temporary" "$CONF_FILE" || {
+    rm -f "$temporary"
+    fail "Cannot install ddclient configuration"
+}
+
+log "Configuration written to ${CONF_FILE}; starting ddclient"
+exec "$ADDON_INIT" "$@"

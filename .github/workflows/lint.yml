@@ -51,7 +51,7 @@ jobs:
 
       - name: Validate shell
         run: |
-          find authentik bonds gluetun stirling-pdf -type f \
+          find authentik bonds ddclient gluetun stirling-pdf -type f \
             \( -name '*.sh' -o -name 'addon-entrypoint' \) \
             -print0 | xargs -0 shellcheck
 
@@ -77,7 +77,7 @@ jobs:
           EVENT: ${{ github.event_name }}
           BASE: ${{ github.event.pull_request.base.sha }}
         run: |
-          all='["authentik","bonds","gluetun","stirling-pdf"]'
+          all='["authentik","bonds","ddclient","gluetun","stirling-pdf"]'
           # Lint every add-on on pushes to main and when this workflow changes;
           # otherwise only the add-ons touched by the pull request.
           if [ "$EVENT" != "pull_request" ]; then
@@ -90,7 +90,7 @@ jobs:
             exit 0
           fi
           addons='[]'
-          for addon in authentik bonds gluetun stirling-pdf; do
+          for addon in authentik bonds ddclient gluetun stirling-pdf; do
             if printf '%s\n' "$changed" | grep -q "^${addon}/"; then
               addons=$(jq -c --arg addon "$addon" '. + [$addon]' <<<"$addons")
             fi

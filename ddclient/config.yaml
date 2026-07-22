@@ -1,0 +1,31 @@
+---
+name: ddclient
+version: "3.9.1-ls69-1"
+slug: ddclient
+description: Dynamic DNS client updating DNS records for many providers
+url: https://github.com/mrwogu/hassio-addons/tree/main/ddclient
+image: ghcr.io/mrwogu/hassio-ddclient
+arch:
+  - aarch64
+  - amd64
+init: false
+startup: services
+map:
+  - type: addon_config
+    read_only: false
+options:
+  config: |
+    # ddclient.conf - https://github.com/ddclient/ddclient
+    # Runs as a daemon; set the refresh interval and one or more hosts.
+    daemon=300
+    ssl=yes
+    use=web
+    # Example (Cloudflare):
+    # protocol=cloudflare
+    # zone=example.com
+    # ttl=1
+    # login=token
+    # password=CLOUDFLARE_API_TOKEN
+    # example.com,www.example.com
+schema:
+  config: str

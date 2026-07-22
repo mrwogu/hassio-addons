@@ -23,6 +23,15 @@ Personal relationship manager built with Go and React.
 - License: Business Source License 1.1
 - Commercial use and managed hosting restrictions apply. Read the add-on documentation before installation.
 
+### ddclient
+
+Dynamic DNS client that updates DNS records for many providers from your current IP address.
+
+- Architectures: `amd64`, `aarch64`
+- Upstream: [ddclient/ddclient](https://github.com/ddclient/ddclient) via the [LinuxServer.io image](https://github.com/linuxserver/docker-ddclient)
+- License: GPL-2.0-or-later
+- No ports; provide the full `ddclient.conf` through the add-on configuration.
+
 ### Stirling-PDF
 
 Locally hosted web application for splitting, merging, converting, OCR-ing, and otherwise manipulating PDF files.

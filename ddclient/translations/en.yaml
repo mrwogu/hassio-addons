@@ -1,0 +1,5 @@
+---
+configuration:
+  config:
+    name: ddclient configuration
+    description: Full ddclient.conf written to /config/ddclient.conf at start. Contains provider credentials.

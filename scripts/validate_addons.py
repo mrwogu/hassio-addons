@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parent.parent
 ADDONS = {
     "authentik": "ghcr.io/mrwogu/hassio-authentik",
     "bonds": "ghcr.io/mrwogu/hassio-bonds",
+    "ddclient": "ghcr.io/mrwogu/hassio-ddclient",
     "gluetun": "ghcr.io/mrwogu/hassio-gluetun",
     "stirling-pdf": "ghcr.io/mrwogu/hassio-stirling-pdf",
 }

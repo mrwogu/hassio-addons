@@ -55,7 +55,7 @@ jobs:
           BASE: ${{ github.event.pull_request.base.sha }}
           BEFORE: ${{ github.event.before }}
         run: |
-          all="authentik bonds gluetun stirling-pdf"
+          all="authentik bonds ddclient gluetun stirling-pdf"
           # Scan the whole fleet on the weekly schedule; on a pull request or a
           # push to main only the add-ons whose image files changed, so a new
           # finding in one add-on never blocks another add-on's release.

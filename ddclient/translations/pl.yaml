@@ -1,0 +1,5 @@
+---
+configuration:
+  config:
+    name: Konfiguracja ddclient
+    description: Pełny ddclient.conf zapisywany do /config/ddclient.conf przy starcie. Zawiera dane logowania providerów.
