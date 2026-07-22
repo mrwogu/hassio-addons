@@ -53,10 +53,10 @@ mv -f "$temporary" "$CONF_FILE" || {
     fail "Cannot install ddclient configuration"
 }
 
-# The daemon interval must be passed on the command line: with only a config
-# "daemon=" value, ddclient does not keep looping in the foreground and the
-# container exits after one update, restarting in a loop. Read the interval from
-# the configuration when present and fall back to 300s otherwise.
+# ddclient's own daemon/foreground handling exits after a single update in this
+# packaging, which restarts the container in a loop. Supervise it here instead:
+# run a one-shot update each cycle and sleep the interval, keeping this shell as
+# PID 1. Read the interval from the configuration, falling back to 300s.
 daemon_interval=$(sed -n \
     's/^[[:space:]]*daemon[[:space:]]*=[[:space:]]*\([0-9][0-9]*\).*/\1/p' \
     "$CONF_FILE" | head -n1)
@@ -66,10 +66,23 @@ case "$daemon_interval" in
         ;;
 esac
 
-log "Configuration written to ${CONF_FILE}; starting ddclient (interval ${daemon_interval}s)"
-# Run in the foreground with an explicit daemon interval so ddclient stays PID 1
-# and loops. The cache persists under the writable config mapping.
-exec "$ADDON_DDCLIENT_BIN" -foreground "-daemon=${daemon_interval}" \
-    -file "$CONF_FILE" \
-    -cache "$CACHE_FILE" \
-    "$@"
+terminate() {
+    exit 0
+}
+trap terminate TERM INT
+
+log "Configuration written to ${CONF_FILE}; supervising ddclient (interval ${daemon_interval}s)"
+runs=0
+while true; do
+    "$ADDON_DDCLIENT_BIN" \
+        -file "$CONF_FILE" \
+        -cache "$CACHE_FILE" \
+        "$@" || log "ddclient exited with a non-zero status"
+    runs=$((runs + 1))
+    if [ -n "${ADDON_MAX_RUNS:-}" ] && [ "$runs" -ge "$ADDON_MAX_RUNS" ]; then
+        break
+    fi
+    # Sleep in the background and wait so a stop signal interrupts promptly.
+    sleep "$daemon_interval" &
+    wait "$!"
+done

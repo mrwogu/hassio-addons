@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.11.2-4
+
+- Supervise ddclient in a loop so the container stays running
+
 ## 3.11.2-3
 
 - Pass daemon interval explicitly so ddclient loops in the foreground

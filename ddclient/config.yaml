@@ -1,6 +1,6 @@
 ---
 name: ddclient
-version: "3.11.2-3"
+version: "3.11.2-4"
 slug: ddclient
 description: Dynamic DNS client updating DNS records for many providers
 url: https://github.com/mrwogu/hassio-addons/tree/main/ddclient

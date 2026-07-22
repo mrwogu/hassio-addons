@@ -2,7 +2,7 @@
 image: docker.io/library/alpine
 version: 3.11.2
 digest: sha256:48b0309ca019d89d40f670aa1bc06e426dc0931948452e8491e3d65087abc07d
-package_version: 3.11.2-3
+package_version: 3.11.2-4
 source: https://github.com/ddclient/ddclient
 release_url: https://github.com/ddclient/ddclient/releases/tag
 release_tag_prefix: v

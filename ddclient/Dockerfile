@@ -32,5 +32,6 @@ RUN chmod 0755 /usr/local/bin/addon-entrypoint
 ENTRYPOINT ["/usr/local/bin/addon-entrypoint"]
 CMD []
 
+# ddclient runs one-shot per cycle, so health tracks the supervising entrypoint.
 HEALTHCHECK --interval=60s --timeout=10s --start-period=30s --retries=3 \
-    CMD pidof ddclient >/dev/null 2>&1 || exit 1
+    CMD pgrep -f addon-entrypoint >/dev/null 2>&1 || exit 1

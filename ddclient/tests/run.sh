@@ -35,6 +35,7 @@ run_entrypoint() {
     ADDON_CONFIG_DIR="$CONFIG_DIR" \
     ADDON_DDCLIENT_BIN="$FAKE_DDCLIENT" \
     ADDON_TEST_ARGS_FILE="$ARGS_FILE" \
+    ADDON_MAX_RUNS=1 \
         sh "$ENTRYPOINT" >"$LOG_FILE" 2>&1
 }
 
@@ -48,9 +49,11 @@ cmp -s "$CONF_FILE" "${TEMP_DIR}/expected.conf" ||
     fail "ddclient.conf content does not match the config option"
 [ "$(file_mode "$CONF_FILE")" = "600" ] ||
     fail "ddclient.conf is not owner-only (0600)"
-expected_args="-foreground -daemon=300 -file ${CONF_FILE} -cache ${CACHE_FILE}"
+expected_args="-file ${CONF_FILE} -cache ${CACHE_FILE}"
 [ "$(cat "$ARGS_FILE")" = "$expected_args" ] ||
-    fail "ddclient was not invoked as a foreground daemon against the config and cache"
+    fail "ddclient was not invoked against the generated config and cache"
+grep -Fq "interval 300s" "$LOG_FILE" ||
+    fail "Default supervision interval was not applied"
 
 # The provider credential is never written to the log.
 if grep -Fq "cloudflare-secret-token" "$LOG_FILE"; then
@@ -69,22 +72,22 @@ if grep -Fq "duck-token" "$LOG_FILE"; then
     fail "Updated credential leaked into the log"
 fi
 
-# A configuration without a daemon interval gets a foreground fallback so the
-# container does not exit after a single update.
+# A configuration without a daemon interval falls back to the default so the
+# container keeps supervising instead of exiting after a single update.
 NODAEMON="${TEMP_DIR}/nodaemon.json"
 jq '.config = "protocol=duckdns\nuse=web\npassword=duck-token\nexample\n"' \
     "$OPTIONS" >"$NODAEMON"
 run_entrypoint "$NODAEMON"
-grep -Fq -- "-daemon=300" "$ARGS_FILE" ||
-    fail "Missing daemon interval was not defaulted for foreground operation"
+grep -Fq "interval 300s" "$LOG_FILE" ||
+    fail "Missing daemon interval was not defaulted for supervision"
 
-# A configured daemon interval is passed through on the command line.
+# A configured daemon interval drives the supervision loop.
 INTERVAL="${TEMP_DIR}/interval.json"
 jq '.config = "daemon=900\nprotocol=duckdns\nuse=web\npassword=duck-token\nexample\n"' \
     "$OPTIONS" >"$INTERVAL"
 run_entrypoint "$INTERVAL"
-grep -Fq -- "-daemon=900" "$ARGS_FILE" ||
-    fail "Configured daemon interval was not forwarded to ddclient"
+grep -Fq "interval 900s" "$LOG_FILE" ||
+    fail "Configured daemon interval was not used for supervision"
 
 # An empty configuration is rejected.
 EMPTY="${TEMP_DIR}/empty.json"
