@@ -53,12 +53,21 @@ jobs:
         env:
           EVENT: ${{ github.event_name }}
           BASE: ${{ github.event.pull_request.base.sha }}
+          BEFORE: ${{ github.event.before }}
         run: |
           all="authentik bonds gluetun stirling-pdf"
-          # Scan the whole fleet on the weekly schedule and on pushes to main;
-          # on a pull request only the add-ons whose image files changed.
-          if [ "$EVENT" = "pull_request" ]; then
-            changed=$(git diff --name-only "$BASE" "$GITHUB_SHA")
+          # Scan the whole fleet on the weekly schedule; on a pull request or a
+          # push to main only the add-ons whose image files changed, so a new
+          # finding in one add-on never blocks another add-on's release.
+          case "$EVENT" in
+            pull_request) base="$BASE" ;;
+            push) base="$BEFORE" ;;
+            *) base="" ;;
+          esac
+          if [ -z "$base" ] || ! git cat-file -e "${base}^{commit}" 2>/dev/null; then
+            selected="$all"
+          else
+            changed=$(git diff --name-only "$base" "$GITHUB_SHA")
             if printf '%s\n' "$changed" | grep -Eq '^\.github/workflows/security\.yml$'; then
               selected="$all"
             else
@@ -71,8 +80,6 @@ jobs:
                 fi
               done
             fi
-          else
-            selected="$all"
           fi
           selected_json='[]'
           for addon in $selected; do
