@@ -175,6 +175,11 @@ jobs:
           format: table
           scanners: vuln,secret
           severity: CRITICAL,HIGH
+          # authentik repackages a large upstream image whose OS packages carry
+          # HIGH CVEs that Debian has not fixed; gate only on findings that have
+          # an available fix and record the baked-in ones as exceptions. Keep in
+          # sync with the same setting in security.yml.
+          ignore-unfixed: ${{ inputs.addon == 'authentik' }}
           trivyignores: ./${{ inputs.addon }}/.trivyignore.yaml
           exit-code: "1"
 
