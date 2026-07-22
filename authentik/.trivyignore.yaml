@@ -49,6 +49,14 @@ vulnerabilities:
     paths: [ak-root/.venv/lib/python3.14/site-packages/pyjwt-2.11.0.dist-info/METADATA]
     statement: Temporary upstream image dependency pending an authentik release.
     expired_at: 2026-08-20
+  - id: CVE-2026-59885
+    paths: [ak-root/.venv/lib/python3.14/site-packages/pyasn1-0.6.3.dist-info/METADATA]
+    statement: Temporary upstream image dependency pending an authentik release.
+    expired_at: 2026-08-20
+  - id: CVE-2026-59886
+    paths: [ak-root/.venv/lib/python3.14/site-packages/pyasn1-0.6.3.dist-info/METADATA]
+    statement: Temporary upstream image dependency pending an authentik release.
+    expired_at: 2026-08-20
   - id: GHSA-537c-gmf6-5ccf
     paths: [ak-root/.venv/lib/python3.14/site-packages/cryptography-48.0.0.dist-info/METADATA]
     statement: Temporary upstream image dependency pending an authentik release.
