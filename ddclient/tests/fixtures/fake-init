@@ -1,4 +1,0 @@
-#!/bin/sh
-# Test double for the upstream s6-overlay init: record the arguments the add-on
-# entrypoint hands off, then exit without starting ddclient.
-printf '%s\n' "$*" >"${ADDON_TEST_ARGS_FILE:?}"

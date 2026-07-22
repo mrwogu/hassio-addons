@@ -1,8 +1,9 @@
 # Changelog
 
-## 3.9.1-ls69-1
+## 3.11.2-1
 
-- Package ddclient via the [LinuxServer.io image](https://github.com/linuxserver/docker-ddclient) `v3.9.1-ls69`.
+- Package ddclient `3.11.2` from the Alpine community repository on a current,
+  digest-pinned Alpine base (the LinuxServer.io image is abandoned on Alpine 3.12).
 - Write `/config/ddclient.conf` from the add-on `config` option on every start.
-- Persist the configuration and ddclient cache in add-on configuration storage.
+- Run ddclient in the foreground and persist its cache under `/config`.
 - Run the dynamic DNS daemon without ingress, ports, or elevated privileges.

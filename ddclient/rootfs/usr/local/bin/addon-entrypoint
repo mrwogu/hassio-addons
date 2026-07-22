@@ -3,9 +3,10 @@ set -eu
 
 OPTIONS_PATH=${ADDON_OPTIONS_PATH:-/data/options.json}
 CONFIG_DIR=${ADDON_CONFIG_DIR:-/config}
-# ADDON_INIT is the upstream s6-overlay init; tests override it with a recorder.
-ADDON_INIT=${ADDON_INIT:-/init}
+# ADDON_DDCLIENT_BIN is the ddclient binary; tests override it with a recorder.
+ADDON_DDCLIENT_BIN=${ADDON_DDCLIENT_BIN:-ddclient}
 CONF_FILE="${CONFIG_DIR}/ddclient.conf"
+CACHE_FILE="${CONFIG_DIR}/ddclient.cache"
 
 log() {
     printf '%s\n' "[ddclient-addon] $*" >&2
@@ -36,8 +37,7 @@ umask 077
 mkdir -p "$CONFIG_DIR"
 
 # Write ddclient.conf privately; it carries provider credentials, so the value
-# is never logged. The upstream init keeps this file (it only seeds a default
-# when absent) and re-owns it to the service user before starting ddclient.
+# is never logged.
 temporary=$(mktemp "${CONFIG_DIR}/.ddclient.conf.XXXXXX") ||
     fail "Cannot create configuration temporary file"
 if ! jq -r '.config' "$OPTIONS_PATH" >"$temporary"; then
@@ -54,4 +54,9 @@ mv -f "$temporary" "$CONF_FILE" || {
 }
 
 log "Configuration written to ${CONF_FILE}; starting ddclient"
-exec "$ADDON_INIT" "$@"
+# Run in the foreground so ddclient stays PID 1 and honors the daemon interval
+# from the configuration. The cache persists under the writable config mapping.
+exec "$ADDON_DDCLIENT_BIN" -foreground \
+    -file "$CONF_FILE" \
+    -cache "$CACHE_FILE" \
+    "$@"

@@ -2,8 +2,8 @@
 
 Home Assistant packaging for [ddclient](https://github.com/ddclient/ddclient), a
 Perl dynamic DNS client that keeps DNS records for many providers pointed at
-your current IP address. The add-on wraps the maintained
-[LinuxServer.io image](https://github.com/linuxserver/docker-ddclient).
+your current IP address. The add-on installs the maintained Alpine community
+`ddclient` package on a current, digest-pinned Alpine base image.
 
 ## Installation
 
@@ -26,4 +26,4 @@ notes.
 
 ddclient is distributed under the GNU General Public License v2.0 (or later).
 Read [LICENSE.upstream](LICENSE.upstream). This add-on is independent packaging
-and is not officially supported by the ddclient or LinuxServer.io authors.
+and is not officially supported by the ddclient authors.

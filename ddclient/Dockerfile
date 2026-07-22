@@ -1,7 +1,12 @@
-# renovate: datasource=docker depName=ghcr.io/linuxserver/ddclient versioning=loose
-ARG UPSTREAM_VERSION="v3.9.1-ls69"
-ARG UPSTREAM_DIGEST="sha256:c33de1e3bcdb6105429468f00c36d0da0f8d3fc1ef9cc4dce44913c631f6e732"
-FROM ghcr.io/linuxserver/ddclient:${UPSTREAM_VERSION}@${UPSTREAM_DIGEST}
+# The upstream LinuxServer.io ddclient image is abandoned (last build sits on
+# Alpine 3.12 with many fixed CVEs) and ddclient publishes no official image, so
+# this add-on installs the maintained Alpine community ddclient package on a
+# current, digest-pinned Alpine base. UPSTREAM_VERSION tracks the ddclient
+# application version; UPSTREAM_DIGEST pins the Alpine base image.
+# renovate: datasource=docker depName=alpine versioning=docker
+ARG UPSTREAM_VERSION="3.11.2"
+ARG UPSTREAM_DIGEST="sha256:48b0309ca019d89d40f670aa1bc06e426dc0931948452e8491e3d65087abc07d"
+FROM alpine:3.21@${UPSTREAM_DIGEST}
 
 LABEL \
     org.opencontainers.image.title="Home Assistant ddclient addon" \
@@ -9,18 +14,21 @@ LABEL \
     org.opencontainers.image.source="https://github.com/mrwogu/hassio-addons" \
     org.opencontainers.image.licenses="GPL-2.0-or-later"
 
-# jq parses the add-on options. The base image is Alpine-based; its s6-overlay
-# init starts as root and reads the root-owned /data/options.json before it
-# drops to the service user.
-RUN apk add --no-cache jq
+# apk upgrade pulls the latest patched base packages within the pinned Alpine
+# branch. ddclient is pinned to an exact package version; jq parses the add-on
+# options and the perl modules cover TLS and common provider protocols.
+RUN apk upgrade --no-cache \
+    && apk add --no-cache \
+        ddclient=3.11.2-r0 \
+        ca-certificates \
+        jq \
+        perl-io-socket-ssl \
+        perl-json
 
 COPY rootfs/usr/local/bin/addon-entrypoint /usr/local/bin/addon-entrypoint
 
 RUN chmod 0755 /usr/local/bin/addon-entrypoint
 
-# The wrapper writes /config/ddclient.conf from the add-on options, then hands
-# off to the upstream s6-overlay init (/init) so it keeps PID 1 and starts the
-# ddclient daemon unchanged.
 ENTRYPOINT ["/usr/local/bin/addon-entrypoint"]
 CMD []
 

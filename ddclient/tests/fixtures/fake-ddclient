@@ -1,0 +1,4 @@
+#!/bin/sh
+# Test double for the ddclient binary: record the arguments the add-on
+# entrypoint hands off, then exit without contacting any provider.
+printf '%s\n' "$*" >"${ADDON_TEST_ARGS_FILE:?}"

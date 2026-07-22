@@ -1,7 +1,8 @@
 ---
-image: ghcr.io/linuxserver/ddclient
-version: v3.9.1-ls69
-digest: sha256:c33de1e3bcdb6105429468f00c36d0da0f8d3fc1ef9cc4dce44913c631f6e732
-package_version: 3.9.1-ls69-1
+image: docker.io/library/alpine
+version: "3.11.2"
+digest: sha256:48b0309ca019d89d40f670aa1bc06e426dc0931948452e8491e3d65087abc07d
+package_version: 3.11.2-1
 source: https://github.com/ddclient/ddclient
-release_url: https://github.com/linuxserver/docker-ddclient/releases/tag
+release_url: https://github.com/ddclient/ddclient/releases/tag
+release_tag_prefix: v

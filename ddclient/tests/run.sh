@@ -5,7 +5,7 @@ SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 ADDON_DIR=$(CDPATH='' cd -- "${SCRIPT_DIR}/.." && pwd)
 ENTRYPOINT="${ADDON_DIR}/rootfs/usr/local/bin/addon-entrypoint"
 OPTIONS="${SCRIPT_DIR}/fixtures/options.json"
-FAKE_INIT="${SCRIPT_DIR}/fixtures/fake-init"
+FAKE_DDCLIENT="${SCRIPT_DIR}/fixtures/fake-ddclient"
 TEMP_DIR=$(mktemp -d)
 
 cleanup() {
@@ -23,21 +23,23 @@ file_mode() {
     stat -c '%a' "$1" 2>/dev/null || stat -f '%Lp' "$1"
 }
 
-chmod 0755 "$FAKE_INIT"
+chmod 0755 "$FAKE_DDCLIENT"
 CONFIG_DIR="${TEMP_DIR}/config"
 ARGS_FILE="${TEMP_DIR}/args"
 LOG_FILE="${TEMP_DIR}/log"
 CONF_FILE="${CONFIG_DIR}/ddclient.conf"
+CACHE_FILE="${CONFIG_DIR}/ddclient.cache"
 
 run_entrypoint() {
     ADDON_OPTIONS_PATH="$1" \
     ADDON_CONFIG_DIR="$CONFIG_DIR" \
-    ADDON_INIT="$FAKE_INIT" \
+    ADDON_DDCLIENT_BIN="$FAKE_DDCLIENT" \
     ADDON_TEST_ARGS_FILE="$ARGS_FILE" \
-        sh "$ENTRYPOINT" --daemon >"$LOG_FILE" 2>&1
+        sh "$ENTRYPOINT" >"$LOG_FILE" 2>&1
 }
 
-# Valid options are written verbatim to ddclient.conf and the init is invoked.
+# Valid options are written verbatim to ddclient.conf and ddclient is invoked
+# in the foreground against the generated configuration and cache.
 run_entrypoint "$OPTIONS"
 
 [ -f "$CONF_FILE" ] || fail "ddclient.conf was not created"
@@ -46,8 +48,9 @@ cmp -s "$CONF_FILE" "${TEMP_DIR}/expected.conf" ||
     fail "ddclient.conf content does not match the config option"
 [ "$(file_mode "$CONF_FILE")" = "600" ] ||
     fail "ddclient.conf is not owner-only (0600)"
-[ "$(cat "$ARGS_FILE")" = "--daemon" ] ||
-    fail "Arguments were not forwarded to the init"
+expected_args="-foreground -file ${CONF_FILE} -cache ${CACHE_FILE}"
+[ "$(cat "$ARGS_FILE")" = "$expected_args" ] ||
+    fail "ddclient was not invoked in the foreground against the config and cache"
 
 # The provider credential is never written to the log.
 if grep -Fq "cloudflare-secret-token" "$LOG_FILE"; then
