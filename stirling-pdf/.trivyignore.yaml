@@ -104,3 +104,7 @@ vulnerabilities:
     paths: [opt/venv/lib/python3.12/site-packages/cryptography-46.0.6.dist-info/METADATA]
     statement: Temporary upstream image dependency pending a Stirling-PDF release.
     expired_at: 2026-08-20
+  - id: GHSA-r7wm-3cxj-wff9
+    paths: [app/lib/jackson-core-2.21.2.jar, app/lib/jackson-core-3.1.2.jar]
+    statement: Temporary upstream image dependency pending a Stirling-PDF release.
+    expired_at: 2026-08-20
