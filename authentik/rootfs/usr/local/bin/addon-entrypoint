@@ -1,0 +1,105 @@
+#!/bin/sh
+set -eu
+
+OPTIONS_PATH=${ADDON_OPTIONS_PATH:-/data/options.json}
+CONFIG_DIR=${ADDON_CONFIG_DIR:-/config}
+# ADDON_INIT is the upstream launcher; tests override it with a recorder.
+ADDON_INIT=${ADDON_INIT:-ak}
+
+log() {
+    printf '%s\n' "[authentik-addon] $*" >&2
+}
+
+fail() {
+    log "Error: $*"
+    exit 1
+}
+
+[ -r "$OPTIONS_PATH" ] || fail "Options file is not readable: $OPTIONS_PATH"
+command -v jq >/dev/null 2>&1 || fail "jq is required"
+
+# Validate options. The schema already constrains types, port ranges, and the
+# log level enum; here we reject empty required values and control characters
+# so nothing unsafe reaches the process environment.
+if ! jq -e '
+    def control_free: (explode | map(select(. < 32 or . == 127)) | length) == 0;
+    def nonempty_clean: type == "string" and length > 0 and control_free;
+    type == "object"
+    and (.postgres_host | nonempty_clean)
+    and (.postgres_db | nonempty_clean)
+    and (.postgres_user | nonempty_clean)
+    and (.postgres_password | type == "string" and length > 0 and control_free)
+    and (.postgres_port | type == "number" and . >= 1 and . <= 65535)
+    and (.redis_host | nonempty_clean)
+    and (.redis_port | type == "number" and . >= 1 and . <= 65535)
+    and (.redis_db | type == "number" and . >= 0 and . <= 15)
+    and ((.redis_password // "") | type == "string" and control_free)
+    and ((.secret_key // "") | type == "string" and control_free)
+    and (.log_level |
+        . == "trace" or . == "debug" or . == "info"
+        or . == "warning" or . == "error")
+    and (.error_reporting | type == "boolean")
+' "$OPTIONS_PATH" >/dev/null 2>&1; then
+    fail "Invalid options: check database, redis, or secret settings"
+fi
+
+umask 022
+DATA_DIR="${CONFIG_DIR}/data"
+CERTS_DIR="${CONFIG_DIR}/certs"
+TEMPLATES_DIR="${CONFIG_DIR}/templates"
+mkdir -p "$DATA_DIR" "$CERTS_DIR" "$TEMPLATES_DIR"
+
+# Resolve the signing key: prefer the provided one, otherwise generate a stable
+# key once and persist it under /config with private permissions. The value is
+# never written to the log.
+secret_key=$(jq -r '.secret_key // ""' "$OPTIONS_PATH")
+if [ -z "$secret_key" ]; then
+    secret_file="${CONFIG_DIR}/secret_key"
+    if [ ! -s "$secret_file" ]; then
+        (
+            umask 077
+            tmp=$(mktemp "${CONFIG_DIR}/.secret_key.XXXXXX")
+            if ! openssl rand -base64 60 | tr -d '\n' >"$tmp"; then
+                rm -f "$tmp"
+                exit 1
+            fi
+            chmod 0600 "$tmp"
+            mv "$tmp" "$secret_file"
+        ) || fail "Could not generate a secret key"
+    fi
+    secret_key=$(cat "$secret_file")
+fi
+
+# Translate options into authentik configuration. Passwords and the secret key
+# are exported but never logged.
+export AUTHENTIK_SECRET_KEY="$secret_key"
+export "AUTHENTIK_POSTGRESQL__HOST=$(jq -r '.postgres_host' "$OPTIONS_PATH")"
+export "AUTHENTIK_POSTGRESQL__PORT=$(jq -r '.postgres_port' "$OPTIONS_PATH")"
+export "AUTHENTIK_POSTGRESQL__NAME=$(jq -r '.postgres_db' "$OPTIONS_PATH")"
+export "AUTHENTIK_POSTGRESQL__USER=$(jq -r '.postgres_user' "$OPTIONS_PATH")"
+export "AUTHENTIK_POSTGRESQL__PASSWORD=$(jq -r '.postgres_password' "$OPTIONS_PATH")"
+export "AUTHENTIK_REDIS__HOST=$(jq -r '.redis_host' "$OPTIONS_PATH")"
+export "AUTHENTIK_REDIS__PORT=$(jq -r '.redis_port' "$OPTIONS_PATH")"
+export "AUTHENTIK_REDIS__DB=$(jq -r '.redis_db' "$OPTIONS_PATH")"
+redis_password=$(jq -r '.redis_password // ""' "$OPTIONS_PATH")
+if [ -n "$redis_password" ]; then
+    export "AUTHENTIK_REDIS__PASSWORD=$redis_password"
+fi
+export "AUTHENTIK_LOG_LEVEL=$(jq -r '.log_level' "$OPTIONS_PATH")"
+export "AUTHENTIK_ERROR_REPORTING__ENABLED=$(jq -r '.error_reporting' "$OPTIONS_PATH")"
+
+# Persist uploaded media, discovered certificates, and custom email templates
+# under /config so they survive restarts and land in Home Assistant backups.
+export "AUTHENTIK_STORAGE__FILE__PATH=$DATA_DIR"
+export "AUTHENTIK_CERT_DISCOVERY_DIR=$CERTS_DIR"
+export "AUTHENTIK_EMAIL__TEMPLATE_DIR=$TEMPLATES_DIR"
+
+# Managed: Home Assistant owns updates and no telemetry should leave the host.
+export AUTHENTIK_DISABLE_UPDATE_CHECK=true
+export AUTHENTIK_DISABLE_STARTUP_ANALYTICS=true
+
+# allinone runs the authentik server and worker in a single process, which
+# suits a one-container add-on; the upstream launcher waits for the database
+# and applies migrations before serving.
+log "Configuration validated; starting authentik (server and worker)"
+exec "$ADDON_INIT" allinone "$@"

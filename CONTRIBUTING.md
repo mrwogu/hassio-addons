@@ -8,7 +8,7 @@
 4. Run `make check`.
 5. Open a pull request.
 
-Replace `gluetun` with `bonds` or `stirling-pdf` when needed. Helper increments packaging revision and prepends changelog entry. Add-on versions use `<upstream-version>-<packaging-revision>`. New upstream versions start at revision `1`; digest and packaging changes increment revision.
+Replace `gluetun` with `bonds`, `stirling-pdf`, or `authentik` when needed. Helper increments packaging revision and prepends changelog entry. Add-on versions use `<upstream-version>-<packaging-revision>`. New upstream versions start at revision `1`; digest and packaging changes increment revision.
 
 ## Security
 

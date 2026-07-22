@@ -32,6 +32,15 @@ Locally hosted web application for splitting, merging, converting, OCR-ing, and 
 - License: MIT
 - Direct web access on port `8080`.
 
+### authentik
+
+Self-hosted identity provider for single sign-on, SAML, OAuth2, and LDAP.
+
+- Architectures: `amd64`, `aarch64`
+- Upstream: [goauthentik/authentik](https://github.com/goauthentik/authentik)
+- License: MIT, with separate terms for enterprise components
+- Requires an external PostgreSQL and Redis. Direct web access on port `9000`.
+
 ## Installation
 
 1. Open Home Assistant.

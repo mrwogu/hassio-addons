@@ -1,0 +1,5 @@
+#!/bin/sh
+# Test double for the upstream launcher: record the environment and arguments
+# the add-on entrypoint hands off, then exit without starting authentik.
+env | sort >"$ADDON_TEST_ENV_FILE"
+printf '%s\n' "$*" >"$ADDON_TEST_ARGS_FILE"
