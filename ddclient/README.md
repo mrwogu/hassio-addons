@@ -11,8 +11,8 @@ your current IP address. The add-on installs the maintained Alpine community
 2. Install ddclient.
 3. Put your full `ddclient.conf` in the `config` option (provider, credentials,
    and hosts to update).
-4. Start the add-on. ddclient runs as a daemon and updates records on the
-   interval set by `daemon=` in the configuration.
+4. Start the add-on. The add-on supervises ddclient and runs an update on the
+   interval set by `daemon=` in the configuration (300 seconds when omitted).
 
 The configuration and the ddclient cache persist in the add-on configuration
 directory. ddclient makes only outbound connections and needs no ports.
