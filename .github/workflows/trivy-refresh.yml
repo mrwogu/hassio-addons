@@ -1,0 +1,90 @@
+---
+name: Trivy exception refresh
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      regenerate:
+        description: Rebuild each image and prune stale exceptions (slower)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: trivy-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    name: Refresh exceptions
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      HAS_TOKEN: ${{ secrets.MAINTENANCE_TOKEN != '' }}
+      REGENERATE: ${{ github.event.inputs.regenerate || 'false' }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Install Trivy
+        if: env.REGENERATE == 'true'
+        uses: aquasecurity/setup-trivy@81e514348e19b6112ce2a7e3ecbafe19c1e1f567  # v0.3.1
+
+      - name: Refresh exceptions
+        run: |
+          for addon in authentik bonds gluetun stirling-pdf; do
+            if [ "$REGENERATE" = "true" ]; then
+              docker build --tag "local/${addon}:refresh" "./${addon}"
+              flags=""
+              if [ "$addon" = "authentik" ]; then flags="--ignore-unfixed"; fi
+              trivy image --quiet --severity HIGH,CRITICAL --scanners vuln $flags \
+                --format json --output "${RUNNER_TEMP}/${addon}.json" \
+                "local/${addon}:refresh"
+              python3 scripts/refresh_trivyignore.py "$addon" \
+                --from-scan "${RUNNER_TEMP}/${addon}.json"
+            else
+              python3 scripts/refresh_trivyignore.py "$addon"
+            fi
+          done
+
+      - name: Create pull request
+        id: cpr
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1  # v8.1.1
+        with:
+          token: ${{ secrets.MAINTENANCE_TOKEN || github.token }}
+          branch: chore/trivy-refresh
+          base: main
+          delete-branch: true
+          commit-message: "chore(security): refresh Trivy exception expiries"
+          title: "chore(security): refresh Trivy exception expiries"
+          body: |
+            Automated maintenance so the time-boxed `.trivyignore.yaml`
+            exceptions never lapse.
+
+            - Scheduled runs only extend `expired_at` for exceptions that are
+              close to expiring.
+            - A manual run with `regenerate` rebuilds each image and prunes
+              exceptions whose finding is gone.
+
+            Merges automatically once the required checks pass. If the Scan gate
+            fails, a new HIGH/CRITICAL finding appeared: run this workflow with
+            `regenerate` to record it, or add a scoped exception by hand.
+          labels: |
+            dependencies
+            security
+
+      - name: Enable auto-merge
+        if: steps.cpr.outputs.pull-request-number != '' && env.HAS_TOKEN == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.MAINTENANCE_TOKEN }}
+          PR: ${{ steps.cpr.outputs.pull-request-number }}
+        run: gh pr merge --auto --squash "$PR"
