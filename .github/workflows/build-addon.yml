@@ -167,7 +167,7 @@ jobs:
             io.hass.url=${{ needs.prepare.outputs.url }}
             org.opencontainers.image.created=${{ needs.prepare.outputs.created }}
             org.opencontainers.image.revision=${{ github.sha }}
-          load: true
+          load: ${{ inputs.publish }}
           push: false
           version: ${{ needs.prepare.outputs.version }}
 
