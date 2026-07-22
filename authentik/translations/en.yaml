@@ -1,0 +1,41 @@
+---
+configuration:
+  postgres_host:
+    name: PostgreSQL host
+    description: Hostname or IP address of the external PostgreSQL server.
+  postgres_port:
+    name: PostgreSQL port
+    description: Port of the PostgreSQL server.
+  postgres_db:
+    name: PostgreSQL database
+    description: Name of the authentik database.
+  postgres_user:
+    name: PostgreSQL user
+    description: Database user authentik connects as.
+  postgres_password:
+    name: PostgreSQL password
+    description: Password for the database user.
+  redis_host:
+    name: Redis host
+    description: Hostname or IP address of the external Redis server.
+  redis_port:
+    name: Redis port
+    description: Port of the Redis server.
+  redis_db:
+    name: Redis database
+    description: Redis logical database number authentik uses.
+  redis_password:
+    name: Redis password
+    description: Optional password for the Redis server.
+  log_level:
+    name: Log level
+    description: Verbosity of authentik logs.
+  error_reporting:
+    name: Error reporting
+    description: Send anonymized error reports to the authentik project.
+  secret_key:
+    name: Secret key
+    description: Signing key. Leave blank to generate and persist one automatically.
+network:
+  9000/tcp: authentik HTTP interface
+  9443/tcp: authentik HTTPS interface

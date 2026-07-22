@@ -23,6 +23,15 @@ Personal relationship manager built with Go and React.
 - License: Business Source License 1.1
 - Commercial use and managed hosting restrictions apply. Read the add-on documentation before installation.
 
+### authentik
+
+Self-hosted identity provider for single sign-on, SAML, OAuth2, and LDAP.
+
+- Architectures: `amd64`, `aarch64`
+- Upstream: [goauthentik/authentik](https://github.com/goauthentik/authentik)
+- License: MIT, with separate terms for enterprise components
+- Requires an external PostgreSQL and Redis. Direct web access on port `9000`.
+
 ## Installation
 
 1. Open Home Assistant.

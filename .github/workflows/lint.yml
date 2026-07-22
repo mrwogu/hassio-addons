@@ -51,7 +51,7 @@ jobs:
 
       - name: Validate shell
         run: |
-          find bonds gluetun -type f \
+          find authentik bonds gluetun -type f \
             \( -name '*.sh' -o -name 'addon-entrypoint' \) \
             -print0 | xargs -0 shellcheck
 
@@ -66,6 +66,7 @@ jobs:
       fail-fast: false
       matrix:
         addon:
+          - authentik
           - bonds
           - gluetun
     steps:

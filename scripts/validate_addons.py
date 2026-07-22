@@ -12,6 +12,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 ADDONS = {
+    "authentik": "ghcr.io/mrwogu/hassio-authentik",
     "bonds": "ghcr.io/mrwogu/hassio-bonds",
     "gluetun": "ghcr.io/mrwogu/hassio-gluetun",
 }
@@ -247,20 +248,25 @@ def validate_trivy_exceptions(slug: str, errors: list[str]) -> None:
             continue
         vulnerability_id = exception.get("id")
         if not isinstance(vulnerability_id, str) or not re.fullmatch(
-            r"CVE-\d{4}-\d{4,}", vulnerability_id
+            r"CVE-\d{4}-\d{4,}|GHSA-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}",
+            vulnerability_id,
         ):
-            errors.append(f"{label} must have a CVE id")
+            errors.append(f"{label} must have a CVE or GHSA id")
         elif vulnerability_id in seen:
             errors.append(f"{label} duplicates {vulnerability_id}")
         else:
             seen.add(vulnerability_id)
+        # A path scope is required when the finding has one. Operating-system
+        # and statically linked binary CVEs have no file path, so Trivy can only
+        # ignore them by id; those exceptions omit paths but stay justified and
+        # time-boxed by the checks below.
         paths = exception.get("paths")
-        if (
+        if paths is not None and (
             not isinstance(paths, list)
             or not paths
             or not all(isinstance(item, str) and item for item in paths)
         ):
-            errors.append(f"{label} must be scoped to image paths")
+            errors.append(f"{label} paths must be a non-empty list of image paths")
         if not str(exception.get("statement", "")).strip():
             errors.append(f"{label} must explain the temporary exception")
 

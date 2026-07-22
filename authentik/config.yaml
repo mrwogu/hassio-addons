@@ -1,0 +1,48 @@
+---
+name: authentik
+version: "2026.5.5-1"
+slug: authentik
+description: Self-hosted identity provider for SSO, SAML, OAuth2, and LDAP
+url: https://github.com/mrwogu/hassio-addons/tree/main/authentik
+image: ghcr.io/mrwogu/hassio-authentik
+arch:
+  - aarch64
+  - amd64
+init: false
+startup: services
+webui: http://[HOST]:[PORT:9000]
+map:
+  - type: addon_config
+    read_only: false
+ports:
+  9000/tcp: 9000
+  9443/tcp: 9443
+ports_description:
+  9000/tcp: authentik HTTP interface
+  9443/tcp: authentik HTTPS interface
+options:
+  postgres_host: ""
+  postgres_port: 5432
+  postgres_db: authentik
+  postgres_user: authentik
+  postgres_password: ""
+  redis_host: ""
+  redis_port: 6379
+  redis_db: 0
+  redis_password: ""
+  log_level: warning
+  error_reporting: false
+  secret_key: ""
+schema:
+  postgres_host: str
+  postgres_port: int(1,65535)
+  postgres_db: str
+  postgres_user: str
+  postgres_password: password
+  redis_host: str
+  redis_port: int(1,65535)
+  redis_db: int(0,15)
+  redis_password: password?
+  log_level: list(trace|debug|info|warning|error)
+  error_reporting: bool
+  secret_key: password?

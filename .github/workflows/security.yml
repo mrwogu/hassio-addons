@@ -43,6 +43,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - addon: authentik
+            arch: amd64
+            image: hassio-authentik
+            os: ubuntu-24.04
+          - addon: authentik
+            arch: aarch64
+            image: hassio-authentik
+            os: ubuntu-24.04-arm
           - addon: bonds
             arch: amd64
             image: hassio-bonds
@@ -83,5 +91,9 @@ jobs:
           format: table
           scanners: vuln,secret
           severity: CRITICAL,HIGH
+          # authentik repackages a large upstream image whose OS packages carry
+          # HIGH CVEs that Debian has not fixed; gate only on findings that have
+          # an available fix and record the baked-in ones as exceptions.
+          ignore-unfixed: ${{ matrix.addon == 'authentik' }}
           trivyignores: ./${{ matrix.addon }}/.trivyignore.yaml
           exit-code: "1"
