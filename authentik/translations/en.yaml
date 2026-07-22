@@ -36,6 +36,9 @@ configuration:
   secret_key:
     name: Secret key
     description: Signing key. Leave blank to generate and persist one automatically.
+  env_vars:
+    name: Advanced environment variables
+    description: Extra upstream AUTHENTIK_* variables. Managed and protected names cannot be overridden.
 network:
   9000/tcp: authentik HTTP interface
   9443/tcp: authentik HTTPS interface

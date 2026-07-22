@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026.5.5-2
+
+- Run as root to read options.json and add advanced env_vars option
+
 ## 2026.5.5-1
 
 - Package authentik [2026.5.5](https://github.com/goauthentik/authentik/releases/tag/version/2026.5.5).

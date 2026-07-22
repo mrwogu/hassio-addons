@@ -10,5 +10,11 @@
   "redis_password": "redis-secret",
   "log_level": "warning",
   "error_reporting": false,
-  "secret_key": ""
+  "secret_key": "",
+  "env_vars": [
+    {
+      "name": "AUTHENTIK_EMAIL__HOST",
+      "value": "smtp.local"
+    }
+  ]
 }

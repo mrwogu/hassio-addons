@@ -36,6 +36,9 @@ configuration:
   secret_key:
     name: Klucz tajny
     description: Klucz podpisujący. Pozostaw pusty, aby wygenerować go automatycznie.
+  env_vars:
+    name: Zaawansowane zmienne środowiskowe
+    description: Dodatkowe zmienne AUTHENTIK_* upstream. Nie można nadpisać nazw zarządzanych ani chronionych.
 network:
   9000/tcp: Interfejs HTTP authentik
   9443/tcp: Interfejs HTTPS authentik

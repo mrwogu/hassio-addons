@@ -54,6 +54,26 @@ with owner-only permissions, reusing it on every restart. Provide your own key
 only if you migrate an existing installation; keep it stable, or existing
 sessions and tokens are invalidated.
 
+### `env_vars`
+
+Advanced upstream variables for authentik settings the structured options do
+not expose. Each entry has a `name` and a `value`:
+
+```yaml
+env_vars:
+  - name: AUTHENTIK_EMAIL__HOST
+    value: smtp.example.com
+```
+
+Names must match `[A-Z][A-Z0-9_]*`. The add-on rejects:
+
+- variables already managed by the options above (database, Redis, secret key,
+  storage paths, log level, error reporting, and the forced update/telemetry
+  flags)
+- adapter and loader variables (such as `PATH` or `LD_PRELOAD`)
+- malformed names
+- values containing control characters
+
 ## Managed behavior
 
 The add-on always disables upstream update checks and startup telemetry, since

@@ -9,8 +9,10 @@ LABEL \
     org.opencontainers.image.source="https://github.com/mrwogu/hassio-addons" \
     org.opencontainers.image.licenses="MIT"
 
-# jq parses the add-on options; the base image is Debian-based and ships as a
-# non-root user, so switch to root only for the package and copy steps.
+# jq parses the add-on options. Home Assistant's Supervisor writes
+# /data/options.json owned by root with mode 0600, so the wrapper must run as
+# root to read it; the Supervisor sandboxes the container and no Linux
+# capabilities are granted.
 USER root
 RUN apt-get update \
     && apt-get install -y --no-install-recommends jq \
@@ -19,8 +21,6 @@ RUN apt-get update \
 COPY rootfs/usr/local/bin/addon-entrypoint /usr/local/bin/addon-entrypoint
 
 RUN chmod 0755 /usr/local/bin/addon-entrypoint
-
-USER 1000
 
 # dumb-init stays PID 1 (as in the upstream image) to reap the server and
 # worker children the allinone process spawns; the wrapper validates options

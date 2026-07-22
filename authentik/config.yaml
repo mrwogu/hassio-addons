@@ -1,6 +1,6 @@
 ---
 name: authentik
-version: "2026.5.5-1"
+version: "2026.5.5-2"
 slug: authentik
 description: Self-hosted identity provider for SSO, SAML, OAuth2, and LDAP
 url: https://github.com/mrwogu/hassio-addons/tree/main/authentik
@@ -33,6 +33,7 @@ options:
   log_level: warning
   error_reporting: false
   secret_key: ""
+  env_vars: []
 schema:
   postgres_host: str
   postgres_port: int(1,65535)
@@ -46,3 +47,6 @@ schema:
   log_level: list(trace|debug|info|warning|error)
   error_reporting: bool
   secret_key: password?
+  env_vars:
+    - name: str
+      value: str

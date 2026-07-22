@@ -6,6 +6,10 @@ CONFIG_DIR=${ADDON_CONFIG_DIR:-/config}
 # ADDON_INIT is the upstream launcher; tests override it with a recorder.
 ADDON_INIT=${ADDON_INIT:-ak}
 
+# Structured options own these variables; custom env vars may not override them.
+MANAGED_ENV="AUTHENTIK_SECRET_KEY AUTHENTIK_POSTGRESQL__HOST AUTHENTIK_POSTGRESQL__PORT AUTHENTIK_POSTGRESQL__NAME AUTHENTIK_POSTGRESQL__USER AUTHENTIK_POSTGRESQL__PASSWORD AUTHENTIK_REDIS__HOST AUTHENTIK_REDIS__PORT AUTHENTIK_REDIS__DB AUTHENTIK_REDIS__PASSWORD AUTHENTIK_LOG_LEVEL AUTHENTIK_ERROR_REPORTING__ENABLED AUTHENTIK_STORAGE__FILE__PATH AUTHENTIK_CERT_DISCOVERY_DIR AUTHENTIK_EMAIL__TEMPLATE_DIR AUTHENTIK_DISABLE_UPDATE_CHECK AUTHENTIK_DISABLE_STARTUP_ANALYTICS"
+PROTECTED_ENV="ADDON_OPTIONS_PATH ADDON_CONFIG_DIR ADDON_INIT PATH HOME IFS ENV BASH_ENV LD_PRELOAD LD_LIBRARY_PATH"
+
 log() {
     printf '%s\n' "[authentik-addon] $*" >&2
 }
@@ -13,6 +17,15 @@ log() {
 fail() {
     log "Error: $*"
     exit 1
+}
+
+is_listed() {
+    list=$1
+    candidate=$2
+    case " $list " in
+        *" $candidate "*) return 0 ;;
+        *) return 1 ;;
+    esac
 }
 
 [ -r "$OPTIONS_PATH" ] || fail "Options file is not readable: $OPTIONS_PATH"
@@ -39,6 +52,11 @@ if ! jq -e '
         . == "trace" or . == "debug" or . == "info"
         or . == "warning" or . == "error")
     and (.error_reporting | type == "boolean")
+    and ((.env_vars // []) |
+        type == "array"
+        and all(.[]; type == "object"
+            and (.name | type == "string")
+            and (.value | type == "string")))
 ' "$OPTIONS_PATH" >/dev/null 2>&1; then
     fail "Invalid options: check database, redis, or secret settings"
 fi
@@ -97,6 +115,35 @@ export "AUTHENTIK_EMAIL__TEMPLATE_DIR=$TEMPLATES_DIR"
 # Managed: Home Assistant owns updates and no telemetry should leave the host.
 export AUTHENTIK_DISABLE_UPDATE_CHECK=true
 export AUTHENTIK_DISABLE_STARTUP_ANALYTICS=true
+
+# Apply advanced upstream variables. Managed and protected names are rejected,
+# names must be uppercase env-style identifiers, and values may not carry
+# control characters.
+env_count=$(jq -r '(.env_vars // []) | length' "$OPTIONS_PATH")
+index=0
+while [ "$index" -lt "$env_count" ]; do
+    name=$(jq -r ".env_vars[$index].name" "$OPTIONS_PATH")
+    value=$(jq -r ".env_vars[$index].value" "$OPTIONS_PATH")
+
+    if ! printf '%s' "$name" | grep -Eq '^[A-Z][A-Z0-9_]*$'; then
+        fail "Invalid custom environment variable name: $name"
+    fi
+    if is_listed "$MANAGED_ENV" "$name"; then
+        fail "Custom environment variable overrides managed variable: $name"
+    fi
+    if is_listed "$PROTECTED_ENV" "$name"; then
+        fail "Custom environment variable overrides protected variable: $name"
+    fi
+    if ! jq -en --arg value "$value" \
+        '$value | test("[\u0000-\u001F\u007F]") | not' \
+        >/dev/null 2>&1; then
+        fail "Custom environment variable contains control characters: $name"
+    fi
+
+    export "$name=$value"
+    log "Exported custom environment variable: $name"
+    index=$((index + 1))
+done
 
 # allinone runs the authentik server and worker in a single process, which
 # suits a one-container add-on; the upstream launcher waits for the database

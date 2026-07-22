@@ -79,6 +79,10 @@ assert_env "AUTHENTIK_EMAIL__TEMPLATE_DIR=${CONFIG_DIR}/templates"
 assert_env "AUTHENTIK_DISABLE_UPDATE_CHECK=true"
 assert_env "AUTHENTIK_DISABLE_STARTUP_ANALYTICS=true"
 grep -Eq '^AUTHENTIK_SECRET_KEY=.' "$ENV_FILE" || fail "Secret key was not exported"
+# Custom advanced variables are exported and their names logged.
+assert_env "AUTHENTIK_EMAIL__HOST=smtp.local"
+grep -Fq "AUTHENTIK_EMAIL__HOST" "$LOG_FILE" ||
+    fail "Custom environment variable name was not logged"
 # The single process runs server and worker together.
 [ "$(cat "$ARGS_FILE")" = "allinone" ] || fail "allinone was not requested"
 
@@ -150,5 +154,40 @@ jq '.redis_db = 99' "$OPTIONS" >"$BAD_DB"
 if run_entrypoint "$BAD_DB"; then
     fail "Out-of-range Redis database was accepted"
 fi
+
+# A custom variable that overrides a managed one is rejected.
+MANAGED_OVERRIDE="${TEMP_DIR}/managed-env.json"
+jq '.env_vars = [{"name": "AUTHENTIK_SECRET_KEY", "value": "nope"}]' \
+    "$OPTIONS" >"$MANAGED_OVERRIDE"
+if run_entrypoint "$MANAGED_OVERRIDE"; then
+    fail "Managed environment override was accepted"
+fi
+grep -Fq "AUTHENTIK_SECRET_KEY" "$LOG_FILE" ||
+    fail "Managed override did not report the offending name"
+
+# A custom variable that overrides a protected one is rejected.
+PROTECTED_OVERRIDE="${TEMP_DIR}/protected-env.json"
+jq '.env_vars = [{"name": "PATH", "value": "/tmp"}]' \
+    "$OPTIONS" >"$PROTECTED_OVERRIDE"
+if run_entrypoint "$PROTECTED_OVERRIDE"; then
+    fail "Protected environment override was accepted"
+fi
+
+# A malformed custom variable name is rejected.
+BAD_NAME="${TEMP_DIR}/bad-name.json"
+jq '.env_vars = [{"name": "bad-name", "value": "x"}]' "$OPTIONS" >"$BAD_NAME"
+if run_entrypoint "$BAD_NAME"; then
+    fail "Malformed custom environment name was accepted"
+fi
+
+# A control character in a custom value is rejected.
+CONTROL_VALUE="${TEMP_DIR}/control-value.json"
+jq '.env_vars = [{"name": "AUTHENTIK_EXTRA", "value": "a\u0009b"}]' \
+    "$OPTIONS" >"$CONTROL_VALUE"
+if run_entrypoint "$CONTROL_VALUE"; then
+    fail "Control character in custom value was accepted"
+fi
+grep -Fq "control characters" "$LOG_FILE" ||
+    fail "Control character value did not report the expected error"
 
 printf '%s\n' "authentik adapter tests passed"
