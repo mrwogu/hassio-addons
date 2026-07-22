@@ -151,6 +151,10 @@ jobs:
         uses: home-assistant/builder/actions/build-image@4de35182ce1e329181bffcbcc84d33db5e2c7e10  # 2026.06.0
         with:
           arch: ${{ matrix.arch }}
+          # The Stirling-PDF image is large enough that exporting the build
+          # cache to the GitHub Actions cache fails with an RPC EOF. Registry
+          # inline cache from the published tag still applies.
+          cache-gha: ${{ inputs.addon != 'stirling-pdf' }}
           container-registry-password: ${{ secrets.GITHUB_TOKEN }}
           context: ./${{ inputs.addon }}
           cosign: false
