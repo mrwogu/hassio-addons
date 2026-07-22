@@ -23,6 +23,15 @@ Personal relationship manager built with Go and React.
 - License: Business Source License 1.1
 - Commercial use and managed hosting restrictions apply. Read the add-on documentation before installation.
 
+### Stirling-PDF
+
+Locally hosted web application for splitting, merging, converting, OCR-ing, and otherwise manipulating PDF files.
+
+- Architectures: `amd64`, `aarch64`
+- Upstream: [Stirling-Tools/Stirling-PDF](https://github.com/Stirling-Tools/Stirling-PDF)
+- License: MIT
+- Direct web access on port `8080`.
+
 ## Installation
 
 1. Open Home Assistant.

@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parent.parent
 ADDONS = {
     "bonds": "ghcr.io/mrwogu/hassio-bonds",
     "gluetun": "ghcr.io/mrwogu/hassio-gluetun",
+    "stirling-pdf": "ghcr.io/mrwogu/hassio-stirling-pdf",
 }
 REQUIRED_ADDON_FILES = (
     "config.yaml",
@@ -247,9 +248,10 @@ def validate_trivy_exceptions(slug: str, errors: list[str]) -> None:
             continue
         vulnerability_id = exception.get("id")
         if not isinstance(vulnerability_id, str) or not re.fullmatch(
-            r"CVE-\d{4}-\d{4,}", vulnerability_id
+            r"CVE-\d{4}-\d{4,}|GHSA-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}",
+            vulnerability_id,
         ):
-            errors.append(f"{label} must have a CVE id")
+            errors.append(f"{label} must have a CVE or GHSA id")
         elif vulnerability_id in seen:
             errors.append(f"{label} duplicates {vulnerability_id}")
         else:

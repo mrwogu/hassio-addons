@@ -59,6 +59,14 @@ jobs:
             arch: aarch64
             image: hassio-gluetun
             os: ubuntu-24.04-arm
+          - addon: stirling-pdf
+            arch: amd64
+            image: hassio-stirling-pdf
+            os: ubuntu-24.04
+          - addon: stirling-pdf
+            arch: aarch64
+            image: hassio-stirling-pdf
+            os: ubuntu-24.04-arm
     env:
       IMAGE_REF: >-
         ${{

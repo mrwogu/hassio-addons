@@ -34,10 +34,10 @@ jobs:
           if printf '%s\n' "$changed" |
             grep -Eq '^\.github/workflows/(build|build-addon)\.yml$'
           then
-            addons='["bonds","gluetun"]'
+            addons='["bonds","gluetun","stirling-pdf"]'
           else
             addons='[]'
-            for addon in bonds gluetun; do
+            for addon in bonds gluetun stirling-pdf; do
               if printf '%s\n' "$changed" | grep -q "^${addon}/"; then
                 addons=$(jq -c --arg addon "$addon" '. + [$addon]' <<<"$addons")
               fi

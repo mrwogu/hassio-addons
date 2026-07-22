@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+
+env | sort >"${STIRLING_TEST_ENV_FILE:?}"
+printf '%s\n' "$*" >"${STIRLING_TEST_ARGS_FILE:?}"
