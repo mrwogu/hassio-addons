@@ -43,9 +43,9 @@ jobs:
 
       - name: Validate PromptScript
         run: |
-          npx --yes @promptscript/cli@1.13.2 check
-          npx --yes @promptscript/cli@1.13.2 validate --strict
-          npx --yes @promptscript/cli@1.13.2 compile
+          npx --yes @promptscript/cli@1.14.0 check
+          npx --yes @promptscript/cli@1.14.0 validate --strict
+          npx --yes @promptscript/cli@1.14.0 compile
           git diff --exit-code -- \
             AGENTS.md .factory/skills/promptscript/SKILL.md
 
