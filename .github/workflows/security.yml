@@ -35,46 +35,71 @@ jobs:
         with:
           fail-on-severity: high
 
+  changes:
+    name: Detect changed add-ons
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.filter.outputs.matrix }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Select add-ons to scan
+        id: filter
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          all="authentik bonds gluetun stirling-pdf"
+          # Scan the whole fleet on the weekly schedule and on pushes to main;
+          # on a pull request only the add-ons whose image files changed.
+          if [ "$EVENT" = "pull_request" ]; then
+            changed=$(git diff --name-only "$BASE" "$GITHUB_SHA")
+            if printf '%s\n' "$changed" | grep -Eq '^\.github/workflows/security\.yml$'; then
+              selected="$all"
+            else
+              selected=""
+              for addon in $all; do
+                if printf '%s\n' "$changed" |
+                  grep -qE "^${addon}/(Dockerfile|config[.]yaml|[.]trivyignore[.]yaml|rootfs/)"
+                then
+                  selected="$selected $addon"
+                fi
+              done
+            fi
+          else
+            selected="$all"
+          fi
+          selected_json='[]'
+          for addon in $selected; do
+            selected_json=$(jq -c --arg a "$addon" '. + [$a]' <<<"$selected_json")
+          done
+          matrix=$(jq -c '{
+            include: [
+              .[] as $a
+              | (
+                  {addon: $a, image: ("hassio-" + $a),
+                   arch: "amd64", os: "ubuntu-24.04"},
+                  {addon: $a, image: ("hassio-" + $a),
+                   arch: "aarch64", os: "ubuntu-24.04-arm"}
+                )
+            ]
+          }' <<<"$selected_json")
+          echo "matrix=$matrix" >>"$GITHUB_OUTPUT"
+
   image:
     name: Image ${{ matrix.addon }} (${{ matrix.arch }})
+    needs: changes
+    if: needs.changes.outputs.matrix != '{"include":[]}'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - addon: authentik
-            arch: amd64
-            image: hassio-authentik
-            os: ubuntu-24.04
-          - addon: authentik
-            arch: aarch64
-            image: hassio-authentik
-            os: ubuntu-24.04-arm
-          - addon: bonds
-            arch: amd64
-            image: hassio-bonds
-            os: ubuntu-24.04
-          - addon: bonds
-            arch: aarch64
-            image: hassio-bonds
-            os: ubuntu-24.04-arm
-          - addon: gluetun
-            arch: amd64
-            image: hassio-gluetun
-            os: ubuntu-24.04
-          - addon: gluetun
-            arch: aarch64
-            image: hassio-gluetun
-            os: ubuntu-24.04-arm
-          - addon: stirling-pdf
-            arch: amd64
-            image: hassio-stirling-pdf
-            os: ubuntu-24.04
-          - addon: stirling-pdf
-            arch: aarch64
-            image: hassio-stirling-pdf
-            os: ubuntu-24.04-arm
+      matrix: ${{ fromJSON(needs.changes.outputs.matrix) }}
     env:
       IMAGE_REF: >-
         ${{
@@ -105,3 +130,33 @@ jobs:
           ignore-unfixed: ${{ matrix.addon == 'authentik' }}
           trivyignores: ./${{ matrix.addon }}/.trivyignore.yaml
           exit-code: "1"
+
+  gate:
+    name: Scan gate
+    needs:
+      - changes
+      - image
+    if: always() && github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require scan results
+        env:
+          CHANGES: ${{ needs.changes.result }}
+          IMAGE: ${{ needs.image.result }}
+        run: |
+          # Stable required check: the per-add-on image scan may be skipped when
+          # no image files changed.
+          if [ "$CHANGES" != "success" ]; then
+            echo "::error::Change detection $CHANGES"
+            exit 1
+          fi
+          case "$IMAGE" in
+            success | skipped)
+              echo "Scan gate passed (image scans: $IMAGE)"
+              ;;
+            *)
+              echo "::error::Image scans $IMAGE"
+              exit 1
+              ;;
+          esac
