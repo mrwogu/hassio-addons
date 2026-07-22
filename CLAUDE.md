@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-<!-- PromptScript 2026-07-20T13:03:39.983Z | source: .promptscript/project.prs | target: claude - do not edit -->
+<!-- PromptScript 2026-07-22T09:27:16.127Z | source: .promptscript/project.prs | target: claude - do not edit -->
 
 ## Project
 
@@ -87,7 +87,7 @@ interrupted metadata, config, or changelog synchronization.
      make check
      yamllint .
      actionlint .github/workflows/*.yml
-     find bonds gluetun -type f \
+     find authentik bonds gluetun stirling-pdf -type f \
        \( -name '*.sh' -o -name 'addon-entrypoint' \) -print0 |
        xargs -0 shellcheck
      promptscript validate
@@ -146,10 +146,9 @@ manual `vpn-integration` workflow for a real WireGuard test.
   privilege policy.
 
 - `Makefile`: bump allowlist, shell paths, and adapter test loop.
-- `.github/workflows/lint.yml`: shell paths and add-on linter matrix.
-- `.github/workflows/build.yml`: all-addons list and changed-add-on loop.
-- `.github/workflows/security.yml`: both architecture matrix rows and
-  image name.
+- `.github/workflows/lint.yml`: shell paths and the changed-add-on list.
+- `.github/workflows/security.yml`: the changed-add-on list and the
+  per-add-on `ignore-unfixed` condition; image names derive from the slug.
 
 - `.github/workflows/publish.yml`: shell paths, Home Assistant linter, and
   unreleased-add-on loop.
