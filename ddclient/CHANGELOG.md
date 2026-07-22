@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.11.2-2
+
+- Keep ddclient running as a foreground daemon (fix restart loop)
+
 ## 3.11.2-1
 
 - Package ddclient `3.11.2` from the Alpine community repository on a current,

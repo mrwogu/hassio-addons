@@ -69,6 +69,15 @@ if grep -Fq "duck-token" "$LOG_FILE"; then
     fail "Updated credential leaked into the log"
 fi
 
+# A configuration without a daemon interval gets a foreground fallback so the
+# container does not exit after a single update.
+NODAEMON="${TEMP_DIR}/nodaemon.json"
+jq '.config = "protocol=duckdns\nuse=web\npassword=duck-token\nexample\n"' \
+    "$OPTIONS" >"$NODAEMON"
+run_entrypoint "$NODAEMON"
+grep -Fq -- "-daemon=300" "$ARGS_FILE" ||
+    fail "Missing daemon interval was not defaulted for foreground operation"
+
 # An empty configuration is rejected.
 EMPTY="${TEMP_DIR}/empty.json"
 jq '.config = ""' "$OPTIONS" >"$EMPTY"
