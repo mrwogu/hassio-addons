@@ -38,7 +38,7 @@ jobs:
           else
             addons='[]'
             for addon in authentik bonds gluetun stirling-pdf; do
-              if printf '%s\n' "$changed" | grep -q "^${addon}/"; then
+              if printf '%s\n' "$changed" | grep -qE "^${addon}/(Dockerfile|config[.]yaml|[.]trivyignore[.]yaml|rootfs/)"; then
                 addons=$(jq -c --arg addon "$addon" '. + [$addon]' <<<"$addons")
               fi
             done

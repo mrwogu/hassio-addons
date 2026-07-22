@@ -37,6 +37,10 @@ jobs:
 
   image:
     name: Image ${{ matrix.addon }} (${{ matrix.arch }})
+    # Pull requests and pushes build and scan only the changed add-on through
+    # the build workflow (and publish scans at release time). This job is the
+    # weekly drift scan of the published images.
+    if: github.event_name == 'schedule'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:

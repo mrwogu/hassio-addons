@@ -167,12 +167,11 @@ jobs:
             io.hass.url=${{ needs.prepare.outputs.url }}
             org.opencontainers.image.created=${{ needs.prepare.outputs.created }}
             org.opencontainers.image.revision=${{ github.sha }}
-          load: ${{ inputs.publish }}
+          load: true
           push: false
           version: ${{ needs.prepare.outputs.version }}
 
-      - name: Scan image before publication
-        if: inputs.publish
+      - name: Scan image
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
         with:
           image-ref: ${{ matrix.image }}:${{ needs.prepare.outputs.version }}
