@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.32.7-3
+
+- Refresh n8n Trivy exception for upstream dependencies.
+
 ## 2.32.7-2
 
 - Add Python task runner and explicit n8n defaults.
