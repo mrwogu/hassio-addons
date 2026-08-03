@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.32.7-3
+
+- Retry n8n publication after upstream CVE refresh.
+
 ## 2.32.7-2
 
 - Add Python task runner and explicit n8n defaults.
