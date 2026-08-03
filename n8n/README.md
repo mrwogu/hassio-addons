@@ -11,7 +11,8 @@ platform for connecting apps and services.
 3. Start the add-on and open its web interface on port `5678`.
 
 n8n uses SQLite by default. PostgreSQL and Redis are optional external
-services; this add-on does not bundle either service.
+services; this add-on does not bundle either service. JavaScript and Python
+Code nodes use the bundled task-runner runtime.
 
 ## Documentation
 

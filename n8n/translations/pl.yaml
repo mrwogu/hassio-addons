@@ -48,6 +48,9 @@ configuration:
   encryption_key:
     name: Klucz szyfrowania
     description: Klucz szyfrowania danych uwierzytelniających. Pusty wygeneruje klucz.
+  allow_unverified_packages:
+    name: Zezwalaj na niezweryfikowane pakiety
+    description: Zezwalaj na pakiety społeczności spoza listy zweryfikowanych pakietów n8n.
   log_level:
     name: Poziom logów
     description: Szczegółowość logów n8n.

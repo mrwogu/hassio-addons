@@ -48,6 +48,9 @@ configuration:
   encryption_key:
     name: Encryption key
     description: Key for encrypting credentials. Leave blank to generate one.
+  allow_unverified_packages:
+    name: Allow unverified packages
+    description: Allow community packages not present in n8n's vetted package list.
   log_level:
     name: Log level
     description: Verbosity of n8n logs.

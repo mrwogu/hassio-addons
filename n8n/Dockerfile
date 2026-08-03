@@ -26,7 +26,7 @@ RUN set -eux; \
     ./sbin/apk.static add --no-cache apk-tools; \
     rm -rf /tmp/*
 
-RUN apk add --no-cache jq openssl su-exec
+RUN apk add --no-cache jq openssl python3 su-exec
 
 COPY rootfs/usr/local/bin/addon-entrypoint /usr/local/bin/addon-entrypoint
 

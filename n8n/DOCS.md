@@ -32,8 +32,9 @@ containers.
 
 Set `timezone` to an IANA timezone such as `Europe/Warsaw`. This controls
 schedule-based workflows. Set `editor_base_url` and `webhook_url` when n8n is
-reachable through a reverse proxy or public hostname. Use HTTPS at the proxy
-and keep the add-on's direct port private when exposing webhooks publicly.
+reachable through a reverse proxy or public hostname. `webhook_url` maps to
+n8n's current `N8N_WEBHOOK_URL` variable. Use HTTPS at the proxy and keep the
+add-on's direct port private when exposing webhooks publicly.
 
 ## Security
 
@@ -46,12 +47,31 @@ The add-on forces these settings:
 
 - `N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true`
 - `N8N_BLOCK_ENV_ACCESS_IN_NODE=true`
+- `N8N_UNVERIFIED_PACKAGES_ENABLED=true`
 - `N8N_DIAGNOSTICS_ENABLED=false`
 - `N8N_VERSION_NOTIFICATIONS_ENABLED=false`
 
 Advanced `env_vars` entries must use uppercase environment names. Managed,
 adapter, loader, and dynamic-library variables cannot be overridden. Values
 containing control characters are rejected.
+
+## Task runners
+
+The add-on runs n8n task runners in internal mode because Home Assistant
+add-ons do not support a runner sidecar. The image includes Python 3, so
+JavaScript and Python Code nodes can start without the missing-runtime error.
+The current n8n defaults are pinned explicitly:
+
+- `N8N_RUNNERS_TASK_TIMEOUT=300`
+- `N8N_COMPRESSION_NODE_MAX_DECOMPRESSED_SIZE_BYTES=2147483648`
+- `N8N_COMPRESSION_NODE_MAX_ZIP_ENTRIES=5000`
+
+External task-runner mode requires a separate `n8nio/runners` sidecar and is
+not supported by this single-container add-on.
+
+`allow_unverified_packages` controls loading community packages not present in
+n8n's vetted package list. It defaults to `true` for compatibility with
+existing workflows. Set it to `false` when only verified packages should load.
 
 ## License and support
 

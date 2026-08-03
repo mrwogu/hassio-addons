@@ -15,6 +15,7 @@
   "redis_password": "redis-secret",
   "redis_tls": true,
   "encryption_key": "",
+  "allow_unverified_packages": true,
   "log_level": "debug",
   "timezone": "Europe/Warsaw",
   "secure_cookie": true,
