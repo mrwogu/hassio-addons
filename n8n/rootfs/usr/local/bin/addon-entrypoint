@@ -1,0 +1,197 @@
+#!/bin/sh
+set -eu
+
+OPTIONS_PATH=${N8N_OPTIONS_PATH:-/data/options.json}
+CONFIG_DIR=${N8N_CONFIG_DIR:-/config}
+ADDON_INIT=${ADDON_INIT:-/docker-entrypoint.sh}
+RUN_AS_USER=${N8N_RUN_AS_USER:-node}
+RUN_AS_GROUP=${N8N_RUN_AS_GROUP:-$RUN_AS_USER}
+SU_EXEC=${N8N_SU_EXEC:-su-exec}
+
+# Structured options own these variables. Custom env vars cannot replace them.
+MANAGED_ENV="DB_TYPE DB_POSTGRESDB_DATABASE DB_POSTGRESDB_HOST DB_POSTGRESDB_PORT DB_POSTGRESDB_USER DB_POSTGRESDB_PASSWORD DB_POSTGRESDB_SCHEMA DB_POSTGRESDB_SSL_ENABLED QUEUE_BULL_REDIS_HOST QUEUE_BULL_REDIS_PORT QUEUE_BULL_REDIS_DB QUEUE_BULL_REDIS_USERNAME QUEUE_BULL_REDIS_PASSWORD QUEUE_BULL_REDIS_TLS EXECUTIONS_MODE N8N_USER_FOLDER N8N_ENCRYPTION_KEY N8N_LOG_LEVEL GENERIC_TIMEZONE N8N_SECURE_COOKIE N8N_EDITOR_BASE_URL WEBHOOK_URL N8N_PORT N8N_PROTOCOL N8N_DIAGNOSTICS_ENABLED N8N_VERSION_NOTIFICATIONS_ENABLED N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS N8N_BLOCK_ENV_ACCESS_IN_NODE"
+PROTECTED_ENV="ADDON_INIT ADDON_OPTIONS_PATH ADDON_CONFIG_DIR N8N_OPTIONS_PATH N8N_CONFIG_DIR N8N_RUN_AS_USER N8N_RUN_AS_GROUP N8N_SU_EXEC PATH HOME IFS ENV BASH_ENV LD_PRELOAD LD_LIBRARY_PATH NODE_OPTIONS"
+
+log() {
+    printf '%s\n' "[n8n-addon] $*" >&2
+}
+
+fail() {
+    log "Error: $*"
+    exit 1
+}
+
+is_listed() {
+    list=$1
+    candidate=$2
+    case " $list " in
+        *" $candidate "*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+[ -r "$OPTIONS_PATH" ] || fail "Options file is not readable: $OPTIONS_PATH"
+command -v jq >/dev/null 2>&1 || fail "jq is required"
+command -v "$SU_EXEC" >/dev/null 2>&1 || fail "su-exec is required"
+id "$RUN_AS_USER" >/dev/null 2>&1 || fail "Runtime user does not exist: $RUN_AS_USER"
+
+# Home Assistant validates schema types; this rejects unsafe values and
+# enforces dependencies between database and queue settings.
+if ! jq -e \
+  --arg database "$(jq -r '.database // ""' "$OPTIONS_PATH")" \
+  --arg execution_mode "$(jq -r '.execution_mode // ""' "$OPTIONS_PATH")" \
+  '
+    def control_free: (explode | map(select(. < 32 or . == 127)) | length) == 0;
+    def nonempty_clean:
+        type == "string" and length > 0 and control_free;
+    def optional_clean:
+        type == "string" and control_free;
+    type == "object"
+    and (.database | . == "sqlite" or . == "postgresdb")
+    and (.execution_mode | . == "regular" or . == "queue")
+    and (if $execution_mode == "queue" then $database == "postgresdb" else true end)
+    and (.postgres_port | type == "number" and . >= 1 and . <= 65535)
+    and (.redis_port | type == "number" and . >= 1 and . <= 65535)
+    and (.redis_db | type == "number" and . >= 0 and . <= 15)
+    and (.postgres_ssl | type == "boolean")
+    and (.redis_tls | type == "boolean")
+    and (.secure_cookie | type == "boolean")
+    and (.log_level |
+        . == "error" or . == "warn" or . == "info" or . == "debug")
+    and (.postgres_schema | nonempty_clean)
+    and (.timezone | nonempty_clean)
+    and ((.postgres_db // "") | nonempty_clean)
+    and ((.postgres_user // "") | nonempty_clean)
+    and ((.postgres_host // "") |
+        if $database == "postgresdb" then nonempty_clean else optional_clean end)
+    and ((.postgres_password // "") | optional_clean)
+    and ((.redis_host // "") |
+        if $execution_mode == "queue" then nonempty_clean else optional_clean end)
+    and ((.redis_username // "") | optional_clean)
+    and ((.redis_password // "") | optional_clean)
+    and ((.encryption_key // "") | optional_clean)
+    and ((.editor_base_url // "") | optional_clean)
+    and ((.webhook_url // "") | optional_clean)
+    and ((.env_vars // []) |
+        type == "array"
+        and all(.[]; type == "object"
+            and (.name | type == "string" and test("^[A-Z][A-Z0-9_]*$"))
+            and (.value | type == "string")))
+' "$OPTIONS_PATH" >/dev/null 2>&1; then
+    fail "Invalid options: check database, Redis, PostgreSQL, or runtime settings"
+fi
+
+umask 022
+N8N_DIR="${CONFIG_DIR}/n8n"
+mkdir -p "$N8N_DIR"
+chown "$RUN_AS_USER:$RUN_AS_GROUP" "$CONFIG_DIR" "$N8N_DIR"
+
+# Resolve the encryption key once and persist it with private permissions.
+encryption_key=$(jq -r '.encryption_key // ""' "$OPTIONS_PATH")
+if [ -z "$encryption_key" ]; then
+    secret_file="${CONFIG_DIR}/encryption_key"
+    if [ ! -s "$secret_file" ]; then
+        (
+            umask 077
+            tmp=$(mktemp "${CONFIG_DIR}/.encryption_key.XXXXXX")
+            if ! openssl rand -hex 32 >"$tmp"; then
+                rm -f "$tmp"
+                exit 1
+            fi
+            chmod 0600 "$tmp"
+            chown "$RUN_AS_USER:$RUN_AS_GROUP" "$tmp"
+            mv "$tmp" "$secret_file"
+        ) || fail "Could not generate an encryption key"
+    fi
+    chmod 0600 "$secret_file"
+    chown "$RUN_AS_USER:$RUN_AS_GROUP" "$secret_file"
+    encryption_key=$(cat "$secret_file")
+fi
+
+export DB_TYPE
+DB_TYPE=$(jq -r '.database' "$OPTIONS_PATH")
+if [ "$DB_TYPE" = "postgresdb" ]; then
+    export "DB_POSTGRESDB_HOST=$(jq -r '.postgres_host' "$OPTIONS_PATH")"
+    export "DB_POSTGRESDB_PORT=$(jq -r '.postgres_port' "$OPTIONS_PATH")"
+    export "DB_POSTGRESDB_DATABASE=$(jq -r '.postgres_db' "$OPTIONS_PATH")"
+    export "DB_POSTGRESDB_USER=$(jq -r '.postgres_user' "$OPTIONS_PATH")"
+    export "DB_POSTGRESDB_PASSWORD=$(jq -r '.postgres_password' "$OPTIONS_PATH")"
+    export "DB_POSTGRESDB_SCHEMA=$(jq -r '.postgres_schema' "$OPTIONS_PATH")"
+    export "DB_POSTGRESDB_SSL_ENABLED=$(jq -r '.postgres_ssl' "$OPTIONS_PATH")"
+fi
+
+EXECUTIONS_MODE=$(jq -r '.execution_mode' "$OPTIONS_PATH")
+export EXECUTIONS_MODE
+if [ "$EXECUTIONS_MODE" = "queue" ]; then
+    export "QUEUE_BULL_REDIS_HOST=$(jq -r '.redis_host' "$OPTIONS_PATH")"
+    export "QUEUE_BULL_REDIS_PORT=$(jq -r '.redis_port' "$OPTIONS_PATH")"
+    export "QUEUE_BULL_REDIS_DB=$(jq -r '.redis_db' "$OPTIONS_PATH")"
+    export "QUEUE_BULL_REDIS_TLS=$(jq -r '.redis_tls' "$OPTIONS_PATH")"
+    redis_username=$(jq -r '.redis_username // ""' "$OPTIONS_PATH")
+    if [ -n "$redis_username" ]; then
+        export "QUEUE_BULL_REDIS_USERNAME=$redis_username"
+    fi
+    redis_password=$(jq -r '.redis_password // ""' "$OPTIONS_PATH")
+    if [ -n "$redis_password" ]; then
+        export "QUEUE_BULL_REDIS_PASSWORD=$redis_password"
+    fi
+fi
+
+export "N8N_USER_FOLDER=$N8N_DIR"
+export "N8N_ENCRYPTION_KEY=$encryption_key"
+export "N8N_LOG_LEVEL=$(jq -r '.log_level' "$OPTIONS_PATH")"
+export "GENERIC_TIMEZONE=$(jq -r '.timezone' "$OPTIONS_PATH")"
+export "N8N_SECURE_COOKIE=$(jq -r '.secure_cookie' "$OPTIONS_PATH")"
+export N8N_PORT=5678
+export N8N_PROTOCOL=http
+
+editor_base_url=$(jq -r '.editor_base_url // ""' "$OPTIONS_PATH")
+if [ -n "$editor_base_url" ]; then
+    export "N8N_EDITOR_BASE_URL=$editor_base_url"
+fi
+webhook_url=$(jq -r '.webhook_url // ""' "$OPTIONS_PATH")
+if [ -n "$webhook_url" ]; then
+    export "WEBHOOK_URL=$webhook_url"
+fi
+
+# Managed defaults keep the add-on quiet, reproducible, and safer for Code
+# nodes. Home Assistant owns upgrades, so n8n's update and telemetry checks are
+# disabled.
+export N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+export N8N_BLOCK_ENV_ACCESS_IN_NODE=true
+export N8N_DIAGNOSTICS_ENABLED=false
+export N8N_VERSION_NOTIFICATIONS_ENABLED=false
+
+env_count=$(jq -r '(.env_vars // []) | length' "$OPTIONS_PATH")
+index=0
+while [ "$index" -lt "$env_count" ]; do
+    name=$(jq -r ".env_vars[$index].name" "$OPTIONS_PATH")
+    value=$(jq -r ".env_vars[$index].value" "$OPTIONS_PATH")
+
+    if ! printf '%s' "$name" | grep -Eq '^[A-Z][A-Z0-9_]*$'; then
+        fail "Invalid custom environment variable name: $name"
+    fi
+    if is_listed "$MANAGED_ENV" "$name"; then
+        fail "Custom environment variable overrides managed variable: $name"
+    fi
+    if is_listed "$PROTECTED_ENV" "$name"; then
+        fail "Custom environment variable overrides protected variable: $name"
+    fi
+    case "$name" in
+        ADDON_* | DYLD_* | LD_*)
+            fail "Custom environment variable uses protected namespace: $name"
+            ;;
+    esac
+    if ! jq -en --arg value "$value" \
+        '$value | test("[\u0000-\u001F\u007F]") | not' \
+        >/dev/null 2>&1; then
+        fail "Custom environment variable contains control characters: $name"
+    fi
+
+    export "$name=$value"
+    log "Exported custom environment variable: $name"
+    index=$((index + 1))
+done
+
+log "Configuration validated; starting n8n"
+exec "$SU_EXEC" "$RUN_AS_USER" "$ADDON_INIT" "$@"

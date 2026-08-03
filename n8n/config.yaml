@@ -1,0 +1,68 @@
+---
+name: n8n
+version: "2.32.7-1"
+slug: n8n
+description: Workflow automation platform
+url: https://github.com/mrwogu/hassio-addons/tree/main/n8n
+image: ghcr.io/mrwogu/hassio-n8n
+arch:
+  - aarch64
+  - amd64
+init: false
+startup: services
+webui: http://[HOST]:[PORT:5678]
+map:
+  - type: addon_config
+    read_only: false
+ports:
+  5678/tcp: 5678
+ports_description:
+  5678/tcp: n8n web interface
+options:
+  database: sqlite
+  postgres_host: ""
+  postgres_port: 5432
+  postgres_db: n8n
+  postgres_user: n8n
+  postgres_password: ""
+  postgres_schema: public
+  postgres_ssl: false
+  execution_mode: regular
+  redis_host: ""
+  redis_port: 6379
+  redis_db: 0
+  redis_username: ""
+  redis_password: ""
+  redis_tls: false
+  encryption_key: ""
+  log_level: info
+  timezone: UTC
+  secure_cookie: false
+  editor_base_url: ""
+  webhook_url: ""
+  env_vars: []
+schema:
+  database: list(sqlite|postgresdb)
+  postgres_host: str?
+  postgres_port: int(1,65535)
+  postgres_db: str
+  postgres_user: str
+  postgres_password: password?
+  postgres_schema: str
+  postgres_ssl: bool
+  execution_mode: list(regular|queue)
+  redis_host: str?
+  redis_port: int(1,65535)
+  redis_db: int(0,15)
+  redis_username: str?
+  redis_password: password?
+  redis_tls: bool
+  encryption_key: password?
+  log_level: list(error|warn|info|debug)
+  timezone: str
+  secure_cookie: bool
+  editor_base_url: str?
+  webhook_url: str?
+  env_vars:
+    - name: str
+      value: str

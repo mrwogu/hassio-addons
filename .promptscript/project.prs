@@ -18,10 +18,11 @@
   architectures: [aarch64, amd64]
   registry: "ghcr.io/mrwogu"
   """
-  The repository packages Bonds and Gluetun as Home Assistant add-ons.
-  Integration code is MIT licensed. Packaged applications retain their
-  upstream licenses. Bonds uses BUSL-1.1 and has commercial-use and managed
-  hosting restrictions.
+  The repository packages Home Assistant add-ons. Integration code is MIT
+  licensed. Packaged applications retain their upstream licenses. Bonds uses
+  BUSL-1.1 and has commercial-use and managed hosting restrictions. n8n uses
+  the Sustainable Use License and has separate terms for Enterprise source
+  files.
 
   Each add-on is a thin wrapper. Runtime adapters translate Home Assistant
   options into upstream environment variables or files, validate untrusted
@@ -114,7 +115,7 @@
      make check
      yamllint .
      actionlint .github/workflows/*.yml
-     find authentik bonds gluetun stirling-pdf -type f \
+     find authentik bonds ddclient gluetun n8n stirling-pdf -type f \
        \( -name '*.sh' -o -name 'addon-entrypoint' \) -print0 |
        xargs -0 shellcheck
      promptscript validate

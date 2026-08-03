@@ -1,0 +1,70 @@
+---
+configuration:
+  database:
+    name: Baza danych
+    description: Użyj lokalnej bazy SQLite albo zewnętrznego PostgreSQL.
+  postgres_host:
+    name: Host PostgreSQL
+    description: Nazwa hosta lub adres IP zewnętrznego serwera PostgreSQL.
+  postgres_port:
+    name: Port PostgreSQL
+    description: Port serwera PostgreSQL.
+  postgres_db:
+    name: Baza PostgreSQL
+    description: Nazwa bazy danych n8n.
+  postgres_user:
+    name: Użytkownik PostgreSQL
+    description: Użytkownik bazy danych używany przez n8n.
+  postgres_password:
+    name: Hasło PostgreSQL
+    description: Hasło użytkownika PostgreSQL.
+  postgres_schema:
+    name: Schemat PostgreSQL
+    description: Schemat PostgreSQL używany przez n8n.
+  postgres_ssl:
+    name: SSL PostgreSQL
+    description: Włącz SSL dla połączenia z PostgreSQL.
+  execution_mode:
+    name: Tryb wykonywania
+    description: Wykonuj zadania lokalnie albo użyj zewnętrznej kolejki Redis.
+  redis_host:
+    name: Host Redis
+    description: Nazwa hosta lub adres IP zewnętrznego serwera Redis.
+  redis_port:
+    name: Port Redis
+    description: Port serwera Redis.
+  redis_db:
+    name: Baza Redis
+    description: Logiczna baza Redis używana przez tryb kolejki.
+  redis_username:
+    name: Użytkownik Redis
+    description: Opcjonalny użytkownik Redis 6 lub nowszego.
+  redis_password:
+    name: Hasło Redis
+    description: Opcjonalne hasło do serwera Redis.
+  redis_tls:
+    name: TLS Redis
+    description: Włącz TLS dla połączenia z Redis.
+  encryption_key:
+    name: Klucz szyfrowania
+    description: Klucz szyfrowania danych uwierzytelniających. Pusty wygeneruje klucz.
+  log_level:
+    name: Poziom logów
+    description: Szczegółowość logów n8n.
+  timezone:
+    name: Strefa czasowa
+    description: Strefa IANA używana przez zadania harmonogramu.
+  secure_cookie:
+    name: Bezpieczne ciasteczka
+    description: Wymagaj HTTPS dla ciasteczek przeglądarki. Włącz za HTTPS.
+  editor_base_url:
+    name: Bazowy adres edytora
+    description: Publiczny adres, pod którym użytkownicy otwierają edytor n8n.
+  webhook_url:
+    name: Adres webhooków
+    description: Publiczny adres używany przez n8n do tworzenia adresów webhooków.
+  env_vars:
+    name: Zaawansowane zmienne środowiskowe
+    description: Dodatkowe zmienne n8n. Nie można nadpisać nazw zarządzanych ani chronionych.
+network:
+  5678/tcp: Interfejs internetowy n8n

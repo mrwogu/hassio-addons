@@ -1,0 +1,70 @@
+---
+configuration:
+  database:
+    name: Database
+    description: Use local SQLite or an external PostgreSQL database.
+  postgres_host:
+    name: PostgreSQL host
+    description: Hostname or IP address of the external PostgreSQL server.
+  postgres_port:
+    name: PostgreSQL port
+    description: Port of the PostgreSQL server.
+  postgres_db:
+    name: PostgreSQL database
+    description: Name of the n8n database.
+  postgres_user:
+    name: PostgreSQL user
+    description: Database user n8n connects as.
+  postgres_password:
+    name: PostgreSQL password
+    description: Password for the PostgreSQL user.
+  postgres_schema:
+    name: PostgreSQL schema
+    description: PostgreSQL schema used by n8n.
+  postgres_ssl:
+    name: PostgreSQL SSL
+    description: Enable SSL for the PostgreSQL connection.
+  execution_mode:
+    name: Execution mode
+    description: Run executions locally or use an external Redis-backed queue.
+  redis_host:
+    name: Redis host
+    description: Hostname or IP address of the external Redis server.
+  redis_port:
+    name: Redis port
+    description: Port of the Redis server.
+  redis_db:
+    name: Redis database
+    description: Redis logical database used by queue mode.
+  redis_username:
+    name: Redis username
+    description: Optional Redis 6 or newer username.
+  redis_password:
+    name: Redis password
+    description: Optional password for the Redis server.
+  redis_tls:
+    name: Redis TLS
+    description: Enable TLS for the Redis connection.
+  encryption_key:
+    name: Encryption key
+    description: Key for encrypting credentials. Leave blank to generate one.
+  log_level:
+    name: Log level
+    description: Verbosity of n8n logs.
+  timezone:
+    name: Timezone
+    description: IANA timezone used by scheduled workflows.
+  secure_cookie:
+    name: Secure cookies
+    description: Require HTTPS for browser cookies. Enable behind HTTPS.
+  editor_base_url:
+    name: Editor base URL
+    description: Public URL where users access the n8n editor.
+  webhook_url:
+    name: Webhook URL
+    description: Public base URL used by n8n to generate webhook URLs.
+  env_vars:
+    name: Advanced environment variables
+    description: Extra n8n variables. Managed and protected names cannot be overridden.
+network:
+  5678/tcp: n8n web interface

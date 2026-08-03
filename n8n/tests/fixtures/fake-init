@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+
+env | sort >"${N8N_TEST_ENV_FILE:?}"
+printf '%s\n' "$*" >"${N8N_TEST_ARGS_FILE:?}"
