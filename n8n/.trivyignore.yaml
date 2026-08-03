@@ -1,2 +1,54 @@
 ---
-vulnerabilities: []
+vulnerabilities:
+  - id: CVE-2026-59892
+    paths: [usr/local/lib/node_modules/n8n/node_modules/.pnpm/@opentelemetry+propagator-jaeger@2.7.1_@opentelemetry+api@1.9.0/node_modules/@opentelemetry/propagator-jaeger/package.json]
+    statement: Temporary upstream image dependency pending a newer n8n image.
+    expired_at: 2026-08-31
+  - id: CVE-2026-39244
+    paths: [usr/local/lib/node_modules/n8n/node_modules/.pnpm/adm-zip@0.5.16/node_modules/adm-zip/package.json]
+    statement: Temporary upstream image dependency pending a newer n8n image.
+    expired_at: 2026-08-31
+  - id: CVE-2026-13149
+    paths: [usr/local/lib/node_modules/n8n/node_modules/.pnpm/brace-expansion@2.1.0/node_modules/brace-expansion/package.json]
+    statement: Temporary upstream image dependency pending a newer n8n image.
+    expired_at: 2026-08-31
+  - id: CVE-2026-14257
+    paths: [usr/local/lib/node_modules/n8n/node_modules/.pnpm/brace-expansion@2.1.0/node_modules/brace-expansion/package.json, usr/local/lib/node_modules/n8n/node_modules/.pnpm/brace-expansion@5.0.7/node_modules/brace-expansion/package.json]
+    statement: Temporary upstream image dependency pending a newer n8n image.
+    expired_at: 2026-08-31
+  - id: CVE-2026-16221
+    paths: [usr/local/lib/node_modules/n8n/node_modules/.pnpm/fast-uri@3.1.3/node_modules/fast-uri/package.json]
+    statement: Temporary upstream image dependency pending a newer n8n image.
+    expired_at: 2026-08-31
+  - id: CVE-2026-59869
+    paths: [usr/local/lib/node_modules/n8n/node_modules/.pnpm/js-yaml@4.2.0/node_modules/js-yaml/package.json]
+    statement: Temporary upstream image dependency pending a newer n8n image.
+    expired_at: 2026-08-31
+  - id: CVE-2026-59887
+    paths: [usr/local/lib/node_modules/n8n/node_modules/.pnpm/linkify-it@5.0.1/node_modules/linkify-it/package.json]
+    statement: Temporary upstream image dependency pending a newer n8n image.
+    expired_at: 2026-08-31
+  - id: GHSA-p6gq-j5cr-w38f
+    paths: [usr/local/lib/node_modules/n8n/node_modules/.pnpm/nodemailer@8.0.10/node_modules/nodemailer/package.json]
+    statement: Temporary upstream image dependency pending a newer n8n image.
+    expired_at: 2026-08-31
+  - id: CVE-2026-45623
+    paths: [usr/local/lib/node_modules/n8n/node_modules/.pnpm/postcss@8.5.10/node_modules/postcss/package.json]
+    statement: Temporary upstream image dependency pending a newer n8n image.
+    expired_at: 2026-08-31
+  - id: GHSA-r28c-9q8g-f849
+    paths: [usr/local/lib/node_modules/n8n/node_modules/.pnpm/postcss@8.5.10/node_modules/postcss/package.json]
+    statement: Temporary upstream image dependency pending a newer n8n image.
+    expired_at: 2026-08-31
+  - id: CVE-2026-13311
+    paths: [usr/local/lib/node_modules/n8n/node_modules/.pnpm/shell-quote@1.8.4/node_modules/shell-quote/package.json]
+    statement: Temporary upstream image dependency pending a newer n8n image.
+    expired_at: 2026-08-31
+  - id: CVE-2026-59873
+    paths: [usr/local/lib/node_modules/n8n/node_modules/.pnpm/tar@7.5.17/node_modules/tar/package.json]
+    statement: Temporary upstream image dependency pending a newer n8n image.
+    expired_at: 2026-08-31
+  - id: CVE-2026-59874
+    paths: [usr/local/lib/node_modules/n8n/node_modules/.pnpm/tar@7.5.17/node_modules/tar/package.json]
+    statement: Temporary upstream image dependency pending a newer n8n image.
+    expired_at: 2026-08-31
