@@ -1,9 +1,5 @@
 # Changelog
 
-## 2.32.7-4
-
-- Bundle the native Python task runner environment.
-
 ## 2.32.7-3
 
 - Retry n8n publication after upstream CVE refresh.
