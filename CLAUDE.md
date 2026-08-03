@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-<!-- PromptScript 2026-07-22T09:27:16.127Z | source: .promptscript/project.prs | target: claude - do not edit -->
+<!-- PromptScript 2026-08-03T18:29:21.834Z | source: .promptscript/project.prs | target: claude - do not edit -->
 
 ## Project
 
@@ -12,6 +12,19 @@ release automation instead of publishing artifacts manually.
 ## Tech Stack
 
 python, shell, yaml, dockerfile
+
+## Context
+
+The repository packages Home Assistant add-ons. Integration code is MIT
+licensed. Packaged applications retain their upstream licenses. Bonds uses
+BUSL-1.1 and has commercial-use and managed hosting restrictions. n8n uses
+the Sustainable Use License and has separate terms for Enterprise source
+files.
+
+Each add-on is a thin wrapper. Runtime adapters translate Home Assistant
+options into upstream environment variables or files, validate untrusted
+input, persist state under `/config`, and finish with `exec` so signals reach
+the upstream process.
 
 ## Code Style
 
@@ -87,7 +100,7 @@ interrupted metadata, config, or changelog synchronization.
      make check
      yamllint .
      actionlint .github/workflows/*.yml
-     find authentik bonds gluetun stirling-pdf -type f \
+     find authentik bonds ddclient gluetun n8n stirling-pdf -type f \
        \( -name '*.sh' -o -name 'addon-entrypoint' \) -print0 |
        xargs -0 shellcheck
      promptscript validate

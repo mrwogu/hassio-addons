@@ -1,0 +1,29 @@
+{
+  "database": "postgresdb",
+  "postgres_host": "postgres.local",
+  "postgres_port": 5432,
+  "postgres_db": "n8n",
+  "postgres_user": "n8n",
+  "postgres_password": "pg-secret-$pass word",
+  "postgres_schema": "public",
+  "postgres_ssl": true,
+  "execution_mode": "queue",
+  "redis_host": "redis.local",
+  "redis_port": 6379,
+  "redis_db": 2,
+  "redis_username": "n8n",
+  "redis_password": "redis-secret",
+  "redis_tls": true,
+  "encryption_key": "",
+  "log_level": "debug",
+  "timezone": "Europe/Warsaw",
+  "secure_cookie": true,
+  "editor_base_url": "https://n8n.example.com",
+  "webhook_url": "https://n8n.example.com/",
+  "env_vars": [
+    {
+      "name": "N8N_CUSTOM_VALUE",
+      "value": "custom-value"
+    }
+  ]
+}

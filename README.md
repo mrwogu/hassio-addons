@@ -50,6 +50,17 @@ Self-hosted identity provider for single sign-on, SAML, OAuth2, and LDAP.
 - License: MIT, with separate terms for enterprise components
 - Requires an external PostgreSQL and Redis. Direct web access on port `9000`.
 
+### n8n
+
+Workflow automation platform for connecting apps and services.
+
+- Architectures: `amd64`, `aarch64`
+- Upstream: [n8n-io/n8n](https://github.com/n8n-io/n8n)
+- License: Sustainable Use License, with separate terms for Enterprise source
+  files
+- Uses SQLite by default; PostgreSQL and Redis are external and optional.
+- Direct web access on port `5678`.
+
 ## Installation
 
 1. Open Home Assistant.
