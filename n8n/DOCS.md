@@ -58,9 +58,12 @@ containing control characters are rejected.
 ## Task runners
 
 The add-on runs n8n task runners in internal mode because Home Assistant
-add-ons do not support a runner sidecar. The image includes Python 3, so
+add-ons do not support a runner sidecar. It bundles the matching official
+n8n task-runner package, Python 3.13, and its virtual environment, so
 JavaScript and Python Code nodes can start without the missing-runtime error.
-The current n8n defaults are pinned explicitly:
+Internal mode is not recommended for general production deployments because
+it does not isolate runner processes from n8n. The current n8n defaults are
+pinned explicitly:
 
 - `N8N_RUNNERS_TASK_TIMEOUT=300`
 - `N8N_COMPRESSION_NODE_MAX_DECOMPRESSED_SIZE_BYTES=2147483648`

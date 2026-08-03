@@ -64,6 +64,14 @@ run_entrypoint() {
         sh "$ENTRYPOINT" --fixture >"$LOG_FILE" 2>&1
 }
 
+# shellcheck disable=SC2016  # the literal Dockerfile expression is under test
+grep -Fq 'FROM ghcr.io/n8n-io/runners:${RUNNERS_VERSION}@${RUNNERS_DIGEST} AS task-runners' \
+    "$ADDON_DIR/Dockerfile" ||
+    fail "Runner image is not immutably pinned"
+grep -Fq 'COPY --from=task-runners /opt/runners/task-runner-python' \
+    "$ADDON_DIR/Dockerfile" ||
+    fail "Python task-runner package is not included"
+
 # External PostgreSQL and Redis settings reach n8n without exposing secrets in
 # the adapter log.
 run_entrypoint "$OPTIONS"
