@@ -2,43 +2,43 @@
 vulnerabilities:
   - id: CVE-2026-25681
     statement: Temporary upstream image dependency pending a newer Bonds image.
-    expired_at: 2026-08-31
+    expired_at: 2026-09-02
   - id: CVE-2026-27136
     statement: Temporary upstream image dependency pending a newer Bonds image.
-    expired_at: 2026-08-31
+    expired_at: 2026-09-02
   - id: CVE-2026-33814
     statement: Temporary upstream image dependency pending a newer Bonds image.
-    expired_at: 2026-08-31
+    expired_at: 2026-09-02
   - id: CVE-2026-39821
     statement: Temporary upstream image dependency pending a newer Bonds image.
-    expired_at: 2026-08-31
+    expired_at: 2026-09-02
   - id: CVE-2026-39828
     statement: Temporary upstream image dependency pending a newer Bonds image.
-    expired_at: 2026-08-31
+    expired_at: 2026-09-02
   - id: CVE-2026-39829
     statement: Temporary upstream image dependency pending a newer Bonds image.
-    expired_at: 2026-08-31
+    expired_at: 2026-09-02
   - id: CVE-2026-39830
     statement: Temporary upstream image dependency pending a newer Bonds image.
-    expired_at: 2026-08-31
+    expired_at: 2026-09-02
   - id: CVE-2026-39831
     statement: Temporary upstream image dependency pending a newer Bonds image.
-    expired_at: 2026-08-31
+    expired_at: 2026-09-02
   - id: CVE-2026-39832
     statement: Temporary upstream image dependency pending a newer Bonds image.
-    expired_at: 2026-08-31
+    expired_at: 2026-09-02
   - id: CVE-2026-39835
     statement: Temporary upstream image dependency pending a newer Bonds image.
-    expired_at: 2026-08-31
+    expired_at: 2026-09-02
   - id: CVE-2026-42508
     statement: Temporary upstream image dependency pending a newer Bonds image.
-    expired_at: 2026-08-31
+    expired_at: 2026-09-02
   - id: CVE-2026-46595
     statement: Temporary upstream image dependency pending a newer Bonds image.
-    expired_at: 2026-08-31
+    expired_at: 2026-09-02
   - id: CVE-2026-46597
     statement: Temporary upstream image dependency pending a newer Bonds image.
-    expired_at: 2026-08-31
+    expired_at: 2026-09-02
   - id: CVE-2026-56852
     statement: Temporary upstream image dependency pending a newer Bonds image.
-    expired_at: 2026-08-31
+    expired_at: 2026-09-02
