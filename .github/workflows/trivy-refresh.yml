@@ -65,7 +65,7 @@ jobs:
 
       - name: Refresh exceptions
         run: |
-          for addon in authentik bonds ddclient gluetun n8n stirling-pdf; do
+          for addon in authentik bonds gluetun n8n stirling-pdf; do
             if [ "$REGENERATE" = "true" ]; then
               docker build --tag "local/${addon}:refresh" "./${addon}"
               flags=""

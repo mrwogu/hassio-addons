@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-<!-- PromptScript 2026-08-03T18:29:21.834Z | source: .promptscript/project.prs | target: claude - do not edit -->
+<!-- PromptScript 2026-08-08T21:51:21.996Z | source: .promptscript/project.prs | target: claude - do not edit -->
 
 ## Project
 
@@ -25,6 +25,10 @@ Each add-on is a thin wrapper. Runtime adapters translate Home Assistant
 options into upstream environment variables or files, validate untrusted
 input, persist state under `/config`, and finish with `exec` so signals reach
 the upstream process.
+
+- Project: hassio-addons
+- Architectures: aarch64, amd64
+- Registry: ghcr.io/mrwogu
 
 ## Code Style
 
@@ -100,7 +104,7 @@ interrupted metadata, config, or changelog synchronization.
      make check
      yamllint .
      actionlint .github/workflows/*.yml
-     find authentik bonds ddclient gluetun n8n stirling-pdf -type f \
+     find authentik bonds gluetun n8n stirling-pdf -type f \
        \( -name '*.sh' -o -name 'addon-entrypoint' \) -print0 |
        xargs -0 shellcheck
      promptscript validate
