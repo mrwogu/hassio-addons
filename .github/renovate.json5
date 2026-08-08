@@ -5,7 +5,7 @@
     "helpers:pinGitHubActionDigests"
   ],
   "baseBranchPatterns": ["main"],
-  "schedule": ["every 6 hours"],
+  "schedule": ["at any time"],
   "enabledManagers": [
     "custom.regex",
     "github-actions",
