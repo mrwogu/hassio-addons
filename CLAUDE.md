@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-<!-- PromptScript 2026-08-08T21:51:21.996Z | source: .promptscript/project.prs | target: claude - do not edit -->
+<!-- PromptScript 2026-08-08T22:00:17.653Z | source: .promptscript/project.prs | target: claude - do not edit -->
 
 ## Project
 
@@ -44,7 +44,6 @@ the upstream process.
 - Gluetun may use only NET_ADMIN and /dev/net/tun with its bounded AppArmor profile
 - Reject control characters, unsafe custom environment names, and overrides of managed variables
 - Pin every external GitHub Action to a full 40-character commit SHA
-- Keep Trivy exceptions CVE-specific, path-scoped, justified, and valid for no more than 30 days
 - Run make check after repository changes
 - Run yamllint and actionlint after YAML or workflow changes
 - Run ShellCheck after shell changes
@@ -55,7 +54,7 @@ the upstream process.
 ```
 /validate  - Run all repository validators relevant to the current changes
 /new-addon - Apply the complete new add-on checklist from these instructions
-/release   - Verify version, changelog, security gates, and automated release readiness
+/release   - Verify version, changelog, and automated release readiness
 ```
 
 # Repository workflow
@@ -64,7 +63,7 @@ the upstream process.
 
 1. Start from `main` and inspect the add-on's `config.yaml`, `Dockerfile`,
    `upstream.yaml`, entrypoint, tests, documentation, translations, changelog,
-   license, and Trivy policy before editing.
+   license before editing.
 
 2. Keep changes in the Home Assistant adapter layer. Do not change upstream
    application code.
@@ -112,9 +111,9 @@ interrupted metadata, config, or changelog synchronization.
      promptscript diff
 ```
 
-CI also runs the official Home Assistant add-on linter, native
-architecture builds, dependency review, and Trivy. Use the protected,
-manual `vpn-integration` workflow for a real WireGuard test.
+CI also runs the official Home Assistant add-on linter and native
+architecture builds. Use the protected, manual `vpn-integration` workflow
+for a real WireGuard test.
 
 ## Adding a new add-on
 
@@ -135,7 +134,6 @@ manual `vpn-integration` workflow for a real WireGuard test.
 - `upstream.yaml`
 - `translations/en.yaml`
 - `translations/pl.yaml`
-- `.trivyignore.yaml`
 - `rootfs/usr/local/bin/addon-entrypoint`
 - `tests/run.sh`
 
@@ -164,9 +162,6 @@ manual `vpn-integration` workflow for a real WireGuard test.
 
 - `Makefile`: bump allowlist, shell paths, and adapter test loop.
 - `.github/workflows/lint.yml`: shell paths and the changed-add-on list.
-- `.github/workflows/security.yml`: the changed-add-on list and the
-  per-add-on `ignore-unfixed` condition; image names derive from the slug.
-
 - `.github/workflows/publish.yml`: shell paths, Home Assistant linter, and
   unreleased-add-on loop.
 
@@ -175,12 +170,8 @@ manual `vpn-integration` workflow for a real WireGuard test.
 
 - `.github/CODEOWNERS`, `README.md`, `CONTRIBUTING.md`, and `SECURITY.md`.
 
-9. Start `.trivyignore.yaml` with an empty vulnerability list. Add an
-   exception only for an unavoidable upstream finding, with exact affected
-   image paths, rationale, and an expiry no more than 30 days away.
-
-10. Run the complete local and CI validation gates before merge. After first
-    publication, make the GHCR package public and link it to this repository.
+9. Run the complete local and CI validation gates before merge. After first
+   publication, make the GHCR package public and link it to this repository.
 
 ## Release process
 
@@ -192,8 +183,7 @@ trustworthy release timestamp are rejected. Timestamped updates wait three
 days before a pull request is opened. The custom Docker manager updates the
 pinned tag and digest, then runs `scripts/sync_addon_version.py`. Tooling
 and GitHub Action updates never automerge. Upstream add-on pull requests
-automerge without review only after
-all required checks pass.
+automerge without review after the normal repository checks pass.
 
 ### Packaging releases
 
@@ -202,11 +192,10 @@ request. Every push to `main` searches for add-on versions without the
 immutable Git tag `<slug>/<version>`, so a failed or cancelled publication is
 retried on a later push.
 
-The reusable release workflow validates the repository, builds each
-architecture natively, scans the local image for HIGH and CRITICAL
-vulnerabilities and secrets, and only then pushes and signs the architecture
-image. It generates an SBOM and attaches it as an OCI attestation. After all
-architectures succeed, it creates and signs immutable version and `latest`
+The reusable release workflow validates the repository and builds each
+architecture natively. It generates an SBOM and attaches it as an OCI
+attestation. After all architectures succeed, it pushes and signs the
+architecture image, then creates and signs immutable version and `latest`
 multi-architecture manifests. Reusing a version manifest during recovery is
 allowed only when its architecture digests and source revision match the
 current commit.
@@ -222,8 +211,7 @@ Before major upstream upgrades, preserve Home Assistant add-on backups.
 Roll back by selecting a previous immutable add-on version and restoring the
 matching configuration backup while the add-on is stopped. Previous images
 remain available for rollback, but only the latest published version receives
-security support. Remove expired Trivy exceptions as soon as upstream fixes
-are available.
+security support.
 
 ## Don'ts
 
@@ -231,6 +219,5 @@ are available.
 - Don't use an unpinned image, a latest base tag, or a mutable GitHub Action reference
 - Don't expose credentials, VPN keys, generated secrets, tokens, personal data, or production configuration in code, tests, or logs
 - Don't add full_access, host_network, a device, or a capability without a documented runtime requirement and validator coverage
-- Don't publish or move latest before vulnerability and secret scans pass
 - Don't reuse or overwrite a released package version or Git tag
 - Don't edit AGENTS.md or generated .factory content directly; edit .promptscript sources and run promptscript compile

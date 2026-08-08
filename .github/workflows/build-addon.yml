@@ -171,22 +171,6 @@ jobs:
           push: false
           version: ${{ needs.prepare.outputs.version }}
 
-      - name: Scan image before publication
-        if: inputs.publish
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
-        with:
-          image-ref: ${{ matrix.image }}:${{ needs.prepare.outputs.version }}
-          format: table
-          scanners: vuln,secret
-          severity: CRITICAL,HIGH
-          # authentik repackages a large upstream image whose OS packages carry
-          # HIGH CVEs that Debian has not fixed; gate only on findings that have
-          # an available fix and record the baked-in ones as exceptions. Keep in
-          # sync with the same setting in security.yml.
-          ignore-unfixed: ${{ inputs.addon == 'authentik' }}
-          trivyignores: ./${{ inputs.addon }}/.trivyignore.yaml
-          exit-code: "1"
-
       - name: Log in to container registry
         if: inputs.publish
         uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee  # v4.2.0

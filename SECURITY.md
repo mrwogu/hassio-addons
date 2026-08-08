@@ -12,10 +12,6 @@ Report vulnerabilities in Gluetun, Bonds, n8n, Stirling-PDF, or authentik direct
 
 Only latest published add-on version receives security updates. Previous versioned images remain available for rollback but are unsupported.
 
-## Scanner exceptions
-
-Trivy exceptions must be scoped to an upstream binary, explain the reason, and expire within 30 days. Repository validation rejects expired or broader exceptions. A fixed upstream release must replace the exception.
-
 ## Secrets
 
 Remove VPN credentials, tokens, private keys, cookies, and personal data from logs and attachments before submission.

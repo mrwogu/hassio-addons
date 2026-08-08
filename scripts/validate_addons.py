@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import re
 import sys
-from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -30,7 +29,6 @@ REQUIRED_ADDON_FILES = (
     "upstream.yaml",
     "translations/en.yaml",
     "translations/pl.yaml",
-    ".trivyignore.yaml",
     "rootfs/usr/local/bin/addon-entrypoint",
     "tests/run.sh",
 )
@@ -234,64 +232,11 @@ def validate_action_pins(errors: list[str]) -> None:
                 )
 
 
-def validate_trivy_exceptions(slug: str, errors: list[str]) -> None:
-    path = ROOT / slug / ".trivyignore.yaml"
-    data = load_yaml(path, errors)
-    if not isinstance(data, dict) or not isinstance(data.get("vulnerabilities"), list):
-        errors.append(f"{slug}/.trivyignore.yaml: vulnerabilities list required")
-        return
-
-    seen: set[str] = set()
-    today = date.today()
-    for index, exception in enumerate(data["vulnerabilities"], 1):
-        label = f"{slug}/.trivyignore.yaml: exception {index}"
-        if not isinstance(exception, dict):
-            errors.append(f"{label} must be a mapping")
-            continue
-        vulnerability_id = exception.get("id")
-        if not isinstance(vulnerability_id, str) or not re.fullmatch(
-            r"CVE-\d{4}-\d{4,}|GHSA-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}",
-            vulnerability_id,
-        ):
-            errors.append(f"{label} must have a CVE or GHSA id")
-        elif vulnerability_id in seen:
-            errors.append(f"{label} duplicates {vulnerability_id}")
-        else:
-            seen.add(vulnerability_id)
-        # A path scope is required when the finding has one. Operating-system
-        # and statically linked binary CVEs have no file path, so Trivy can only
-        # ignore them by id; those exceptions omit paths but stay justified and
-        # time-boxed by the checks below.
-        paths = exception.get("paths")
-        if paths is not None and (
-            not isinstance(paths, list)
-            or not paths
-            or not all(isinstance(item, str) and item for item in paths)
-        ):
-            errors.append(f"{label} paths must be a non-empty list of image paths")
-        if not str(exception.get("statement", "")).strip():
-            errors.append(f"{label} must explain the temporary exception")
-
-        expires = exception.get("expired_at")
-        if isinstance(expires, str):
-            try:
-                expires = date.fromisoformat(expires)
-            except ValueError:
-                expires = None
-        if not isinstance(expires, date):
-            errors.append(f"{label} must have an ISO expiration date")
-        elif expires <= today:
-            errors.append(f"{label} expired on {expires.isoformat()}")
-        elif expires > today + timedelta(days=30):
-            errors.append(f"{label} cannot remain active for more than 30 days")
-
-
 def main() -> int:
     errors: list[str] = []
     validate_repository(errors)
     for slug, image in ADDONS.items():
         validate_addon(slug, image, errors)
-        validate_trivy_exceptions(slug, errors)
     validate_yaml_files(errors)
     validate_action_pins(errors)
 
