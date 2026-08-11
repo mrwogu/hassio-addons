@@ -1,5 +1,5 @@
 ---
-# promptscript-generated: 2026-08-11T15:55:00.079Z | source: .promptscript/project.prs | target: promptscript
+# promptscript-generated: 2026-08-08T21:51:21.998Z | source: .promptscript/project.prs | target: promptscript
 name: promptscript
 description: >-
   PromptScript language expert for reading, writing, modifying, and
@@ -12,35 +12,6 @@ description: >-
   to PromptScript. Also use when asked about the 48 built-in compilation
   targets, including GitHub Copilot, Claude Code, Cursor, Antigravity,
   Factory AI, and AGENTS.md-based platforms.
-license: MIT
-metadata:
-  author: PromptScript
-  homepage: https://getpromptscript.dev
-compatibility:
-  - claude-code
-  - github-copilot
-  - cursor
-  - factory-ai
-  - gemini-cli
-  - opencode
-  - windsurf
-  - cline
-  - roo
-  - codex
-  - continue
-  - augment
-  - goose
-  - kilo
-  - amp
-  - trae
-  - junie
-  - kiro-cli
-allowed-tools:
-  - Read
-  - Write
-  - Glob
-  - Grep
-  - Bash
 user-invocable: true
 ---
 

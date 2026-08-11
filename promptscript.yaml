@@ -4,6 +4,7 @@ syntax: "1.2.0"
 
 targets:
   - claude
+  - factory
 
 validation:
   rules:
