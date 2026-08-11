@@ -1,0 +1,80 @@
+---
+name: Synchronize Renovate metadata
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: renovate-sync-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    name: Synchronize add-on metadata
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository
+      && startsWith(github.event.pull_request.head.ref, 'renovate/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out trusted base
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+        with:
+          ref: main
+          path: base
+          persist-credentials: false
+
+      - name: Check out Renovate branch
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          path: worktree
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
+        with:
+          python-version: "3.14"
+
+      - name: Synchronize changed add-ons
+        working-directory: worktree
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -eu
+          for addon in authentik bonds gluetun n8n stirling-pdf; do
+            if git diff --name-only "$BASE_SHA...HEAD" -- "${addon}/Dockerfile" |
+              grep -qx "${addon}/Dockerfile"
+            then
+              python3 ../base/scripts/sync_addon_version.py "$addon"
+            fi
+          done
+
+      - name: Commit synchronized metadata
+        working-directory: worktree
+        env:
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          set -eu
+          if git diff --quiet; then
+            echo "No metadata changes required"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- \
+            authentik/Dockerfile authentik/config.yaml authentik/upstream.yaml authentik/CHANGELOG.md \
+            bonds/Dockerfile bonds/config.yaml bonds/upstream.yaml bonds/CHANGELOG.md \
+            gluetun/Dockerfile gluetun/config.yaml gluetun/upstream.yaml gluetun/CHANGELOG.md \
+            n8n/Dockerfile n8n/config.yaml n8n/upstream.yaml n8n/CHANGELOG.md \
+            stirling-pdf/Dockerfile stirling-pdf/config.yaml stirling-pdf/upstream.yaml stirling-pdf/CHANGELOG.md
+          git commit -m "chore(deps): synchronize add-on metadata"
+          git push origin "HEAD:${BRANCH}"

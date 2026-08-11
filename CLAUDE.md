@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-<!-- PromptScript 2026-08-08T22:00:17.653Z | source: .promptscript/project.prs | target: claude - do not edit -->
+<!-- PromptScript 2026-08-11T14:38:30.026Z | source: .promptscript/project.prs | target: claude - do not edit -->
 
 ## Project
 
@@ -178,12 +178,11 @@ for a real WireGuard test.
 ### Automated upstream releases
 
 Renovate runs as the hosted GitHub App on `mrwogu/hassio-addons` and checks
-upstream image tags and digests every six hours. Updates without a
-trustworthy release timestamp are rejected. Timestamped updates wait three
-days before a pull request is opened. The custom Docker manager updates the
-pinned tag and digest, then runs `scripts/sync_addon_version.py`. Tooling
-and GitHub Action updates never automerge. Upstream add-on pull requests
-automerge without review after the normal repository checks pass.
+upstream image tags and digests every six hours. The custom Docker manager
+updates the pinned tag and digest. The `renovate-sync` workflow then synchronizes
+add-on metadata in the Renovate pull request. Tooling and GitHub Action
+updates never automerge. Upstream add-on pull requests automerge without
+review after the normal repository checks pass.
 
 ### Packaging releases
 
