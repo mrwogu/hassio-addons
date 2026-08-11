@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.41.3-1
+
+- Update upstream to [v3.41.3](https://github.com/passteque/gluetun/releases/tag/v3.41.3).
+
 ## 3.41.1-6
 
 - Allow AppArmor writes to /etc/openvpn for OpenVPN config generation

@@ -1,6 +1,6 @@
 # renovate: datasource=docker depName=qmcgaw/gluetun versioning=docker
-ARG UPSTREAM_VERSION="v3.41.1"
-ARG UPSTREAM_DIGEST="sha256:1a5bf4b4820a879cdf8d93d7ef0d2d963af56670c9ebff8981860b6804ebc8ab"
+ARG UPSTREAM_VERSION="v3.41.3"
+ARG UPSTREAM_DIGEST="sha256:fa19cc76b2af13d57a8d3dc3066f2ada061b1c761b8aecf989b3877c0486e027"
 FROM qmcgaw/gluetun:${UPSTREAM_VERSION}@${UPSTREAM_DIGEST}
 
 LABEL \
