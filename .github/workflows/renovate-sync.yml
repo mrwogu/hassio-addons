@@ -44,6 +44,9 @@ jobs:
         with:
           python-version: "3.14"
 
+      - name: Install sync dependencies
+        run: python -m pip install -r base/requirements-dev.txt
+
       - name: Synchronize changed add-ons
         working-directory: worktree
         env:
