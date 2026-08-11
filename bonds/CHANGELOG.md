@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.18.1-1
+
+- Update upstream to [0.18.1](https://github.com/naiba/bonds/releases/tag/v0.18.1).
+
 ## 0.15.13-1
 
 - Package Bonds [v0.15.13](https://github.com/naiba/bonds/releases/tag/v0.15.13).
