@@ -191,7 +191,8 @@ grep -Fq 'HEALTHCHECK --interval=5s' "${ADDON_DIR}/Dockerfile" ||
     fail "Native Gluetun healthcheck missing"
 grep -Eq '^ARG UPSTREAM_DIGEST="sha256:[0-9a-f]{64}"$' \
     "${ADDON_DIR}/Dockerfile" || fail "Base image digest is not pinned"
-grep -Fq "FROM qmcgaw/gluetun:${UPSTREAM_VERSION}@${UPSTREAM_DIGEST}" \
+expected_base_image="FROM qmcgaw/gluetun:\${UPSTREAM_VERSION}@\${UPSTREAM_DIGEST}"
+grep -Fq "$expected_base_image" \
     "${ADDON_DIR}/Dockerfile" || fail "Base image digest is not used"
 grep -Fq 'ln -s /config /gluetun' "${ADDON_DIR}/Dockerfile" ||
     fail "Persistent Gluetun storage link missing"
