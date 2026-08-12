@@ -10,6 +10,8 @@
 
 Replace `gluetun` with `bonds`, `n8n`, `stirling-pdf`, or `authentik` when needed. Helper increments packaging revision and prepends changelog entry. Add-on versions use `<upstream-version>-<packaging-revision>`. New upstream versions start at revision `1`; digest and packaging changes increment revision.
 
+Each `upstream.yaml` contains an add-on-specific `changelog_template`. Keep its wording specific to the add-on and preserve both `{upstream_version}` and `{upstream_link}` placeholders.
+
 ## Security
 
 Never commit credentials, VPN keys, tokens, generated secrets, user data, or production configuration. Follow `SECURITY.md` for vulnerability reports.

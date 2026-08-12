@@ -187,9 +187,17 @@ def validate_addon(slug: str, expected_image: str, errors: list[str]) -> None:
                 "image",
                 "source",
                 "release_url",
+                "changelog_template",
             ):
                 if not upstream.get(key):
                     errors.append(f"{slug}/upstream.yaml: missing {key}")
+            changelog_template = str(upstream.get("changelog_template", ""))
+            for placeholder in ("{upstream_version}", "{upstream_link}"):
+                if placeholder not in changelog_template:
+                    errors.append(
+                        f"{slug}/upstream.yaml: changelog_template must contain "
+                        f"{placeholder}"
+                    )
             if upstream.get("version") != docker_source.get("VERSION"):
                 errors.append(f"{slug}: upstream version differs from Dockerfile")
             if upstream.get("digest") != docker_source.get("DIGEST"):

@@ -99,13 +99,29 @@ def render_changelog(
     upstream_version: str,
     url: str,
     release_tag: str,
+    template: str,
 ) -> str:
     heading = f"## {version}"
     if heading in content:
         return content
+    required_placeholders = ("{upstream_version}", "{upstream_link}")
+    missing_placeholders = [
+        placeholder for placeholder in required_placeholders if placeholder not in template
+    ]
+    if missing_placeholders:
+        missing = ", ".join(missing_placeholders)
+        raise ValueError(f"changelog_template missing placeholder(s): {missing}")
+    upstream_link = f"{url.rstrip('/')}/{release_tag}"
+    message = (
+        template.strip()
+        .replace("{upstream_version}", upstream_version)
+        .replace("{upstream_link}", upstream_link)
+    )
+    if not message or "\n" in message or "\r" in message:
+        raise ValueError("changelog_template must render one non-empty line")
     entry = (
         f"{heading}\n\n"
-        f"- Update upstream to [{upstream_version}]({url.rstrip('/')}/{release_tag}).\n\n"
+        f"- {message}\n\n"
     )
     if content.startswith("# Changelog\n"):
         content = f"# Changelog\n\n{entry}{content[12:].lstrip()}"
@@ -289,6 +305,9 @@ def sync_locked(addon_dir: Path) -> str | None:
     release_tag = docker_version
     if tag_prefix and not release_tag.startswith(tag_prefix):
         release_tag = f"{tag_prefix}{release_tag}"
+    changelog_template = str(metadata.get("changelog_template", "")).strip()
+    if not changelog_template:
+        raise ValueError(f"{upstream_path}: changelog_template required")
     updated_config = render_config_version(config_content, config_path, package_version)
     updated_changelog = render_changelog(
         changelog_content,
@@ -296,6 +315,7 @@ def sync_locked(addon_dir: Path) -> str | None:
         docker_version,
         release_base,
         release_tag,
+        changelog_template,
     )
     upstream_changed = (
         old_version != docker_version

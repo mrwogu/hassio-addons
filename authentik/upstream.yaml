@@ -6,3 +6,6 @@ package_version: 2026.8.0-rc7-1
 source: https://github.com/goauthentik/authentik
 release_url: https://github.com/goauthentik/authentik/releases/tag
 release_tag_prefix: version/
+changelog_template: >-
+  Refresh authentik's identity, SSO, and directory integration with
+  [{upstream_version}]({upstream_link}).

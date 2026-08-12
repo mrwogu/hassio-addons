@@ -6,3 +6,6 @@ package_version: 2.35.1-1
 source: https://github.com/n8n-io/n8n
 release_url: https://github.com/n8n-io/n8n/releases/tag
 release_tag_prefix: n8n@
+changelog_template: >-
+  Refresh n8n workflow automation and task-runner support with
+  [{upstream_version}]({upstream_link}).

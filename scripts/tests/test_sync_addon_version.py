@@ -39,6 +39,10 @@ class SyncAddonVersionTest(unittest.TestCase):
             "digest": metadata_digest,
             "package_version": metadata_package_version or package_version,
             "release_url": "https://example.invalid/releases/tag",
+            "changelog_template": (
+                "Refresh the add-on with "
+                "[{upstream_version}]({upstream_link})."
+            ),
         }
         if release_tag_prefix:
             metadata["release_tag_prefix"] = release_tag_prefix
@@ -66,7 +70,11 @@ class SyncAddonVersionTest(unittest.TestCase):
         self.assertIn('version: "2.0.0-1"', (addon / "config.yaml").read_text())
         changelog = (addon / "CHANGELOG.md").read_text()
         self.assertIn("## 2.0.0-1", changelog)
-        self.assertIn("/tag/v2.0.0", changelog)
+        self.assertIn(
+            "- Refresh the add-on with "
+            "[v2.0.0](https://example.invalid/releases/tag/v2.0.0).",
+            changelog,
+        )
 
     def test_digest_update_increments_revision(self) -> None:
         addon = self.make_addon(
@@ -89,6 +97,23 @@ class SyncAddonVersionTest(unittest.TestCase):
         )
 
         self.assertIsNone(sync(addon))
+
+    def test_requires_original_changelog_template(self) -> None:
+        addon = self.make_addon(
+            "v2.0.0",
+            "sha256:new",
+            "v1.0.0",
+            "sha256:old",
+            "1.0.0-4",
+            "v",
+        )
+        metadata_path = addon / "upstream.yaml"
+        metadata = yaml.safe_load(metadata_path.read_text())
+        del metadata["changelog_template"]
+        metadata_path.write_text(yaml.safe_dump(metadata, sort_keys=False))
+
+        with self.assertRaisesRegex(ValueError, "changelog_template required"):
+            sync(addon)
 
     def test_interrupted_sync_repairs_config_and_changelog(self) -> None:
         addon = self.make_addon(

@@ -2,7 +2,7 @@
 
 ## 2.14.3-1
 
-- Update upstream to [2.14.3](https://github.com/Stirling-Tools/Stirling-PDF/releases/tag/v2.14.3).
+- Bring the latest PDF processing and document workflow fixes from Stirling-PDF [2.14.3](https://github.com/Stirling-Tools/Stirling-PDF/releases/tag/v2.14.3).
 
 ## 2.14.2-1
 
