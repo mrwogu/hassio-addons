@@ -7,7 +7,7 @@ CONFIG_DIR=${ADDON_CONFIG_DIR:-/config}
 ADDON_INIT=${ADDON_INIT:-ak}
 
 # Structured options own these variables; custom env vars may not override them.
-MANAGED_ENV="AUTHENTIK_SECRET_KEY AUTHENTIK_POSTGRESQL__HOST AUTHENTIK_POSTGRESQL__PORT AUTHENTIK_POSTGRESQL__NAME AUTHENTIK_POSTGRESQL__USER AUTHENTIK_POSTGRESQL__PASSWORD AUTHENTIK_REDIS__HOST AUTHENTIK_REDIS__PORT AUTHENTIK_REDIS__DB AUTHENTIK_REDIS__PASSWORD AUTHENTIK_LOG_LEVEL AUTHENTIK_ERROR_REPORTING__ENABLED AUTHENTIK_STORAGE__FILE__PATH AUTHENTIK_CERT_DISCOVERY_DIR AUTHENTIK_EMAIL__TEMPLATE_DIR AUTHENTIK_DISABLE_UPDATE_CHECK AUTHENTIK_DISABLE_STARTUP_ANALYTICS"
+MANAGED_ENV="AUTHENTIK_SECRET_KEY AUTHENTIK_POSTGRESQL__HOST AUTHENTIK_POSTGRESQL__PORT AUTHENTIK_POSTGRESQL__NAME AUTHENTIK_POSTGRESQL__USER AUTHENTIK_POSTGRESQL__PASSWORD AUTHENTIK_LOG_LEVEL AUTHENTIK_ERROR_REPORTING__ENABLED AUTHENTIK_STORAGE__FILE__PATH AUTHENTIK_CERT_DISCOVERY_DIR AUTHENTIK_EMAIL__TEMPLATE_DIR AUTHENTIK_DISABLE_UPDATE_CHECK AUTHENTIK_DISABLE_STARTUP_ANALYTICS"
 PROTECTED_ENV="ADDON_OPTIONS_PATH ADDON_CONFIG_DIR ADDON_INIT PATH HOME IFS ENV BASH_ENV LD_PRELOAD LD_LIBRARY_PATH"
 
 log() {
@@ -43,10 +43,6 @@ if ! jq -e '
     and (.postgres_user | nonempty_clean)
     and (.postgres_password | type == "string" and length > 0 and control_free)
     and (.postgres_port | type == "number" and . >= 1 and . <= 65535)
-    and (.redis_host | nonempty_clean)
-    and (.redis_port | type == "number" and . >= 1 and . <= 65535)
-    and (.redis_db | type == "number" and . >= 0 and . <= 15)
-    and ((.redis_password // "") | type == "string" and control_free)
     and ((.secret_key // "") | type == "string" and control_free)
     and (.log_level |
         . == "trace" or . == "debug" or . == "info"
@@ -58,7 +54,7 @@ if ! jq -e '
             and (.name | type == "string")
             and (.value | type == "string")))
 ' "$OPTIONS_PATH" >/dev/null 2>&1; then
-    fail "Invalid options: check database, redis, or secret settings"
+    fail "Invalid options: check database or secret settings"
 fi
 
 umask 022
@@ -96,13 +92,6 @@ export "AUTHENTIK_POSTGRESQL__PORT=$(jq -r '.postgres_port' "$OPTIONS_PATH")"
 export "AUTHENTIK_POSTGRESQL__NAME=$(jq -r '.postgres_db' "$OPTIONS_PATH")"
 export "AUTHENTIK_POSTGRESQL__USER=$(jq -r '.postgres_user' "$OPTIONS_PATH")"
 export "AUTHENTIK_POSTGRESQL__PASSWORD=$(jq -r '.postgres_password' "$OPTIONS_PATH")"
-export "AUTHENTIK_REDIS__HOST=$(jq -r '.redis_host' "$OPTIONS_PATH")"
-export "AUTHENTIK_REDIS__PORT=$(jq -r '.redis_port' "$OPTIONS_PATH")"
-export "AUTHENTIK_REDIS__DB=$(jq -r '.redis_db' "$OPTIONS_PATH")"
-redis_password=$(jq -r '.redis_password // ""' "$OPTIONS_PATH")
-if [ -n "$redis_password" ]; then
-    export "AUTHENTIK_REDIS__PASSWORD=$redis_password"
-fi
 export "AUTHENTIK_LOG_LEVEL=$(jq -r '.log_level' "$OPTIONS_PATH")"
 export "AUTHENTIK_ERROR_REPORTING__ENABLED=$(jq -r '.error_reporting' "$OPTIONS_PATH")"
 

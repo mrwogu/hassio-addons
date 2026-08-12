@@ -2,14 +2,15 @@
 
 ## Requirements
 
-authentik does not bundle a database or cache. Before starting the add-on,
+authentik does not bundle a database. Since authentik 2025.10, all
+application state is stored in PostgreSQL. Before starting the add-on,
 provide:
 
 - An external **PostgreSQL** server (version 12 or newer) with an empty
   database and a user that owns it.
-- An external **Redis** server.
 
-Both must be reachable from the Home Assistant host. Example PostgreSQL setup:
+The server must be reachable from the Home Assistant host. Example PostgreSQL
+setup:
 
 ```sql
 CREATE USER authentik WITH PASSWORD 'a-strong-password';
@@ -32,11 +33,6 @@ create the first administrator account.
 ### `postgres_host`, `postgres_port`, `postgres_db`, `postgres_user`, `postgres_password`
 
 Connection details for the external PostgreSQL server.
-
-### `redis_host`, `redis_port`, `redis_db`, `redis_password`
-
-Connection details for the external Redis server. The password is optional; the
-database number selects a Redis logical database (0-15).
 
 ### `log_level`
 
@@ -67,7 +63,7 @@ env_vars:
 
 Names must match `[A-Z][A-Z0-9_]*`. The add-on rejects:
 
-- variables already managed by the options above (database, Redis, secret key,
+- variables already managed by the options above (database, secret key,
   storage paths, log level, error reporting, and the forced update/telemetry
   flags)
 - adapter and loader variables (such as `PATH` or `LD_PRELOAD`)
@@ -82,8 +78,8 @@ are not configurable.
 
 ## Persistent Data
 
-authentik keeps its authoritative state in PostgreSQL and Redis. The file paths
-below are redirected into the add-on configuration directory so uploaded and
+authentik keeps its authoritative state in PostgreSQL. The file paths below are
+redirected into the add-on configuration directory so uploaded and
 generated files survive restarts and are captured by Home Assistant backups:
 
 | Data | Container path | Stored at |

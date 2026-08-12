@@ -66,10 +66,10 @@ assert_env "AUTHENTIK_POSTGRESQL__NAME=authentik"
 assert_env "AUTHENTIK_POSTGRESQL__USER=authentik"
 # shellcheck disable=SC2016  # the literal $ is part of the password under test
 assert_env 'AUTHENTIK_POSTGRESQL__PASSWORD=pg-secret-$pass word'
-assert_env "AUTHENTIK_REDIS__HOST=redis.local"
-assert_env "AUTHENTIK_REDIS__PORT=6379"
-assert_env "AUTHENTIK_REDIS__DB=2"
-assert_env "AUTHENTIK_REDIS__PASSWORD=redis-secret"
+refute_env_key "AUTHENTIK_REDIS__HOST"
+refute_env_key "AUTHENTIK_REDIS__PORT"
+refute_env_key "AUTHENTIK_REDIS__DB"
+refute_env_key "AUTHENTIK_REDIS__PASSWORD"
 assert_env "AUTHENTIK_LOG_LEVEL=warning"
 assert_env "AUTHENTIK_ERROR_REPORTING__ENABLED=false"
 assert_env "AUTHENTIK_STORAGE__FILE__PATH=${CONFIG_DIR}/data"
@@ -125,12 +125,19 @@ assert_env "AUTHENTIK_SECRET_KEY=provided-signing-key-123"
 [ ! -e "${PROVIDED_CONFIG}/secret_key" ] ||
     fail "Secret key file created despite a provided key"
 
-# The optional Redis password is omitted when blank.
-NO_REDIS_PW="${TEMP_DIR}/no-redis-pw.json"
-jq '.redis_password = ""' "$OPTIONS" >"$NO_REDIS_PW"
-run_entrypoint "$NO_REDIS_PW"
+# Legacy Redis fields are ignored for existing installations.
+LEGACY_REDIS="${TEMP_DIR}/legacy-redis.json"
+jq '. + {
+    redis_host: "redis.local",
+    redis_port: 6379,
+    redis_db: 2,
+    redis_password: "redis-secret"
+}' "$OPTIONS" >"$LEGACY_REDIS"
+run_entrypoint "$LEGACY_REDIS"
+refute_env_key "AUTHENTIK_REDIS__HOST"
+refute_env_key "AUTHENTIK_REDIS__PORT"
+refute_env_key "AUTHENTIK_REDIS__DB"
 refute_env_key "AUTHENTIK_REDIS__PASSWORD"
-assert_env "AUTHENTIK_REDIS__HOST=redis.local"
 
 # A missing required value is rejected.
 EMPTY_HOST="${TEMP_DIR}/empty-host.json"
@@ -148,11 +155,11 @@ if run_entrypoint "$CONTROL"; then
     fail "Control character in database user was accepted"
 fi
 
-# An out-of-range Redis database is rejected.
-BAD_DB="${TEMP_DIR}/bad-db.json"
-jq '.redis_db = 99' "$OPTIONS" >"$BAD_DB"
-if run_entrypoint "$BAD_DB"; then
-    fail "Out-of-range Redis database was accepted"
+# An out-of-range PostgreSQL port is rejected.
+BAD_PORT="${TEMP_DIR}/bad-port.json"
+jq '.postgres_port = 70000' "$OPTIONS" >"$BAD_PORT"
+if run_entrypoint "$BAD_PORT"; then
+    fail "Out-of-range PostgreSQL port was accepted"
 fi
 
 # A custom variable that overrides a managed one is rejected.

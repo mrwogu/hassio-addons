@@ -2,10 +2,9 @@
 image: ghcr.io/goauthentik/server
 version: 2026.8.0-rc7
 digest: sha256:9d30c53c17a6889a2b2a7145066dc68cc3909a42596fe44844ba958020346cc4
-package_version: 2026.8.0-rc7-1
+package_version: 2026.8.0-rc7-2
 source: https://github.com/goauthentik/authentik
 release_url: https://github.com/goauthentik/authentik/releases/tag
 release_tag_prefix: version/
-changelog_template: >-
-  Refresh authentik's identity, SSO, and directory integration with
+changelog_template: Refresh authentik's identity, SSO, and directory integration with
   [{upstream_version}]({upstream_link}).

@@ -15,18 +15,6 @@ configuration:
   postgres_password:
     name: Hasło PostgreSQL
     description: Hasło użytkownika bazy danych.
-  redis_host:
-    name: Host Redis
-    description: Nazwa hosta lub adres IP zewnętrznego serwera Redis.
-  redis_port:
-    name: Port Redis
-    description: Port serwera Redis.
-  redis_db:
-    name: Baza danych Redis
-    description: Numer logicznej bazy danych Redis używanej przez authentik.
-  redis_password:
-    name: Hasło Redis
-    description: Opcjonalne hasło do serwera Redis.
   log_level:
     name: Poziom logów
     description: Szczegółowość logów authentik.
