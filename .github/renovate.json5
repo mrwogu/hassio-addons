@@ -50,9 +50,9 @@
       "ignoreTests": false
     },
     {
-      "description": "Never automerge repository tooling",
+      "description": "Automerge repository tooling",
       "matchManagers": ["github-actions", "pip_requirements"],
-      "automerge": false
+      "automerge": true
     }
   ]
 }
