@@ -43,6 +43,8 @@
         "stirling-pdf/Dockerfile"
       ],
       "matchUpdateTypes": ["digest", "patch", "minor", "major"],
+      "ignoreUnstable": true,
+      "allowedVersions": "/^v?\\d+\\.\\d+\\.\\d+$/",
       "labels": ["dependencies", "addon-upstream", "automerge"],
       "automerge": true,
       "automergeType": "pr",
