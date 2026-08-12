@@ -1,11 +1,9 @@
 ---
 image: ghcr.io/naiba/bonds
-version: 0.18.2
-digest: sha256:d159d75d66c2589c4747ed9b9a92baf5d4010e9636cff51ffd999e21edcce41d
-package_version: 0.18.2-1
+version: 0.19.0
+digest: sha256:6d6f262cdbc63f8d223002b0e74672c3521efbdd3b6918cb75420680ef189318
+package_version: 0.19.0-1
 source: https://github.com/naiba/bonds
 release_url: https://github.com/naiba/bonds/releases/tag
 release_tag_prefix: v
-changelog_template: >-
-  Bring the latest relationship management updates from Bonds
-  [{upstream_version}]({upstream_link}).
+changelog_template: Bring the latest relationship management updates from Bonds [{upstream_version}]({upstream_link}).
