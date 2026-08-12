@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.35.0-1
+
+- Update upstream to [2.35.0](https://github.com/n8n-io/n8n/releases/tag/n8n@2.35.0).
+
 ## 2.32.7-4
 
 - Bundle the native Python task runner environment.
