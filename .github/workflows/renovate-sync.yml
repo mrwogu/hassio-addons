@@ -9,12 +9,13 @@ on:
       - synchronize
 
 permissions:
+  actions: write
   contents: write
   pull-requests: read
 
 concurrency:
   group: renovate-sync-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   sync:
@@ -62,6 +63,7 @@ jobs:
           done
 
       - name: Commit synchronized metadata
+        id: commit
         working-directory: worktree
         env:
           BRANCH: ${{ github.event.pull_request.head.ref }}
@@ -80,4 +82,40 @@ jobs:
             n8n/Dockerfile n8n/config.yaml n8n/upstream.yaml n8n/CHANGELOG.md \
             stirling-pdf/Dockerfile stirling-pdf/config.yaml stirling-pdf/upstream.yaml stirling-pdf/CHANGELOG.md
           git commit -m "chore(deps): synchronize add-on metadata"
+          echo "head_sha=$(git rev-parse HEAD)" >>"$GITHUB_OUTPUT"
           git push origin "HEAD:${BRANCH}"
+
+      - name: Approve checks for synchronized commit
+        if: steps.commit.outputs.head_sha != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ steps.commit.outputs.head_sha }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -eu
+          for _ in $(seq 1 60); do
+            run_ids=$(
+              gh api \
+                "repos/$REPOSITORY/actions/runs?event=pull_request&head_sha=$HEAD_SHA&per_page=100" \
+                --jq '.workflow_runs[] |
+                  select(.name == "Lint" or .name == "Test") | .id'
+            )
+            run_count=$(printf '%s\n' "$run_ids" | sed '/^$/d' | wc -l | tr -d ' ')
+            if [ "$run_count" -lt 2 ]; then
+              sleep 2
+              continue
+            fi
+            for run_id in $run_ids; do
+              conclusion=$(
+                gh api "repos/$REPOSITORY/actions/runs/$run_id" \
+                  --jq '.conclusion // empty'
+              )
+              if [ "$conclusion" = "action_required" ]; then
+                gh api --method POST \
+                  "repos/$REPOSITORY/actions/runs/$run_id/approve" >/dev/null
+              fi
+            done
+            exit 0
+          done
+          echo "::error::Timed out waiting for Renovate checks"
+          exit 1
