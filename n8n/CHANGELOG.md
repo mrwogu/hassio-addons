@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.35.1-1
+
+- Update upstream to [2.35.1](https://github.com/n8n-io/n8n/releases/tag/n8n@2.35.1).
+
 ## 2.35.0-1
 
 - Update upstream to [2.35.0](https://github.com/n8n-io/n8n/releases/tag/n8n@2.35.0).
