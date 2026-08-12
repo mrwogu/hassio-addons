@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.18.2-1
+
+- Update upstream to [0.18.2](https://github.com/naiba/bonds/releases/tag/v0.18.2).
+
 ## 0.18.1-1
 
 - Update upstream to [0.18.1](https://github.com/naiba/bonds/releases/tag/v0.18.1).
