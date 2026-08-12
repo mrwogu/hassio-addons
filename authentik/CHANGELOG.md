@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026.8.0-rc7-1
+
+- Update upstream to [2026.8.0-rc7](https://github.com/goauthentik/authentik/releases/tag/version/2026.8.0-rc7).
+
 ## 2026.5.5-2
 
 - Run as root to read options.json and add advanced env_vars option
