@@ -1,0 +1,17 @@
+---
+http:
+  services:
+    homeassistant:
+      loadBalancer:
+        servers:
+          - url: "http://<HOME_ASSISTANT_ORIGIN>:8123"
+
+    plain-http:
+      loadBalancer:
+        servers:
+          - url: "http://<HTTP_SERVICE_ORIGIN>:8080"
+
+    websocket-service:
+      loadBalancer:
+        servers:
+          - url: "http://<WEBSOCKET_SERVICE_ORIGIN>:9000"

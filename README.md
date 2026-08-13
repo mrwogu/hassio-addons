@@ -43,7 +43,13 @@ Home Assistant add-ons packaged from upstream projects with automated updates, m
       <p><sub><code>amd64</code> <code>aarch64</code> · Port <code>5678</code><br><a href="https://github.com/n8n-io/n8n">Upstream</a> · Sustainable Use License</sub></p>
       <p><sub>SQLite by default. PostgreSQL and Redis are optional.</sub></p>
     </td>
-    <td></td>
+    <td align="center" valign="top" width="33%">
+      <a href="traefik_proxy/"><img src="traefik_proxy/logo.png" alt="Traefik Proxy" width="220"></a>
+      <h3><a href="traefik_proxy/">Traefik Proxy</a></h3>
+      <p>File-configured reverse proxy with TLS, real-IP logging, and Cloudflare-aware operations.</p>
+      <p><sub><code>amd64</code> <code>aarch64</code> · Ports <code>80</code> and <code>443</code><br><a href="https://github.com/traefik/traefik">Upstream</a> · MIT</sub></p>
+      <p><sub>Docker provider disabled. Dashboard is not published.</sub></p>
+    </td>
   </tr>
 </table>
 

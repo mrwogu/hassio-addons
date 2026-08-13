@@ -1,0 +1,11 @@
+{
+  "log_level": "debug",
+  "access_log_format": "json",
+  "trusted_proxy_ips": ["172.30.33.0/24"],
+  "acme": {
+    "enabled": false,
+    "email": "",
+    "cloudflare_api_token": "",
+    "cloudflare_api_token_file": ""
+  }
+}

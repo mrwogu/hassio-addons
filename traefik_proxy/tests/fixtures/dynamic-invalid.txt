@@ -1,0 +1,6 @@
+http:
+  routers:
+    broken:
+      rule: "Host(`broken.example.invalid`)"
+      service: missing
+      middlewares: [

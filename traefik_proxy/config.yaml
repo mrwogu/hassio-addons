@@ -1,0 +1,42 @@
+---
+name: Traefik Proxy
+version: "3.7.10-1"
+slug: traefik_proxy
+description: Secure file-configured reverse proxy for Home Assistant
+url: https://github.com/mrwogu/hassio-addons/tree/main/traefik_proxy
+image: ghcr.io/mrwogu/hassio-traefik-proxy
+arch:
+  - aarch64
+  - amd64
+init: false
+startup: services
+map:
+  - type: addon_config
+    read_only: false
+  - type: share
+    read_only: false
+ports:
+  80/tcp: 80
+  443/tcp: 443
+ports_description:
+  80/tcp: HTTP reverse proxy
+  443/tcp: HTTPS reverse proxy
+options:
+  log_level: info
+  access_log_format: json
+  trusted_proxy_ips: []
+  acme:
+    enabled: false
+    email: ""
+    cloudflare_api_token: ""
+    cloudflare_api_token_file: ""
+schema:
+  log_level: list(error|warn|info|debug)
+  access_log_format: list(json|common)
+  trusted_proxy_ips:
+    - str
+  acme:
+    enabled: bool
+    email: str?
+    cloudflare_api_token: password?
+    cloudflare_api_token_file: str?

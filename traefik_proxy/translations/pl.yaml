@@ -1,0 +1,30 @@
+---
+configuration:
+  log_level:
+    name: Poziom logu aplikacji
+    description: Szczegółowość logu aplikacji Traefik.
+  access_log_format:
+    name: Format access logu
+    description: JSON Lines do analizy albo Common Log Format dla prostych filtrów.
+  trusted_proxy_ips:
+    name: Zaufane zakresy proxy
+    description: Tylko zakresy CIDR lokalnego cloudflared albo zaufanego proxy.
+  acme:
+    name: Let's Encrypt DNS-01
+    description: Opcjonalny resolver certyfikatów z ograniczonym tokenem Cloudflare DNS.
+    fields:
+      enabled:
+        name: Włącz ACME
+        description: Pobieraj certyfikaty przez wyzwanie Cloudflare DNS-01.
+      email:
+        name: Email konta ACME
+        description: Adres używany przy rejestracji w Let's Encrypt.
+      cloudflare_api_token:
+        name: Token API Cloudflare
+        description: Ograniczony token edycji DNS. Nie trafia do logów Traefik.
+      cloudflare_api_token_file:
+        name: Plik tokenu API Cloudflare
+        description: Absolutna ścieżka pod /config albo /share/traefik do chronionego pliku tokenu.
+network:
+  80/tcp: Proxy reverse HTTP
+  443/tcp: Proxy reverse HTTPS

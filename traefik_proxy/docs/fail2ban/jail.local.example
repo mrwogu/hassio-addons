@@ -1,0 +1,27 @@
+[DEFAULT]
+# Replace with all current Cloudflare IP ranges before enabling any jail.
+# Never ban Cloudflare Edge addresses as if they were visitors.
+ignoreip = 127.0.0.1/8 ::1
+bantime = 1h
+findtime = 10m
+backend = auto
+
+[traefik-auth]
+enabled = false
+filter = traefik-auth
+logpath = /share/traefik/logs/access.jsonl
+maxretry = 5
+
+[traefik-404]
+enabled = false
+filter = traefik-404
+logpath = /share/traefik/logs/access.jsonl
+maxretry = 30
+findtime = 5m
+
+[traefik-scan]
+enabled = false
+filter = traefik-scan
+logpath = /share/traefik/logs/access.jsonl
+maxretry = 5
+findtime = 10m
