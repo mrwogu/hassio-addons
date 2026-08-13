@@ -1,0 +1,30 @@
+---
+configuration:
+  log_level:
+    name: Application log level
+    description: Traefik application log verbosity.
+  access_log_format:
+    name: Access log format
+    description: JSON Lines for analysis or Common Log Format for simple filters.
+  trusted_proxy_ips:
+    name: Trusted proxy IP ranges
+    description: CIDR ranges of the local cloudflared or reverse proxy source only.
+  acme:
+    name: Let's Encrypt DNS-01
+    description: Optional certificate resolver using a scoped Cloudflare DNS token.
+    fields:
+      enabled:
+        name: Enable ACME
+        description: Obtain certificates through the Cloudflare DNS-01 challenge.
+      email:
+        name: ACME account email
+        description: Email address used for Let's Encrypt registration.
+      cloudflare_api_token:
+        name: Cloudflare API token
+        description: Scoped DNS edit token. It is never written to Traefik logs.
+      cloudflare_api_token_file:
+        name: Cloudflare API token file
+        description: Absolute path under /config or /share/traefik to a protected token file.
+network:
+  80/tcp: HTTP reverse proxy
+  443/tcp: HTTPS reverse proxy

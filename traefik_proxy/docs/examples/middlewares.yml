@@ -1,0 +1,22 @@
+---
+http:
+  middlewares:
+    secure-headers:
+      headers:
+        browserXssFilter: true
+        contentTypeNosniff: true
+        frameDeny: true
+        referrerPolicy: no-referrer
+
+    basic-auth:
+      basicAuth:
+        users:
+          - "operator:$2y$05$REPLACE_WITH_BCRYPT_HASH"
+
+    forward-auth:
+      forwardAuth:
+        address: "http://<AUTH_SERVICE_ORIGIN>:9000/verify"
+        trustForwardHeader: false
+        authResponseHeaders:
+          - X-Forwarded-User
+          - X-Forwarded-Email

@@ -6,51 +6,52 @@ Home Assistant add-ons packaged from upstream projects with automated updates, m
 
 ## Add-ons
 
-### Gluetun
-
-VPN client supporting multiple providers, OpenVPN, WireGuard, DNS filtering, and proxy services.
-
-- Architectures: `amd64`, `aarch64`
-- Upstream: [passteque/gluetun](https://github.com/passteque/gluetun)
-- License: MIT
-
-### Bonds
-
-Personal relationship manager built with Go and React.
-
-- Architectures: `amd64`, `aarch64`
-- Upstream: [naiba/bonds](https://github.com/naiba/bonds)
-- License: Business Source License 1.1
-- Commercial use and managed hosting restrictions apply. Read the add-on documentation before installation.
-
-### Stirling-PDF
-
-Locally hosted web application for splitting, merging, converting, OCR-ing, and otherwise manipulating PDF files.
-
-- Architectures: `amd64`, `aarch64`
-- Upstream: [Stirling-Tools/Stirling-PDF](https://github.com/Stirling-Tools/Stirling-PDF)
-- License: MIT
-- Direct web access on port `8080`.
-
-### authentik
-
-Self-hosted identity provider for single sign-on, SAML, OAuth2, and LDAP.
-
-- Architectures: `amd64`, `aarch64`
-- Upstream: [goauthentik/authentik](https://github.com/goauthentik/authentik)
-- License: MIT, with separate terms for enterprise components
-- Requires an external PostgreSQL and Redis. Direct web access on port `9000`.
-
-### n8n
-
-Workflow automation platform for connecting apps and services.
-
-- Architectures: `amd64`, `aarch64`
-- Upstream: [n8n-io/n8n](https://github.com/n8n-io/n8n)
-- License: Sustainable Use License, with separate terms for Enterprise source
-  files
-- Uses SQLite by default; PostgreSQL and Redis are external and optional.
-- Direct web access on port `5678`.
+<table>
+  <tr>
+    <td align="center" valign="top" width="33%">
+      <a href="gluetun/"><img src="gluetun/logo.png" alt="Gluetun" width="220"></a>
+      <h3><a href="gluetun/">Gluetun VPN</a></h3>
+      <p>VPN client supporting multiple providers, OpenVPN, WireGuard, DNS filtering, and proxy services.</p>
+      <p><sub><code>amd64</code> <code>aarch64</code><br><a href="https://github.com/passteque/gluetun">Upstream</a> · MIT</sub></p>
+    </td>
+    <td align="center" valign="top" width="33%">
+      <a href="bonds/"><img src="bonds/logo.png" alt="Bonds" width="220"></a>
+      <h3><a href="bonds/">Bonds</a></h3>
+      <p>Personal relationship manager built with Go and React.</p>
+      <p><sub><code>amd64</code> <code>aarch64</code><br><a href="https://github.com/naiba/bonds">Upstream</a> · Business Source License 1.1</sub></p>
+      <p><sub>Commercial use and managed hosting restrictions apply.</sub></p>
+    </td>
+    <td align="center" valign="top" width="33%">
+      <a href="stirling-pdf/"><img src="stirling-pdf/logo.png" alt="Stirling-PDF" width="220"></a>
+      <h3><a href="stirling-pdf/">Stirling-PDF</a></h3>
+      <p>Locally hosted web application for splitting, merging, converting, OCR, and otherwise manipulating PDF files.</p>
+      <p><sub><code>amd64</code> <code>aarch64</code> · Port <code>8080</code><br><a href="https://github.com/Stirling-Tools/Stirling-PDF">Upstream</a> · MIT</sub></p>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" valign="top" width="33%">
+      <a href="authentik/"><img src="authentik/logo.png" alt="authentik" width="220"></a>
+      <h3><a href="authentik/">authentik</a></h3>
+      <p>Self-hosted identity provider for single sign-on, SAML, OAuth2, and LDAP.</p>
+      <p><sub><code>amd64</code> <code>aarch64</code> · Port <code>9000</code><br><a href="https://github.com/goauthentik/authentik">Upstream</a> · MIT</sub></p>
+      <p><sub>Requires external PostgreSQL and Redis.</sub></p>
+    </td>
+    <td align="center" valign="top" width="33%">
+      <a href="n8n/"><img src="n8n/logo.png" alt="n8n" width="220"></a>
+      <h3><a href="n8n/">n8n</a></h3>
+      <p>Workflow automation platform for connecting apps and services.</p>
+      <p><sub><code>amd64</code> <code>aarch64</code> · Port <code>5678</code><br><a href="https://github.com/n8n-io/n8n">Upstream</a> · Sustainable Use License</sub></p>
+      <p><sub>SQLite by default. PostgreSQL and Redis are optional.</sub></p>
+    </td>
+    <td align="center" valign="top" width="33%">
+      <a href="traefik_proxy/"><img src="traefik_proxy/logo.png" alt="Traefik Proxy" width="220"></a>
+      <h3><a href="traefik_proxy/">Traefik Proxy</a></h3>
+      <p>File-configured reverse proxy with TLS, real-IP logging, and Cloudflare-aware operations.</p>
+      <p><sub><code>amd64</code> <code>aarch64</code> · Ports <code>80</code> and <code>443</code><br><a href="https://github.com/traefik/traefik">Upstream</a> · MIT</sub></p>
+      <p><sub>Docker provider disabled. Dashboard is not published.</sub></p>
+    </td>
+  </tr>
+</table>
 
 ## Installation
 

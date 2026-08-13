@@ -1,0 +1,9 @@
+/share/traefik/logs/access.jsonl /share/traefik/logs/traefik.log {
+  size 50M
+  rotate 14
+  compress
+  missingok
+  notifempty
+  copytruncate
+  su root root
+}

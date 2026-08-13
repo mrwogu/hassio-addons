@@ -1,0 +1,11 @@
+{
+  "log_level": "trace",
+  "access_log_format": "json",
+  "trusted_proxy_ips": [],
+  "acme": {
+    "enabled": false,
+    "email": "",
+    "cloudflare_api_token": "",
+    "cloudflare_api_token_file": ""
+  }
+}

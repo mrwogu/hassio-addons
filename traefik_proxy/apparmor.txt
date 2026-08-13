@@ -1,0 +1,46 @@
+#include <tunables/global>
+
+profile ADDON_SLUG flags=(attach_disconnected,mediate_deleted) {
+  #include <abstractions/base>
+  #include <abstractions/nameservice>
+
+  network inet,
+  network inet6,
+  network unix,
+  signal,
+
+  /usr/local/bin/addon-entrypoint rix,
+  /usr/local/bin/run.sh rix,
+  /usr/local/bin/dynamic-watcher.py r,
+  /usr/local/bin/traefik ix,
+  /bin/sh ix,
+  /bin/sleep ix,
+  /usr/bin/jq ix,
+  /usr/bin/python3* ix,
+  /usr/sbin/logrotate ix,
+
+  /bin/** mr,
+  /lib/** mr,
+  /sbin/** mr,
+  /usr/bin/** mr,
+  /usr/lib/** mr,
+  /usr/sbin/** mr,
+
+  /etc/traefik/traefik.yml r,
+  /etc/logrotate.d/traefik r,
+  /etc/** r,
+  /proc/** r,
+  /run/ rw,
+  /run/** rwk,
+  /tmp/ rw,
+  /tmp/** rwk,
+  /var/ rw,
+  /var/** rwk,
+
+  /config/ rw,
+  /config/** rwk,
+  /data/ rw,
+  /data/** rwk,
+  /share/ rw,
+  /share/** rwk,
+}

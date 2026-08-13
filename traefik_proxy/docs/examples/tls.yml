@@ -1,0 +1,5 @@
+---
+tls:
+  certificates:
+    - certFile: /share/traefik/certs/example.crt
+      keyFile: /share/traefik/certs/example.key

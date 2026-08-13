@@ -1,0 +1,56 @@
+---
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
+
+entryPoints:
+  web:
+    address: ":80"
+    forwardedHeaders:
+      insecure: false
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+  websecure:
+    address: ":443"
+    forwardedHeaders:
+      insecure: false
+  health:
+    address: "127.0.0.1:8082"
+
+api:
+  dashboard: true
+  insecure: false
+
+ping:
+  entryPoint: health
+
+providers:
+  file:
+    directory: /config/traefik/dynamic-active
+    watch: true
+
+log:
+  level: INFO
+  filePath: /share/traefik/logs/traefik.log
+  format: json
+
+accessLog:
+  filePath: /share/traefik/logs/access.jsonl
+  format: json
+  bufferingSize: 0
+  fields:
+    defaultMode: keep
+    names:
+      RequestLine: drop
+    queryParameters:
+      defaultMode: drop
+    headers:
+      defaultMode: drop
+      names:
+        CF-Connecting-IP: keep
+        X-Forwarded-For: keep
+        X-Real-IP: keep

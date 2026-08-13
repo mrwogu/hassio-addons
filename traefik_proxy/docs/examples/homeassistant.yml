@@ -1,0 +1,12 @@
+---
+http:
+  routers:
+    homeassistant:
+      rule: "Host(`ha.example.invalid`)"
+      entryPoints:
+        - websecure
+      service: homeassistant
+      middlewares:
+        - secure-headers
+      tls:
+        certResolver: letsencrypt
