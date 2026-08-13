@@ -9,6 +9,7 @@ from pathlib import Path
 
 
 SCRIPT = Path(__file__).resolve().parents[1] / "dynamic-watcher.py"
+INVALID_FIXTURE = Path(__file__).resolve().parent / "fixtures" / "dynamic-invalid.txt"
 SPEC = importlib.util.spec_from_file_location("dynamic_watcher", SCRIPT)
 if SPEC is None or SPEC.loader is None:
     raise RuntimeError("Could not load dynamic watcher")
@@ -34,7 +35,7 @@ class DynamicWatcherTest(unittest.TestCase):
             active_good = (active / "services.yml").read_text(encoding="utf-8")
 
             broken = source / "broken.yml"
-            broken.write_text("http:\n  routers:\n    broken: [\n", encoding="utf-8")
+            broken.write_text(INVALID_FIXTURE.read_text(encoding="utf-8"), encoding="utf-8")
             MODULE.sync_once(source, active, log, seen)
 
             self.assertEqual(
@@ -56,7 +57,7 @@ class DynamicWatcherTest(unittest.TestCase):
             MODULE.sync_once(source, active, log, {})
             expected = (active / "services.yml").read_bytes()
 
-            good.write_text("http:\n  routers: [\n", encoding="utf-8")
+            good.write_text(INVALID_FIXTURE.read_text(encoding="utf-8"), encoding="utf-8")
             restarted_seen = MODULE.discover_active(active)
             MODULE.sync_once(source, active, log, restarted_seen)
 
@@ -83,6 +84,24 @@ class DynamicWatcherTest(unittest.TestCase):
             file_path.unlink()
             MODULE.sync_once(source, active, log, seen)
             self.assertFalse((active / "routes.yml").exists())
+
+    def test_missing_source_does_not_remove_active_configuration(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "source"
+            active = root / "active"
+            log = root / "traefik.log"
+            source.mkdir()
+            file_path = source / "routes.yml"
+            file_path.write_text("http:\n  routers: {}\n", encoding="utf-8")
+            seen = MODULE.sync_once(source, active, log, {})
+            file_path.unlink()
+            source.rmdir()
+
+            MODULE.sync_once(source, active, log, seen)
+
+            self.assertTrue((active / "routes.yml").exists())
+            self.assertIn("Could not inspect dynamic source directory", log.read_text())
 
 
 if __name__ == "__main__":

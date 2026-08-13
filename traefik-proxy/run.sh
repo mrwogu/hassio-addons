@@ -10,8 +10,10 @@ LOGROTATE_STATE=${TRAEFIK_LOGROTATE_STATE:-${DATA_DIR}/logrotate.status}
 TRAEFIK_BIN=${TRAEFIK_BIN:-/usr/local/bin/traefik}
 LOGROTATE_BIN=${TRAEFIK_LOGROTATE_BIN:-/usr/sbin/logrotate}
 WATCHER_BIN=${TRAEFIK_WATCHER_BIN:-/usr/local/bin/dynamic-watcher.py}
-ROTATE_INTERVAL=${TRAEFIK_ROTATE_INTERVAL:-5}
-PREFLIGHT_WAIT=${TRAEFIK_PREFLIGHT_WAIT:-1}
+STATIC_RENDERER=${TRAEFIK_STATIC_RENDERER:-/usr/local/bin/static-config.py}
+RUNTIME_STATIC_CONFIG=${TRAEFIK_RUNTIME_STATIC_CONFIG:-${DATA_DIR}/static.yml}
+ROTATE_INTERVAL=${TRAEFIK_ROTATE_INTERVAL:-300}
+PREFLIGHT_WAIT=${TRAEFIK_PREFLIGHT_WAIT:-10}
 
 DYNAMIC_DIR="${SHARE_DIR}/dynamic"
 ACTIVE_DYNAMIC_DIR="${DATA_DIR}/dynamic-active"
@@ -19,6 +21,7 @@ LOG_DIR="${SHARE_DIR}/logs"
 ACCESS_LOG="${LOG_DIR}/access.jsonl"
 APP_LOG="${LOG_DIR}/traefik.log"
 ACME_FILE="${DATA_DIR}/acme.json"
+LOG_PIPE=${TRAEFIK_LOG_PIPE:-/tmp/traefik-stdout.pipe}
 SECRET_DIR=${TRAEFIK_SECRET_DIR:-/run/secrets/traefik}
 CF_TOKEN_SECRET="${SECRET_DIR}/cloudflare_api_token"
 
@@ -60,6 +63,7 @@ validate_options() {
             and (explode | all(. >= 32 and . != 127));
         def optional_clean:
             ((. // "") | type == "string")
+            and ((. // "") | length <= 1024)
             and ((. // "") | explode | all(. >= 32 and . != 127));
         type == "object"
         and ((.log_level // "info") |
@@ -104,6 +108,7 @@ prepare_acme() {
 
     if [ "$ACME_ENABLED" != "true" ]; then
         rm -f "$CF_TOKEN_SECRET"
+        unset CF_DNS_API_TOKEN CF_DNS_API_TOKEN_FILE
         return
     fi
 
@@ -112,14 +117,33 @@ prepare_acme() {
         fail "Configure one Cloudflare token source, not two"
     fi
     if [ -n "$ACME_TOKEN_FILE" ]; then
-        case "$ACME_TOKEN_FILE" in
-            /config/* | /share/traefik/*) ;;
-            *) fail "Cloudflare token file must be under /config or /share/traefik" ;;
-        esac
-        [ -r "$ACME_TOKEN_FILE" ] ||
+        ACME_TOKEN_PATH=$(python3 - "$ACME_TOKEN_FILE" <<'PY'
+from pathlib import Path
+import os
+import sys
+
+candidate = Path(sys.argv[1]).resolve(strict=True)
+roots = (
+    Path(os.environ.get("TRAEFIK_CONFIG_ROOT", "/config")).resolve(),
+    Path(os.environ.get("TRAEFIK_SHARE_DIR", "/share/traefik")).resolve(),
+)
+if not any(candidate == root or root in candidate.parents for root in roots):
+    raise SystemExit(1)
+print(candidate)
+PY
+        ) || fail "Cloudflare token file must resolve under /config or /share/traefik"
+        [ -r "$ACME_TOKEN_PATH" ] ||
             fail "Configured Cloudflare token file is not readable"
-        ACME_TOKEN=$(cat "$ACME_TOKEN_FILE") ||
-            fail "Could not read Cloudflare token file"
+        ACME_TOKEN=$(python3 - "$ACME_TOKEN_PATH" <<'PY'
+from pathlib import Path
+import sys
+
+value = Path(sys.argv[1]).read_bytes()
+if not value or any(byte < 32 or byte == 127 for byte in value):
+    raise SystemExit(1)
+sys.stdout.buffer.write(value)
+PY
+        ) || fail "Cloudflare token file contains control characters or is empty"
     fi
     [ -n "$ACME_TOKEN" ] ||
         fail "Cloudflare DNS API token is required when ACME is enabled"
@@ -133,8 +157,9 @@ prepare_acme() {
     [ -f "$ACME_FILE" ] || fail "ACME storage path is not a regular file"
     chmod 0600 "$ACME_FILE"
     write_secret "$CF_TOKEN_SECRET" "$ACME_TOKEN"
-    CF_DNS_API_TOKEN=$(cat "$CF_TOKEN_SECRET")
-    export CF_DNS_API_TOKEN
+    unset CF_DNS_API_TOKEN
+    CF_DNS_API_TOKEN_FILE="$CF_TOKEN_SECRET"
+    export CF_DNS_API_TOKEN_FILE
 }
 
 prepare_runtime_options() {
@@ -143,57 +168,69 @@ prepare_runtime_options() {
     TRUSTED_PROXY_IPS=$(jq -r '(.trusted_proxy_ips // []) | join(",")' "$OPTIONS_PATH")
 }
 
-run_traefik() {
-    if [ -n "$TRUSTED_PROXY_IPS" ]; then
-        exec "$TRAEFIK_BIN" \
-            "--configFile=${STATIC_CONFIG}" \
-            "--log.level=${LOG_LEVEL}" \
-            "--accesslog.format=${ACCESS_LOG_FORMAT}" \
-            "--providers.file.directory=${ACTIVE_DYNAMIC_DIR}" \
-            "--providers.file.watch=true" \
-            "--entryPoints.web.forwardedHeaders.trustedIPs=${TRUSTED_PROXY_IPS}" \
-            "--entryPoints.websecure.forwardedHeaders.trustedIPs=${TRUSTED_PROXY_IPS}" \
-            "$@"
-    else
-        exec "$TRAEFIK_BIN" \
-            "--configFile=${STATIC_CONFIG}" \
-            "--log.level=${LOG_LEVEL}" \
-            "--accesslog.format=${ACCESS_LOG_FORMAT}" \
-            "--providers.file.directory=${ACTIVE_DYNAMIC_DIR}" \
-            "--providers.file.watch=true" \
-            "$@"
-    fi
+render_static_config() {
+    WEB_ADDRESS=$1
+    WEBSECURE_ADDRESS=$2
+    HEALTH_ADDRESS=$3
+    python3 "$STATIC_RENDERER" \
+        --source "$STATIC_CONFIG" \
+        --output "$RUNTIME_STATIC_CONFIG" \
+        --web-address "$WEB_ADDRESS" \
+        --websecure-address "$WEBSECURE_ADDRESS" \
+        --health-address "$HEALTH_ADDRESS" \
+        --dynamic-directory "$ACTIVE_DYNAMIC_DIR" \
+        --access-log-path "$ACCESS_LOG" \
+        --log-level "$LOG_LEVEL" \
+        --access-log-format "$ACCESS_LOG_FORMAT" \
+        --trusted-proxy-ips "$TRUSTED_PROXY_IPS" \
+        --acme-enabled "$ACME_ENABLED" \
+        --acme-email "$ACME_EMAIL" \
+        --acme-storage "$ACME_FILE"
 }
 
-run_with_acme() {
-    if [ "$ACME_ENABLED" = "true" ]; then
-        run_traefik \
-            "--certificatesResolvers.letsencrypt.acme.email=${ACME_EMAIL}" \
-            "--certificatesResolvers.letsencrypt.acme.storage=${ACME_FILE}" \
-            "--certificatesResolvers.letsencrypt.acme.dnsChallenge.provider=cloudflare" \
-            "$@"
-    else
-        run_traefik "$@"
+start_log_forwarder() {
+    rm -f "$LOG_PIPE"
+    mkfifo "$LOG_PIPE"
+    chmod 0600 "$LOG_PIPE"
+    tee -a "$APP_LOG" <"$LOG_PIPE" >&2 &
+    log_forwarder_pid=$!
+}
+
+stop_log_forwarder() {
+    if [ -n "${log_forwarder_pid:-}" ]; then
+        kill "$log_forwarder_pid" 2>/dev/null || true
+        wait "$log_forwarder_pid" 2>/dev/null || true
+        log_forwarder_pid=
     fi
+    rm -f "$LOG_PIPE"
+}
+
+run_traefik() {
+    exec "$TRAEFIK_BIN" "--configFile=${RUNTIME_STATIC_CONFIG}" >"$LOG_PIPE" 2>&1
 }
 
 preflight() {
     log "Validating Traefik static configuration"
-    run_with_acme \
-        "--entrypoints.web.address=127.0.0.1:0" \
-        "--entrypoints.websecure.address=127.0.0.1:0" \
-        "--entrypoints.health.address=127.0.0.1:0" &
+    render_static_config \
+        "127.0.0.1:0" \
+        "127.0.0.1:0" \
+        "127.0.0.1:0"
+    start_log_forwarder
+    "$TRAEFIK_BIN" "--configFile=${RUNTIME_STATIC_CONFIG}" >"$LOG_PIPE" 2>&1 &
     preflight_pid=$!
     sleep "$PREFLIGHT_WAIT"
     if kill -0 "$preflight_pid" 2>/dev/null; then
         kill -TERM "$preflight_pid" 2>/dev/null || true
         wait "$preflight_pid" 2>/dev/null || true
-        return 0
+        preflight_status=0
+    elif wait "$preflight_pid"; then
+        preflight_status=0
+    else
+        preflight_status=$?
     fi
-    if wait "$preflight_pid"; then
-        return 0
-    fi
-    fail "Traefik configuration validation failed; inspect ${APP_LOG}"
+    stop_log_forwarder
+    [ "$preflight_status" -eq 0 ] ||
+        fail "Traefik configuration validation failed; inspect ${APP_LOG}"
 }
 
 rotate_loop() {
@@ -225,6 +262,7 @@ on_exit() {
     exit_status=$?
     trap - EXIT
     stop_children
+    stop_log_forwarder
     wait "${child_pid:-}" "${rotation_pid:-}" "${watcher_pid:-}" 2>/dev/null || true
     exit "$exit_status"
 }
@@ -232,8 +270,11 @@ on_exit() {
 require_command jq
 require_command "$TRAEFIK_BIN"
 require_command "$LOGROTATE_BIN"
+require_command mkfifo
+require_command tee
 require_command python3
 [ -x "$WATCHER_BIN" ] || fail "Dynamic configuration watcher is not executable"
+[ -x "$STATIC_RENDERER" ] || fail "Static configuration renderer is not executable"
 [ -r "$OPTIONS_PATH" ] || fail "Options file is not readable"
 [ -r "$STATIC_CONFIG" ] || fail "Static configuration is not readable"
 
@@ -256,12 +297,14 @@ watcher_pid=$!
 
 preflight
 
+render_static_config ":80" ":443" "127.0.0.1:8082"
 log "Starting Traefik; dynamic configuration directory is ${DYNAMIC_DIR}"
 rotate_loop &
 rotation_pid=$!
 trap forward_signal INT TERM HUP
 
-run_with_acme &
+start_log_forwarder
+run_traefik &
 child_pid=$!
 if wait "$child_pid"; then
     exit_status=0
@@ -273,5 +316,6 @@ kill "$rotation_pid" 2>/dev/null || true
 wait "$rotation_pid" 2>/dev/null || true
 kill "$watcher_pid" 2>/dev/null || true
 wait "$watcher_pid" 2>/dev/null || true
+stop_log_forwarder
 trap - INT TERM HUP
 exit "$exit_status"

@@ -54,7 +54,7 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           set -eu
-          for addon in authentik bonds gluetun n8n stirling-pdf traefik_proxy; do
+          for addon in authentik bonds gluetun n8n stirling-pdf traefik-proxy; do
             if git diff --name-only "$BASE_SHA...HEAD" -- "${addon}/Dockerfile" |
               grep -qx "${addon}/Dockerfile"
             then
@@ -81,7 +81,7 @@ jobs:
             gluetun/Dockerfile gluetun/config.yaml gluetun/upstream.yaml gluetun/CHANGELOG.md \
             n8n/Dockerfile n8n/config.yaml n8n/upstream.yaml n8n/CHANGELOG.md \
             stirling-pdf/Dockerfile stirling-pdf/config.yaml stirling-pdf/upstream.yaml stirling-pdf/CHANGELOG.md \
-            traefik_proxy/Dockerfile traefik_proxy/config.yaml traefik_proxy/upstream.yaml traefik_proxy/CHANGELOG.md
+            traefik-proxy/Dockerfile traefik-proxy/config.yaml traefik-proxy/upstream.yaml traefik-proxy/CHANGELOG.md
           git commit -m "chore(deps): synchronize add-on metadata"
           echo "head_sha=$(git rev-parse HEAD)" >>"$GITHUB_OUTPUT"
           git push origin "HEAD:${BRANCH}"

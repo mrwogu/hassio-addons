@@ -1,0 +1,76 @@
+---
+name: Traefik integration
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: traefik-integration
+  cancel-in-progress: false
+
+jobs:
+  integration:
+    name: Traefik ${{ matrix.arch }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            platform: linux/amd64
+          - arch: aarch64
+            platform: linux/arm64
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130  # v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c  # v4.2.0
+
+      - name: Build image
+        env:
+          ARCH: ${{ matrix.arch }}
+          PLATFORM: ${{ matrix.platform }}
+        run: |
+          docker buildx build --load --platform "$PLATFORM" \
+            --tag "local/traefik-proxy:3.7.10-$ARCH" traefik-proxy
+
+      - name: Load AppArmor profile
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes apparmor-utils
+          sed 's/profile ADDON_SLUG/profile mrwogu-traefik-proxy-${{ matrix.arch }}/' \
+            traefik-proxy/apparmor.txt >integration-apparmor.txt
+          sudo apparmor_parser --replace integration-apparmor.txt
+
+      - name: Run integration
+        env:
+          ACME_TEST: "true"
+          APPARMOR_PROFILE: mrwogu-traefik-proxy-${{ matrix.arch }}
+          ARCH: ${{ matrix.arch }}
+          CONTAINER: traefik-proxy-integration-${{ github.run_id }}-${{ matrix.arch }}
+          IMAGE: local/traefik-proxy:3.7.10-${{ matrix.arch }}
+          PLATFORM: ${{ matrix.platform }}
+        run: sh traefik-proxy/tests/integration.sh
+
+      - name: Inspect failure
+        if: failure()
+        run: docker ps -a
+
+      - name: Clean up
+        if: always()
+        run: |
+          docker rm --force "traefik-proxy-integration-${GITHUB_RUN_ID}-${{ matrix.arch }}" \
+            >/dev/null 2>&1 || true
+          sudo apparmor_parser --remove integration-apparmor.txt \
+            >/dev/null 2>&1 || true
+          rm -f integration-apparmor.txt

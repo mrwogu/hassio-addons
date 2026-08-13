@@ -46,7 +46,7 @@ jobs:
 
       - name: Validate shell
         run: |
-          find authentik bonds gluetun n8n stirling-pdf traefik_proxy -type f \
+          find authentik bonds gluetun n8n stirling-pdf traefik-proxy -type f \
             \( -name '*.sh' -o -name 'addon-entrypoint' \) \
             -print0 | xargs -0 shellcheck
 
@@ -81,7 +81,7 @@ jobs:
       - name: Validate Traefik Proxy metadata
         uses: frenck/action-addon-linter@f995494fd84fae6310d23617e66d0e37de4f14eb  # v2.21
         with:
-          path: ./traefik_proxy
+          path: ./traefik-proxy
 
   changes:
     name: Detect unreleased add-ons
@@ -102,7 +102,7 @@ jobs:
         id: filter
         run: |
           addons='[]'
-          for addon in authentik bonds gluetun n8n stirling-pdf traefik_proxy; do
+          for addon in authentik bonds gluetun n8n stirling-pdf traefik-proxy; do
             version=$(sed -n 's/^version: "\(.*\)"$/\1/p' "$addon/config.yaml")
             if [ -z "$version" ]; then
               echo "::error::Could not read $addon version"

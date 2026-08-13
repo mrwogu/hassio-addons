@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.7.10-2
+
+- Fix runtime configuration, confinement, and smoke tests
+
 ## 3.7.10-1
 
 - Initial Traefik Proxy Home Assistant app based on Traefik v3.7.10.

@@ -16,7 +16,7 @@ ADDONS = {
     "gluetun": "ghcr.io/mrwogu/hassio-gluetun",
     "n8n": "ghcr.io/mrwogu/hassio-n8n",
     "stirling-pdf": "ghcr.io/mrwogu/hassio-stirling-pdf",
-    "traefik_proxy": "ghcr.io/mrwogu/hassio-traefik-proxy",
+    "traefik-proxy": "ghcr.io/mrwogu/hassio-traefik-proxy",
 }
 REQUIRED_ADDON_FILES = (
     "config.yaml",

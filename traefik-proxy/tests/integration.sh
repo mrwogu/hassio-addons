@@ -1,21 +1,38 @@
 #!/bin/sh
 set -eu
 
-IMAGE=${IMAGE:-local/traefik-proxy:3.7.10-amd64}
-PODMAN_ARCH=${PODMAN_ARCH:-amd64}
+CONTAINER_RUNTIME=${CONTAINER_RUNTIME:-docker}
+ARCH=${ARCH:-amd64}
+case "$ARCH" in
+    amd64) DEFAULT_PLATFORM=linux/amd64 ;;
+    aarch64) DEFAULT_PLATFORM=linux/arm64 ;;
+    *) printf '%s\n' "Unsupported ARCH: $ARCH" >&2; exit 2 ;;
+esac
+PLATFORM=${PLATFORM:-$DEFAULT_PLATFORM}
+IMAGE=${IMAGE:-local/traefik-proxy:3.7.10-${ARCH}}
+if [ "$CONTAINER_RUNTIME" = podman ]; then
+    DEFAULT_CONTAINER_HOST=host.containers.internal
+else
+    DEFAULT_CONTAINER_HOST=host.docker.internal
+fi
+CONTAINER_HOST=${CONTAINER_HOST:-$DEFAULT_CONTAINER_HOST}
 TEST_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 WORK_DIR=$(mktemp -d)
-CONTAINER="traefik-proxy-integration-$$"
+CONTAINER=${CONTAINER:-traefik-proxy-integration-$$}
 HTTP_PORT=${HTTP_PORT:-19080}
 HTTPS_PORT=${HTTPS_PORT:-19443}
 
 cleanup() {
-    podman rm --force "$CONTAINER" >/dev/null 2>&1 || true
+    "$CONTAINER_RUNTIME" rm --force "$CONTAINER" >/dev/null 2>&1 || true
     if [ -n "${BACKEND_PID:-}" ]; then
         kill "$BACKEND_PID" 2>/dev/null || true
         wait "$BACKEND_PID" 2>/dev/null || true
     fi
-    rm -rf "$WORK_DIR"
+    if [ "${KEEP_WORK_DIR:-false}" != true ]; then
+        rm -rf "$WORK_DIR"
+    else
+        printf '%s\n' "Preserved integration workspace: $WORK_DIR" >&2
+    fi
 }
 trap cleanup EXIT HUP INT TERM
 
@@ -34,9 +51,10 @@ fail() {
             cat "${WORK_DIR}/share/traefik/dynamic/hot.yml" >&2
         fi
         if [ -n "${CONTAINER:-}" ]; then
-            podman exec "$CONTAINER" ls -la /share/traefik/dynamic >&2 || true
-            podman exec "$CONTAINER" sed -n '1,80p' /etc/traefik/traefik.yml >&2 || true
-            podman exec "$CONTAINER" ps >&2 || true
+            "$CONTAINER_RUNTIME" logs "$CONTAINER" >&2 || true
+            "$CONTAINER_RUNTIME" exec "$CONTAINER" ls -la /share/traefik/dynamic >&2 || true
+            "$CONTAINER_RUNTIME" exec "$CONTAINER" sed -n '1,80p' /etc/traefik/traefik.yml >&2 || true
+            "$CONTAINER_RUNTIME" exec "$CONTAINER" ps >&2 || true
         fi
     fi
     exit 1
@@ -68,8 +86,8 @@ wait_for_route() {
 
 wait_for_health() {
     for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
-        if podman exec "$CONTAINER" /usr/local/bin/traefik healthcheck \
-            --configFile=/etc/traefik/traefik.yml \
+        if "$CONTAINER_RUNTIME" exec "$CONTAINER" /usr/local/bin/traefik healthcheck \
+            --configFile=/config/traefik/static.yml \
             --ping=true --ping.entrypoint=health >/dev/null 2>&1
         then
             return 0
@@ -123,6 +141,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.send_header("Sec-WebSocket-Accept", accept)
             self.end_headers()
             return
+        if self.path.startswith("/wp-login.php"):
+            self.send_response(404)
+            self.end_headers()
+            return
         self.send_response(200)
         self.send_header("Content-Type", "text/plain")
         self.end_headers()
@@ -161,27 +183,53 @@ http:
     backend:
       loadBalancer:
         servers:
-          - url: "http://host.containers.internal:__BACKEND_PORT__"
+          - url: "http://__CONTAINER_HOST__:__BACKEND_PORT__"
 EOF
-sed -i.bak "s/__BACKEND_PORT__/${BACKEND_PORT}/" \
+sed -i.bak \
+    -e "s/__CONTAINER_HOST__/${CONTAINER_HOST}/" \
+    -e "s/__BACKEND_PORT__/${BACKEND_PORT}/" \
     "${WORK_DIR}/share/traefik/dynamic/routes.yml"
 rm -f "${WORK_DIR}/share/traefik/dynamic/routes.yml.bak"
 
-podman run --detach --name "$CONTAINER" --arch "$PODMAN_ARCH" \
-    --publish "${HTTP_PORT}:80" --publish "${HTTPS_PORT}:443" \
-    --volume "$WORK_DIR/data:/data" --volume "$WORK_DIR/config:/config" \
-    --volume "$WORK_DIR/share:/share" \
-    "$IMAGE" >/dev/null
+start_container() {
+    set -- --detach --name "$CONTAINER" --platform "$PLATFORM"
+    if [ -n "${APPARMOR_PROFILE:-}" ]; then
+        set -- "$@" --security-opt "apparmor=${APPARMOR_PROFILE}"
+    fi
+    if [ "$CONTAINER_RUNTIME" = docker ]; then
+        set -- "$@" --add-host host.docker.internal:host-gateway
+    fi
+    set -- "$@" \
+        --publish "${HTTP_PORT}:80" --publish "${HTTPS_PORT}:443" \
+        --volume "$WORK_DIR/data:/data" --volume "$WORK_DIR/config:/config" \
+        --volume "$WORK_DIR/share:/share" \
+        "$IMAGE"
+    "$CONTAINER_RUNTIME" run "$@" >/dev/null
+}
+
+start_container
 
 sleep 5
 wait_for_health
+static_config="$WORK_DIR/config/traefik/static.yml"
+[ -f "$static_config" ] || fail "Rendered static configuration missing"
+grep -Fq 'address: :80' "$static_config" ||
+    fail "Rendered HTTP entrypoint did not use port 80"
+grep -Fq 'address: :443' "$static_config" ||
+    fail "Rendered HTTPS entrypoint did not use port 443"
 if [ "${ACME_TEST:-false}" = true ]; then
     acme_file="$WORK_DIR/config/traefik/acme.json"
     [ -f "$acme_file" ] || fail "ACME storage file missing"
     acme_mode=$(stat -c '%a' "$acme_file" 2>/dev/null || stat -f '%Lp' "$acme_file")
     [ "$acme_mode" = 600 ] || fail "ACME storage mode is $acme_mode, expected 600"
+    grep -Fq 'certificatesResolvers:' "$static_config" ||
+        fail "ACME resolver missing from rendered static configuration"
     if grep -Fq 'fixture-acme-token' "$WORK_DIR/share/traefik/logs/traefik.log"; then
         fail "Cloudflare token leaked into application log"
+    fi
+else
+    if grep -Fq 'certificatesResolvers:' "$static_config"; then
+        fail "ACME resolver unexpectedly enabled"
     fi
 fi
 
@@ -193,6 +241,12 @@ wait_for_route plain.localhost 200
 body=$(curl --silent --insecure -H 'Host: plain.localhost' \
     "https://127.0.0.1:${HTTPS_PORT}/")
 [ "$body" = "backend-ok" ] || fail "HTTP backend returned unexpected body"
+
+scan_status=$(curl --silent --insecure --output /dev/null \
+    --write-out '%{http_code}' \
+    -H 'Host: plain.localhost' \
+    "https://127.0.0.1:${HTTPS_PORT}/wp-login.php")
+[ "$scan_status" = 404 ] || fail "Scan fixture request returned $scan_status"
 
 websocket_status=$(curl --silent --insecure --output /dev/null \
     --write-out '%{http_code}' \
@@ -255,7 +309,7 @@ http:
       service: backend
       tls: {}
 EOF
-podman exec --interactive "$CONTAINER" /bin/sh \
+    "$CONTAINER_RUNTIME" exec --interactive "$CONTAINER" /bin/sh \
     -c 'cat > /share/traefik/dynamic/hot.yml' <"${WORK_DIR}/hot.yml"
 wait_for_route hot.localhost 200
 
@@ -266,21 +320,21 @@ http:
       rule: "Host(`broken.localhost`)"
       service: [
 EOF
-podman exec --interactive "$CONTAINER" /bin/sh \
+    "$CONTAINER_RUNTIME" exec --interactive "$CONTAINER" /bin/sh \
     -c 'cat > /share/traefik/dynamic/broken.yml' <"${WORK_DIR}/broken.yml"
 sleep 2
 grep -Eiq 'error|invalid|configuration' "$WORK_DIR/share/traefik/logs/traefik.log" ||
     fail "Invalid dynamic configuration was not logged"
 wait_for_route hot.localhost 200
 
-podman exec "$CONTAINER" logrotate -f \
+"$CONTAINER_RUNTIME" exec "$CONTAINER" logrotate -f \
     -s /config/forced-logrotate.status /etc/logrotate.d/traefik
 [ -f "$WORK_DIR/share/traefik/logs/access.jsonl" ] ||
     fail "Active access log missing after rotation"
 [ -f "$WORK_DIR/share/traefik/logs/traefik.log" ] ||
     fail "Active application log missing after rotation"
 
-podman restart "$CONTAINER" >/dev/null
+"$CONTAINER_RUNTIME" restart "$CONTAINER" >/dev/null
 wait_for_health
 wait_for_route hot.localhost 200
 

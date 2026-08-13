@@ -63,7 +63,9 @@ docs/examples/tls.yml
 
 `/config` is persistent Home Assistant App storage. Protected token files may
 also live elsewhere under `/config`, and the App does not assume
-`/app_configs/<id>` exists.
+`/app_configs/<id>` exists. Logs and user-editable dynamic files stay under
+`/share/traefik` deliberately so host fail2ban can consume them; this is the
+adapter's only mutable-storage exception.
 
 ## Real client IP and Cloudflare Tunnel
 
@@ -87,9 +89,9 @@ Traefik then handles forwarded headers only from those trusted source IPs.
 The access log keeps:
 
 - `ClientAddr` and `ClientHost`
-- `CF-Connecting-IP`
-- `X-Forwarded-For`
-- `X-Real-IP`
+- `request_Cf-Connecting-Ip`
+- `request_X-Forwarded-For`
+- `request_X-Real-Ip`
 
 Header logging is explicitly allowlisted. All other headers remain dropped.
 Traefik may normalize or replace `X-Forwarded-For` while processing an
@@ -102,7 +104,7 @@ source has been added to `trusted_proxy_ips`.
 2. Request it locally and through the Tunnel.
 3. Compare `ClientHost` in `access.jsonl` with the `whoami` request headers.
 4. Confirm the `X-Forwarded-For` value contains expected client and proxy hops.
-5. Confirm `CF-Connecting-IP` contains the public client IP when the request
+5. Confirm `request_Cf-Connecting-Ip` contains the public client IP when the request
    came through Cloudflare.
 6. Confirm `ClientHost` is not a Cloudflare Edge address.
 7. If `ClientHost` is cloudflared instead of the visitor, verify the origin
@@ -167,8 +169,9 @@ acme:
 
 Use a Cloudflare API token limited to DNS edit for required zone only. Protect
 the file with mode `0600`. The adapter copies its value atomically to an
-internal runtime file, passes it to Traefik through `CF_DNS_API_TOKEN`, and
-never logs its value. Paths are limited to `/config` and `/share/traefik`.
+internal runtime file, passes its path to Traefik through
+`CF_DNS_API_TOKEN_FILE`, and never logs its value. Paths are limited to
+`/config` and `/share/traefik`.
 
 ACME storage:
 
@@ -232,6 +235,22 @@ hidden `/data`.
 3. Restore the previous cloudflared origin manually.
 4. Confirm NPM `/data` and certificates remain intact.
 5. Restore the previous Home Assistant proxy trust settings if they changed.
+
+## Integration testing
+
+The end-to-end test builds the pinned image, runs Docker on both `amd64` and
+`aarch64` emulation targets, checks HTTP/HTTPS/WebSocket routing, access-log
+redaction, dynamic reloads, invalid-file retention, restart persistence, and
+log rotation:
+
+```sh
+make integration-traefik
+```
+
+The same test runs manually from the protected `Traefik integration` workflow.
+The workflow also loads `apparmor.txt`, so it verifies the profile and
+`net_bind_service` permission against the built image. Set `ACME_TEST=true` for
+the optional resolver and `0600` storage checks.
 
 ## Health and troubleshooting
 

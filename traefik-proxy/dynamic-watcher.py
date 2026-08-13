@@ -56,7 +56,7 @@ def valid_content(path: Path) -> bytes | None:
     try:
         content = path.read_bytes()
         document = yaml.safe_load(content.decode("utf-8"))
-    except (OSError, UnicodeError, yaml.YAMLError) as err:
+    except (OSError, UnicodeError, yaml.YAMLError):
         return None
     if not isinstance(document, dict):
         return None
@@ -85,7 +85,11 @@ def sync_once(
     log_path: Path,
     seen: dict[str, tuple[int, int]],
 ) -> dict[str, tuple[int, int]]:
-    current = discover(source)
+    try:
+        current = discover(source)
+    except OSError as err:
+        write_log(log_path, f"Could not inspect dynamic source directory: {err}")
+        return seen
     for name, path in current.items():
         try:
             current_signature = signature(path)
@@ -122,13 +126,30 @@ def sync_once(
 
 def main() -> int:
     args = parse_args()
-    args.source.mkdir(mode=0o750, parents=True, exist_ok=True)
-    args.active.mkdir(mode=0o700, parents=True, exist_ok=True)
-    os.chmod(args.source, 0o750)
-    os.chmod(args.active, 0o700)
-    seen = discover_active(args.active)
+    try:
+        args.source.mkdir(mode=0o750, parents=True, exist_ok=True)
+        args.active.mkdir(mode=0o700, parents=True, exist_ok=True)
+        os.chmod(args.source, 0o750)
+        os.chmod(args.active, 0o700)
+        seen = discover_active(args.active)
+    except OSError as err:
+        write_log(args.log, f"Could not initialize dynamic directories: {err}")
+        return 1
     while True:
-        seen = sync_once(args.source, args.active, args.log, seen)
+        try:
+            if not args.source.is_dir():
+                write_log(
+                    args.log,
+                    "Dynamic source directory is unavailable; keeping active state",
+                )
+                if args.once:
+                    return 1
+                time.sleep(max(args.interval, 0.1))
+                continue
+            args.active.mkdir(mode=0o700, parents=True, exist_ok=True)
+            seen = sync_once(args.source, args.active, args.log, seen)
+        except OSError as err:
+            write_log(args.log, f"Dynamic watcher recovered from filesystem error: {err}")
         if args.once:
             return 0
         time.sleep(max(args.interval, 0.1))

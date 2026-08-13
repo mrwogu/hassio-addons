@@ -148,8 +148,10 @@ Default access log is JSON Lines at:
 
 Each request is flushed immediately with `bufferingSize=0`. The configured
 fields include `ClientAddr`, `ClientHost`, `RequestHost`, `RequestMethod`,
-`RequestPath`, `DownstreamStatus`, `OriginStatus`, `UserAgent`, `Referer`,
-`RequestCount`, `Duration`, and `RetryAttempts`.
+`RequestPath`, `DownstreamStatus`, `OriginStatus`, `RequestCount`, `Duration`,
+and `RetryAttempts`. Retained request headers appear as normalized fields such
+as `request_Cf-Connecting-Ip`, `request_X-Forwarded-For`, and
+`request_X-Real-Ip`.
 
 All other request headers are dropped. `Cookie`, `Authorization`, `X-Api-Key`,
 access tokens, and passwords are not configured for logging. Query parameters
