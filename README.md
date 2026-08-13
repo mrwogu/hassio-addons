@@ -34,7 +34,7 @@ Home Assistant add-ons packaged from upstream projects with automated updates, m
       <h3><a href="authentik/">authentik</a></h3>
       <p>Self-hosted identity provider for single sign-on, SAML, OAuth2, and LDAP.</p>
       <p><sub><code>amd64</code> <code>aarch64</code> · Port <code>9000</code><br><a href="https://github.com/goauthentik/authentik">Upstream</a> · MIT</sub></p>
-      <p><sub>Requires external PostgreSQL and Redis.</sub></p>
+      <p><sub>Requires external PostgreSQL.</sub></p>
     </td>
     <td align="center" valign="top" width="33%">
       <a href="n8n/"><img src="n8n/logo.png" alt="n8n" width="220"></a>
