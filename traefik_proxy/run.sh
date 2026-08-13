@@ -204,7 +204,7 @@ rotate_loop() {
     done
 }
 
-# shellcheck disable=SC2329
+# shellcheck disable=SC2317,SC2329
 forward_signal() {
     if [ -n "${child_pid:-}" ]; then
         kill -TERM "$child_pid" 2>/dev/null || true
