@@ -211,7 +211,7 @@ forward_signal() {
     fi
 }
 
-# shellcheck disable=SC2329
+# shellcheck disable=SC2317,SC2329
 stop_children() {
     for pid in "${child_pid:-}" "${rotation_pid:-}" "${watcher_pid:-}"; do
         if [ -n "$pid" ]; then
@@ -220,7 +220,7 @@ stop_children() {
     done
 }
 
-# shellcheck disable=SC2329
+# shellcheck disable=SC2317,SC2329
 on_exit() {
     exit_status=$?
     trap - EXIT
