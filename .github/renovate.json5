@@ -16,6 +16,9 @@
   "prConcurrentLimit": 10,
   "prHourlyLimit": 10,
   "rebaseWhen": "behind-base-branch",
+  "gitIgnoredAuthors": [
+    "41898282+github-actions[bot]@users.noreply.github.com"
+  ],
   "semanticCommits": "enabled",
   "semanticCommitType": "chore",
   "semanticCommitScope": "deps",
