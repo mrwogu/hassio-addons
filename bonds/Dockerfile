@@ -1,6 +1,6 @@
 # renovate: datasource=docker depName=ghcr.io/naiba/bonds versioning=semver
-ARG UPSTREAM_VERSION="0.22.0"
-ARG UPSTREAM_DIGEST="sha256:26b32ed744334e289458c575367d3f016bdc35215409ede7380db18bca058d18"
+ARG UPSTREAM_VERSION="0.22.1"
+ARG UPSTREAM_DIGEST="sha256:9a9b6099f7f68f4ecc6aee4a7d7b5bd558bcbc3fc60dc03e7020b77ff565872f"
 FROM ghcr.io/naiba/bonds:${UPSTREAM_VERSION}@${UPSTREAM_DIGEST}
 
 LABEL \
