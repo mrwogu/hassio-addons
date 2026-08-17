@@ -1,0 +1,49 @@
+---
+configuration:
+  user_email:
+    name: User email
+    description: Initial administrator email used during account bootstrap.
+  user_password:
+    name: User password
+    description: Initial administrator password used during account bootstrap.
+  session_secret:
+    name: Session secret
+    description: Optional secret for signing sessions. Leave blank to generate one.
+  allowed_origins:
+    name: Allowed origins
+    description: Comma-separated CORS origins for direct access or a reverse proxy.
+  trust_proxy:
+    name: Trust reverse proxy
+    description: Trust the first reverse-proxy hop when enabled.
+  cookie_secure:
+    name: Secure cookies
+    description: "Session cookie mode: auto, true, or false."
+  file_upload_limit_mb:
+    name: File upload limit
+    description: Maximum upload size per file in megabytes.
+  disable_scheduler:
+    name: Disable scheduler
+    description: Disable background scheduled jobs.
+  disable_telegram:
+    name: Disable Telegram
+    description: Disable Telegram integration.
+  swagger_enabled:
+    name: Enable Swagger
+    description: Expose the authenticated Swagger API page.
+  enable_backups:
+    name: Enable backups
+    description: Enable Tududi's backup feature.
+  enable_caldav:
+    name: Enable CalDAV
+    description: Enable CalDAV synchronization.
+  enable_mcp:
+    name: Enable MCP
+    description: Enable the Tududi MCP endpoint.
+  base_url:
+    name: Public base URL
+    description: Public URL used for OIDC callbacks and generated links.
+  env_vars:
+    name: Advanced environment variables
+    description: Extra upstream environment variables with uppercase names.
+network:
+  3002/tcp: Tududi web interface

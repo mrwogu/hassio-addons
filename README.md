@@ -52,6 +52,14 @@ Home Assistant add-ons packaged from upstream projects with automated updates, m
       <p><sub>Docker provider disabled. Dashboard is not published.</sub></p>
     </td>
   </tr>
+  <tr>
+    <td align="center" valign="top" width="33%">
+      <a href="tududi/"><img src="tududi/logo.png" alt="Tududi" width="220"></a>
+      <h3><a href="tududi/">Tududi</a></h3>
+      <p>Self-hosted task management and life organization system for tasks, projects, notes, and areas.</p>
+      <p><sub><code>amd64</code> <code>aarch64</code> · Port <code>3002</code><br><a href="https://github.com/chrisvel/tududi">Upstream</a> · MIT</sub></p>
+    </td>
+  </tr>
 </table>
 
 ## Installation

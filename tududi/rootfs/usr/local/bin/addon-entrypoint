@@ -1,0 +1,164 @@
+#!/bin/sh
+set -eu
+
+OPTIONS_PATH=${TUDUDI_OPTIONS_PATH:-/data/options.json}
+CONFIG_DIR=${TUDUDI_CONFIG_DIR:-/config}
+UPSTREAM_INIT=${TUDUDI_INIT:-/app/scripts/docker-entrypoint.sh}
+
+MANAGED_ENV="NODE_ENV HOST PORT DB_FILE TUDUDI_USER_EMAIL TUDUDI_USER_PASSWORD TUDUDI_SESSION_SECRET TUDUDI_ALLOWED_ORIGINS TUDUDI_UPLOAD_PATH TUDUDI_TRUST_PROXY COOKIE_SECURE FILE_UPLOAD_LIMIT_MB DISABLE_SCHEDULER DISABLE_TELEGRAM SWAGGER_ENABLED FF_ENABLE_BACKUPS FF_ENABLE_CALDAV CALDAV_ENABLED FF_ENABLE_MCP BASE_URL"
+PROTECTED_ENV="TUDUDI_OPTIONS_PATH TUDUDI_CONFIG_DIR TUDUDI_INIT TUDUDI_SKIP_CHOWN TUDUDI_TEST_ENV_FILE TUDUDI_TEST_ARGS_FILE PUID PGID APP_UID APP_GID PATH HOME IFS ENV BASH_ENV LD_PRELOAD LD_LIBRARY_PATH NODE_OPTIONS"
+
+log() {
+    printf '%s\n' "[tududi-addon] $*" >&2
+}
+
+fail() {
+    log "Error: $*"
+    exit 1
+}
+
+is_listed() {
+    list=$1
+    candidate=$2
+    case " $list " in
+        *" $candidate "*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+[ -r "$OPTIONS_PATH" ] || fail "Options file is not readable: $OPTIONS_PATH"
+command -v jq >/dev/null 2>&1 || fail "jq is required"
+
+if ! jq -e '
+    def control_free: (explode | map(select(. < 32 or . == 127)) | length) == 0;
+    def clean: type == "string" and control_free;
+    type == "object"
+    and ((.user_email // "") | clean)
+    and ((.user_password // "") | clean)
+    and ((.session_secret // "") |
+        type == "string" and control_free and
+        (length == 0 or length >= 32))
+    and ((.user_email // "") | length == 0) ==
+        ((.user_password // "") | length == 0)
+    and ((.allowed_origins // "") | clean)
+    and (.trust_proxy | type == "boolean")
+    and (.cookie_secure |
+        . == "auto" or . == "true" or . == "false")
+    and (.file_upload_limit_mb |
+        type == "number" and floor == . and . >= 1 and . <= 1024)
+    and (.disable_scheduler | type == "boolean")
+    and (.disable_telegram | type == "boolean")
+    and (.swagger_enabled | type == "boolean")
+    and (.enable_backups | type == "boolean")
+    and (.enable_caldav | type == "boolean")
+    and (.enable_mcp | type == "boolean")
+    and ((.base_url // "") |
+        clean and
+        (length == 0 or test("^https?://[^[:space:]]+$")))
+    and ((.env_vars // []) |
+        type == "array"
+        and all(.[]; type == "object"
+            and (.name | type == "string" and test("^[A-Z][A-Z0-9_]*$"))
+            and (.value | type == "string" and control_free)))
+' "$OPTIONS_PATH" >/dev/null 2>&1; then
+    fail "Invalid options: check credentials, URLs, feature flags, or environment variables"
+fi
+
+umask 022
+DB_DIR="${CONFIG_DIR}/db"
+UPLOAD_DIR="${CONFIG_DIR}/uploads"
+mkdir -p "$DB_DIR" "$UPLOAD_DIR"
+
+# The upstream launcher drops to the app user. Make persistent directories
+# writable without changing ownership of the generated secret.
+if [ "${TUDUDI_SKIP_CHOWN:-false}" != "true" ]; then
+    id app >/dev/null 2>&1 || fail "Upstream app user is missing"
+    chown -R app:app "$DB_DIR" "$UPLOAD_DIR"
+fi
+
+session_secret=$(jq -r '.session_secret // ""' "$OPTIONS_PATH")
+if [ -z "$session_secret" ]; then
+    secret_file="${CONFIG_DIR}/session_secret"
+    if [ ! -s "$secret_file" ]; then
+        (
+            umask 077
+            temporary=$(mktemp "${CONFIG_DIR}/.session_secret.XXXXXX")
+            if ! generated=$(od -An -N64 -tx1 /dev/urandom | tr -d ' \n'); then
+                rm -f "$temporary"
+                exit 1
+            fi
+            case "$generated" in
+                *[!0-9a-f]*|"") rm -f "$temporary"; exit 1 ;;
+            esac
+            printf '%s\n' "$generated" >"$temporary"
+            chmod 0600 "$temporary"
+            mv "$temporary" "$secret_file"
+        ) || fail "Could not generate a session secret"
+    fi
+    chmod 0600 "$secret_file"
+    session_secret=$(cat "$secret_file")
+fi
+
+user_email=$(jq -r '.user_email // ""' "$OPTIONS_PATH")
+user_password=$(jq -r '.user_password // ""' "$OPTIONS_PATH")
+allowed_origins=$(jq -r '.allowed_origins // ""' "$OPTIONS_PATH")
+base_url=$(jq -r '.base_url // ""' "$OPTIONS_PATH")
+
+export NODE_ENV=production
+export HOST=0.0.0.0
+export PORT=3002
+export "DB_FILE=${DB_DIR}/production.sqlite3"
+export "TUDUDI_USER_EMAIL=$user_email"
+export "TUDUDI_USER_PASSWORD=$user_password"
+export "TUDUDI_SESSION_SECRET=$session_secret"
+export "TUDUDI_ALLOWED_ORIGINS=$allowed_origins"
+export "TUDUDI_UPLOAD_PATH=$UPLOAD_DIR"
+export "TUDUDI_TRUST_PROXY=$(jq -r '.trust_proxy' "$OPTIONS_PATH")"
+export "COOKIE_SECURE=$(jq -r '.cookie_secure' "$OPTIONS_PATH")"
+export "FILE_UPLOAD_LIMIT_MB=$(jq -r '.file_upload_limit_mb' "$OPTIONS_PATH")"
+export "DISABLE_SCHEDULER=$(jq -r '.disable_scheduler' "$OPTIONS_PATH")"
+export "DISABLE_TELEGRAM=$(jq -r '.disable_telegram' "$OPTIONS_PATH")"
+export "SWAGGER_ENABLED=$(jq -r '.swagger_enabled' "$OPTIONS_PATH")"
+export "FF_ENABLE_BACKUPS=$(jq -r '.enable_backups' "$OPTIONS_PATH")"
+export "FF_ENABLE_CALDAV=$(jq -r '.enable_caldav' "$OPTIONS_PATH")"
+export "CALDAV_ENABLED=$(jq -r '(.enable_caldav and (.disable_scheduler | not))' "$OPTIONS_PATH")"
+export "FF_ENABLE_MCP=$(jq -r '.enable_mcp' "$OPTIONS_PATH")"
+if [ -n "$base_url" ]; then
+    export "BASE_URL=$base_url"
+else
+    unset BASE_URL 2>/dev/null || true
+fi
+
+env_count=$(jq -r '(.env_vars // []) | length' "$OPTIONS_PATH")
+index=0
+while [ "$index" -lt "$env_count" ]; do
+    name=$(jq -r ".env_vars[$index].name" "$OPTIONS_PATH")
+    value=$(jq -r ".env_vars[$index].value" "$OPTIONS_PATH")
+
+    if ! printf '%s' "$name" | grep -Eq '^[A-Z][A-Z0-9_]*$'; then
+        fail "Invalid custom environment variable name: $name"
+    fi
+    if is_listed "$MANAGED_ENV" "$name"; then
+        fail "Custom environment variable overrides managed variable: $name"
+    fi
+    if is_listed "$PROTECTED_ENV" "$name"; then
+        fail "Custom environment variable overrides protected variable: $name"
+    fi
+    case "$name" in
+        ADDON_* | DYLD_* | LD_*)
+            fail "Custom environment variable uses protected namespace: $name"
+            ;;
+    esac
+    if ! jq -en --arg value "$value" \
+        '$value | test("[\u0000-\u001F\u007F]") | not' \
+        >/dev/null 2>&1; then
+        fail "Custom environment variable contains control characters: $name"
+    fi
+
+    export "$name=$value"
+    log "Exported custom environment variable: $name"
+    index=$((index + 1))
+done
+
+log "Configuration validated; starting Tududi"
+exec "$UPSTREAM_INIT" "$@"

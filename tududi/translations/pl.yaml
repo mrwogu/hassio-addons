@@ -1,0 +1,49 @@
+---
+configuration:
+  user_email:
+    name: Adres email użytkownika
+    description: Email administratora używany podczas tworzenia konta.
+  user_password:
+    name: Hasło użytkownika
+    description: Hasło administratora używane podczas tworzenia konta.
+  session_secret:
+    name: Sekret sesji
+    description: Opcjonalny sekret do podpisywania sesji. Puste pole wygeneruje sekret.
+  allowed_origins:
+    name: Dozwolone źródła
+    description: Lista źródeł CORS dla dostępu bezpośredniego lub reverse proxy.
+  trust_proxy:
+    name: Zaufaj reverse proxy
+    description: Włącza zaufanie pierwszemu przeskokowi reverse proxy.
+  cookie_secure:
+    name: Bezpieczne ciasteczka
+    description: "Tryb ciasteczek sesji: auto, true lub false."
+  file_upload_limit_mb:
+    name: Limit przesyłania plików
+    description: Maksymalny rozmiar pojedynczego pliku w megabajtach.
+  disable_scheduler:
+    name: Wyłącz harmonogram
+    description: Wyłącza zadania wykonywane w tle według harmonogramu.
+  disable_telegram:
+    name: Wyłącz Telegram
+    description: Wyłącza integrację z Telegramem.
+  swagger_enabled:
+    name: Włącz Swagger
+    description: Udostępnia uwierzytelnioną stronę API Swagger.
+  enable_backups:
+    name: Włącz kopie zapasowe
+    description: Włącza funkcję kopii zapasowych Tududi.
+  enable_caldav:
+    name: Włącz CalDAV
+    description: Włącza synchronizację CalDAV.
+  enable_mcp:
+    name: Włącz MCP
+    description: Włącza endpoint MCP Tududi.
+  base_url:
+    name: Publiczny adres bazowy
+    description: Publiczny URL dla callbacków OIDC i generowanych linków.
+  env_vars:
+    name: Zaawansowane zmienne środowiskowe
+    description: Dodatkowe zmienne upstream z nazwami wielkimi literami.
+network:
+  3002/tcp: Interfejs internetowy Tududi

@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-<!-- PromptScript 2026-08-11T16:34:20.051Z | source: .promptscript/project.prs | target: claude - do not edit -->
+<!-- PromptScript 2026-08-17T21:54:39.481Z | source: .promptscript/project.prs | target: claude - do not edit -->
 
 ## Project
 
@@ -86,7 +86,7 @@ interrupted metadata, config, or changelog synchronization.
      make check
      yamllint .
      actionlint .github/workflows/*.yml
-     find authentik bonds gluetun n8n stirling-pdf -type f \
+     find authentik bonds gluetun n8n stirling-pdf traefik-proxy tududi -type f \
        \( -name '*.sh' -o -name 'addon-entrypoint' \) -print0 |
        xargs -0 shellcheck
      promptscript validate

@@ -17,6 +17,7 @@ ADDONS = {
     "n8n": "ghcr.io/mrwogu/hassio-n8n",
     "stirling-pdf": "ghcr.io/mrwogu/hassio-stirling-pdf",
     "traefik-proxy": "ghcr.io/mrwogu/hassio-traefik-proxy",
+    "tududi": "ghcr.io/mrwogu/hassio-tududi",
 }
 REQUIRED_ADDON_FILES = (
     "config.yaml",
