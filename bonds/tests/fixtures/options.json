@@ -1,4 +1,11 @@
 {
+  "database": "postgres",
+  "postgres_host": "postgres.local",
+  "postgres_port": 5432,
+  "postgres_db": "bonds",
+  "postgres_user": "bonds",
+  "postgres_password": "pg-secret-$pass word",
+  "postgres_sslmode": "verify-full",
   "app_url": "https://bonds.example.test:8080",
   "jwt_secret": "",
   "settings_encryption_key": "",

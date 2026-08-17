@@ -9,7 +9,10 @@ Home Assistant packaging for [Bonds](https://github.com/naiba/bonds), a personal
 3. Review the configuration and set `app_url` to the URL used to access Bonds.
 4. Start the add-on and open its web interface on port `8080`.
 
-Data, uploads, search indexes, backups, and generated secrets persist in the add-on configuration directory.
+SQLite is the default database. PostgreSQL is supported as an optional
+external service; the add-on does not bundle or create a database.
+Uploads, search indexes, backups, and generated secrets persist in the add-on
+configuration directory.
 
 ## Documentation
 
