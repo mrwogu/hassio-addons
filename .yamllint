@@ -1,6 +1,9 @@
 ---
 extends: default
 
+# Keep local scratch directories out of the lint scope.
+ignore-from-file: .gitignore
+
 rules:
   document-start:
     present: true

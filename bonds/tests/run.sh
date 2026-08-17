@@ -24,6 +24,35 @@ assert_env() {
         fail "Missing environment value: $expected"
 }
 
+run_entrypoint() {
+    options=$1
+    config_dir=$2
+    ENV_FILE="${TEMP_DIR}/env-$3"
+    ARGS_FILE="${TEMP_DIR}/args-$3"
+    BONDS_OPTIONS_PATH="$options" \
+    BONDS_CONFIG_DIR="$config_dir" \
+    BONDS_EXECUTABLE="$FAKE_BONDS" \
+    BONDS_TEST_ENV_FILE="$ENV_FILE" \
+    BONDS_TEST_ARGS_FILE="$ARGS_FILE" \
+        sh "$ENTRYPOINT" --fixture >"$LOG_FILE" 2>&1
+}
+
+expect_failure() {
+    label=$1
+    options=$2
+    message=$3
+    if BONDS_OPTIONS_PATH="$options" \
+        BONDS_CONFIG_DIR="$CONFIG_DIR" \
+        BONDS_EXECUTABLE="$FAKE_BONDS" \
+        BONDS_TEST_ENV_FILE="$ENV_FILE" \
+        BONDS_TEST_ARGS_FILE="$ARGS_FILE" \
+            sh "$ENTRYPOINT" --fixture >"$LOG_FILE" 2>&1; then
+        fail "$label was accepted"
+    fi
+    grep -Fq "$message" "$LOG_FILE" ||
+        fail "$label did not report the expected error"
+}
+
 chmod 0755 "$FAKE_BONDS"
 CONFIG_DIR="${TEMP_DIR}/config"
 ENV_FILE="${TEMP_DIR}/env"
@@ -39,8 +68,8 @@ BONDS_TEST_ARGS_FILE="$ARGS_FILE" \
 
 assert_env "SERVER_PORT=8080"
 assert_env "SERVER_HOST=0.0.0.0"
-assert_env "DB_DRIVER=sqlite"
-assert_env "DB_DSN=${CONFIG_DIR}/bonds.db"
+assert_env "DB_DRIVER=postgres"
+assert_env "DB_DSN=host='postgres.local' port='5432' user='bonds' password='pg-secret-\$pass word' dbname='bonds' sslmode='verify-full'"
 assert_env "APP_ENV=production"
 assert_env "DEBUG=true"
 assert_env "APP_URL=https://bonds.example.test:8080"
@@ -69,6 +98,9 @@ grep -Fqx "SETTINGS_ENC_KEY=$SETTINGS_KEY" "$ENV_FILE" ||
 if grep -Fq "$JWT_SECRET" "$LOG_FILE" ||
     grep -Fq "$SETTINGS_KEY" "$LOG_FILE"; then
     fail "Generated secret leaked to logs"
+fi
+if grep -Fq 'pg-secret' "$LOG_FILE"; then
+    fail "Database password leaked to logs"
 fi
 
 ENV_FILE="${TEMP_DIR}/env-second"
@@ -130,17 +162,90 @@ if grep -Fq "$CUSTOM_JWT" "$LOG_FILE" ||
     fail "User-provided secret leaked to logs"
 fi
 
+# SQLite remains the storage mode when selected explicitly.
+SQLITE_OPTIONS="${TEMP_DIR}/sqlite-options.json"
+jq '.database = "sqlite" | .postgres_host = "" | .postgres_password = ""' \
+    "$OPTIONS" >"$SQLITE_OPTIONS"
+SQLITE_CONFIG_DIR="${TEMP_DIR}/sqlite-config"
+run_entrypoint "$SQLITE_OPTIONS" "$SQLITE_CONFIG_DIR" sqlite
+assert_env "DB_DRIVER=sqlite"
+assert_env "DB_DSN=${SQLITE_CONFIG_DIR}/bonds.db"
+
+# An absent database option falls back to SQLite.
+DEFAULT_DATABASE="${TEMP_DIR}/default-database.json"
+jq 'del(.database)' "$OPTIONS" >"$DEFAULT_DATABASE"
+DEFAULT_CONFIG_DIR="${TEMP_DIR}/default-config"
+run_entrypoint "$DEFAULT_DATABASE" "$DEFAULT_CONFIG_DIR" default
+assert_env "DB_DRIVER=sqlite"
+assert_env "DB_DSN=${DEFAULT_CONFIG_DIR}/bonds.db"
+
+# PostgreSQL DSN quoting protects spaces, quotes, and backslashes.
+ESCAPED_PASSWORD="${TEMP_DIR}/escaped-password.json"
+jq --arg password "quote'\\slash" \
+    '.postgres_password = $password' "$OPTIONS" >"$ESCAPED_PASSWORD"
+run_entrypoint "$ESCAPED_PASSWORD" "$CONFIG_DIR" escaped
+assert_env "DB_DSN=host='postgres.local' port='5432' user='bonds' password='quote\\'\\\\slash' dbname='bonds' sslmode='verify-full'"
+
+# An empty password is omitted so PGPASSFILE and peer authentication still work.
+EMPTY_PASSWORD="${TEMP_DIR}/empty-password.json"
+jq '.postgres_password = "" | .postgres_sslmode = "disable"' \
+    "$OPTIONS" >"$EMPTY_PASSWORD"
+run_entrypoint "$EMPTY_PASSWORD" "$CONFIG_DIR" empty-password
+assert_env "DB_DSN=host='postgres.local' port='5432' user='bonds' dbname='bonds' sslmode='disable'"
+
+# PostgreSQL mode warns about a SQLite database left behind in /config.
+STALE_CONFIG_DIR="${TEMP_DIR}/stale-config"
+mkdir -p "$STALE_CONFIG_DIR"
+: >"${STALE_CONFIG_DIR}/bonds.db"
+run_entrypoint "$OPTIONS" "$STALE_CONFIG_DIR" stale
+grep -Fq "${STALE_CONFIG_DIR}/bonds.db stays unused" "$LOG_FILE" ||
+    fail "Unused SQLite database did not raise a warning"
+
+# Invalid options are rejected with an option-specific message.
+INVALID_DATABASE="${TEMP_DIR}/invalid-database.json"
+jq '.database = "mysql"' "$OPTIONS" >"$INVALID_DATABASE"
+expect_failure "Unknown database backend" "$INVALID_DATABASE" \
+    "Option 'database' must be sqlite or postgres"
+
+INVALID_SSLMODE="${TEMP_DIR}/invalid-sslmode.json"
+jq '.postgres_sslmode = "verify-ca"' "$OPTIONS" >"$INVALID_SSLMODE"
+expect_failure "Unknown PostgreSQL TLS mode" "$INVALID_SSLMODE" \
+    "Option 'postgres_sslmode' must be disable, require or verify-full"
+
+MISSING_HOST="${TEMP_DIR}/missing-host.json"
+jq '.postgres_host = ""' "$OPTIONS" >"$MISSING_HOST"
+expect_failure "Empty PostgreSQL host" "$MISSING_HOST" \
+    "Option 'postgres_host' is required when database is postgres"
+
+MISSING_DB="${TEMP_DIR}/missing-db.json"
+jq '.postgres_db = ""' "$OPTIONS" >"$MISSING_DB"
+expect_failure "Empty PostgreSQL database" "$MISSING_DB" \
+    "Option 'postgres_db' is required when database is postgres"
+
+CONTROL_USER="${TEMP_DIR}/control-user.json"
+jq '.postgres_user = "bond\u0009s"' "$OPTIONS" >"$CONTROL_USER"
+expect_failure "Control character in PostgreSQL user" "$CONTROL_USER" \
+    "Option 'postgres_user' must be a string without control characters"
+
+CONTROL_APP_URL="${TEMP_DIR}/control-app-url.json"
+jq '.app_url = "http://bonds.example.test:8080\u000d"' \
+    "$OPTIONS" >"$CONTROL_APP_URL"
+expect_failure "Control character in application URL" "$CONTROL_APP_URL" \
+    "Option 'app_url' must be a non-empty string"
+
+BAD_PORT="${TEMP_DIR}/bad-port.json"
+jq '.postgres_port = 70000' "$OPTIONS" >"$BAD_PORT"
+expect_failure "Out-of-range PostgreSQL port" "$BAD_PORT" \
+    "Option 'postgres_port' must be an integer between 1 and 65535"
+
 INVALID_OPTIONS="${TEMP_DIR}/invalid-options.json"
 jq '.storage_max_size_mb = 0' "$OPTIONS" >"$INVALID_OPTIONS"
-if BONDS_OPTIONS_PATH="$INVALID_OPTIONS" \
-    BONDS_CONFIG_DIR="$CONFIG_DIR" \
-    BONDS_EXECUTABLE="$FAKE_BONDS" \
-    BONDS_TEST_ENV_FILE="$ENV_FILE" \
-    BONDS_TEST_ARGS_FILE="$ARGS_FILE" \
-        sh "$ENTRYPOINT" >"$LOG_FILE" 2>&1; then
-    fail "Invalid numeric value was accepted"
-fi
-grep -Fq "Invalid options structure or numeric value" "$LOG_FILE" ||
-    fail "Invalid numeric value did not report expected error"
+expect_failure "Invalid numeric value" "$INVALID_OPTIONS" \
+    "Option 'storage_max_size_mb' must be a positive integer"
+
+MALFORMED_OPTIONS="${TEMP_DIR}/malformed-options.json"
+printf '%s' '{"database": ' >"$MALFORMED_OPTIONS"
+expect_failure "Malformed options file" "$MALFORMED_OPTIONS" \
+    "Invalid options file: expected a JSON object"
 
 printf '%s\n' "Bonds adapter tests passed"

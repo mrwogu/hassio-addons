@@ -15,6 +15,24 @@ fail() {
     exit 1
 }
 
+dsn_quote() {
+    # Quote values for the lib/pq-style key-value DSN accepted by Bonds.
+    printf '%s' "$1" | sed "s/[\\\\']/\\\\&/g"
+}
+
+JQ_DEFS='
+    def control_free: (explode | map(select(. < 32 or . == 127)) | length) == 0;
+    def nonempty_clean: type == "string" and length > 0 and control_free;
+    def optional_clean: type == "string" and control_free;
+'
+
+check_option() {
+    message=$1
+    filter=$2
+    jq -e "${JQ_DEFS} ${filter}" "$OPTIONS_PATH" >/dev/null 2>&1 ||
+        fail "$message"
+}
+
 random_secret() {
     value=$(od -An -N 32 -tx1 /dev/urandom | tr -d ' \n')
     case "$value" in
@@ -51,19 +69,53 @@ write_secrets() {
 command -v jq >/dev/null 2>&1 || fail "jq is required"
 [ -x "$BONDS_BIN" ] || fail "Bonds executable is not executable: $BONDS_BIN"
 
-if ! jq -e '
-    type == "object" and
-    (.app_url | type == "string" and length > 0) and
-    ((.jwt_secret // "") | type == "string") and
-    ((.settings_encryption_key // "") | type == "string") and
-    (.storage_max_size_mb |
-        type == "number" and floor == . and . > 0) and
-    ((.backup_cron // "0 3 * * *") | type == "string") and
-    (.backup_retention_days |
-        type == "number" and floor == . and . > 0) and
-    (.debug | type == "boolean")
-' "$OPTIONS_PATH" >/dev/null 2>&1; then
-    fail "Invalid options structure or numeric value"
+jq -e 'type == "object"' "$OPTIONS_PATH" >/dev/null 2>&1 ||
+    fail "Invalid options file: expected a JSON object"
+
+database=$(jq -r '.database // "sqlite"' "$OPTIONS_PATH")
+case $database in
+    sqlite | postgres) ;;
+    *) fail "Option 'database' must be sqlite or postgres" ;;
+esac
+
+postgres_sslmode=$(jq -r '.postgres_sslmode // "require"' "$OPTIONS_PATH")
+case $postgres_sslmode in
+    disable | require | verify-full) ;;
+    *)
+        fail "Option 'postgres_sslmode' must be disable, require or verify-full"
+        ;;
+esac
+
+check_option "Option 'app_url' must be a non-empty string" \
+    '.app_url | nonempty_clean'
+check_option "Option 'jwt_secret' must be a string without control characters" \
+    '(.jwt_secret // "") | optional_clean'
+check_option "Option 'settings_encryption_key' must be a string without control characters" \
+    '(.settings_encryption_key // "") | optional_clean'
+check_option "Option 'storage_max_size_mb' must be a positive integer" \
+    '.storage_max_size_mb | type == "number" and floor == . and . > 0'
+check_option "Option 'backup_cron' must be a string without control characters" \
+    '(.backup_cron // "0 3 * * *") | optional_clean'
+check_option "Option 'backup_retention_days' must be a positive integer" \
+    '.backup_retention_days | type == "number" and floor == . and . > 0'
+check_option "Option 'debug' must be a boolean" '.debug | type == "boolean"'
+check_option "Option 'postgres_host' must be a string without control characters" \
+    '(.postgres_host // "") | optional_clean'
+check_option "Option 'postgres_port' must be an integer between 1 and 65535" \
+    '(.postgres_port // 5432) |
+        type == "number" and floor == . and . >= 1 and . <= 65535'
+check_option "Option 'postgres_db' must be a string without control characters" \
+    '(.postgres_db // "") | optional_clean'
+check_option "Option 'postgres_user' must be a string without control characters" \
+    '(.postgres_user // "") | optional_clean'
+check_option "Option 'postgres_password' must be a string without control characters" \
+    '(.postgres_password // "") | optional_clean'
+
+if [ "$database" = postgres ]; then
+    for option in postgres_host postgres_db postgres_user; do
+        check_option "Option '${option}' is required when database is postgres" \
+            "(.${option} // \"\") | nonempty_clean"
+    done
 fi
 
 umask 077
@@ -115,8 +167,31 @@ fi
 
 export SERVER_PORT=8080
 export SERVER_HOST=0.0.0.0
-export DB_DRIVER=sqlite
-export "DB_DSN=${CONFIG_DIR}/bonds.db"
+if [ "$database" = "postgres" ]; then
+    postgres_host=$(jq -r '.postgres_host' "$OPTIONS_PATH")
+    postgres_port=$(jq -r '.postgres_port // 5432' "$OPTIONS_PATH")
+    postgres_db=$(jq -r '.postgres_db' "$OPTIONS_PATH")
+    postgres_user=$(jq -r '.postgres_user' "$OPTIONS_PATH")
+    postgres_password=$(jq -r '.postgres_password // ""' "$OPTIONS_PATH")
+    if [ -f "${CONFIG_DIR}/bonds.db" ]; then
+        log "Warning: ${CONFIG_DIR}/bonds.db stays unused in postgres mode;" \
+            "migrate its contents before relying on PostgreSQL"
+    fi
+    dsn="host='$(dsn_quote "$postgres_host")'"
+    dsn="$dsn port='$(dsn_quote "$postgres_port")'"
+    dsn="$dsn user='$(dsn_quote "$postgres_user")'"
+    # An explicit empty password shadows PGPASSFILE and peer authentication.
+    if [ -n "$postgres_password" ]; then
+        dsn="$dsn password='$(dsn_quote "$postgres_password")'"
+    fi
+    dsn="$dsn dbname='$(dsn_quote "$postgres_db")'"
+    dsn="$dsn sslmode='${postgres_sslmode}'"
+    export DB_DRIVER=postgres
+    export "DB_DSN=$dsn"
+else
+    export DB_DRIVER=sqlite
+    export "DB_DSN=${CONFIG_DIR}/bonds.db"
+fi
 export "JWT_SECRET=$jwt_secret"
 export "SETTINGS_ENC_KEY=$settings_key"
 export APP_ENV=production

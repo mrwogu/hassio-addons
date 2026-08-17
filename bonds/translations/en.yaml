@@ -1,5 +1,29 @@
 ---
 configuration:
+  database:
+    name: Database
+    description: Use local SQLite or an external PostgreSQL database.
+  postgres_host:
+    name: PostgreSQL host
+    description: Hostname or IP address of the external PostgreSQL server.
+  postgres_port:
+    name: PostgreSQL port
+    description: Port of the PostgreSQL server.
+  postgres_db:
+    name: PostgreSQL database
+    description: Name of the Bonds database.
+  postgres_user:
+    name: PostgreSQL user
+    description: Database user Bonds connects as.
+  postgres_password:
+    name: PostgreSQL password
+    description: Optional password for the PostgreSQL user.
+  postgres_sslmode:
+    name: PostgreSQL TLS mode
+    description: >-
+      disable sends credentials in clear text, require encrypts without
+      verifying the server certificate, verify-full also validates the
+      certificate against the trusted certificate authorities.
   app_url:
     name: Application URL
     description: Full URL used to access Bonds, including the direct port.

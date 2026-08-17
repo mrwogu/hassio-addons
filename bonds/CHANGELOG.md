@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.22.2-2
+
+- Add optional external PostgreSQL support
+
 ## 0.22.2-1
 
 - Bring the latest relationship management updates from Bonds [0.22.2](https://github.com/naiba/bonds/releases/tag/v0.22.2).

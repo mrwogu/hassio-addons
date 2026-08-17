@@ -19,6 +19,7 @@ Home Assistant add-ons packaged from upstream projects with automated updates, m
       <h3><a href="bonds/">Bonds</a></h3>
       <p>Personal relationship manager built with Go and React.</p>
       <p><sub><code>amd64</code> <code>aarch64</code><br><a href="https://github.com/naiba/bonds">Upstream</a> · Business Source License 1.1</sub></p>
+      <p><sub>SQLite by default. PostgreSQL is optional and external.</sub></p>
       <p><sub>Commercial use and managed hosting restrictions apply.</sub></p>
     </td>
     <td align="center" valign="top" width="33%">

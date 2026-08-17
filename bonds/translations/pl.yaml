@@ -1,5 +1,29 @@
 ---
 configuration:
+  database:
+    name: Baza danych
+    description: Użyj lokalnej bazy SQLite albo zewnętrznego PostgreSQL.
+  postgres_host:
+    name: Host PostgreSQL
+    description: Nazwa hosta lub adres IP zewnętrznego serwera PostgreSQL.
+  postgres_port:
+    name: Port PostgreSQL
+    description: Port serwera PostgreSQL.
+  postgres_db:
+    name: Baza PostgreSQL
+    description: Nazwa bazy danych Bonds.
+  postgres_user:
+    name: Użytkownik PostgreSQL
+    description: Użytkownik bazy danych używany przez Bonds.
+  postgres_password:
+    name: Hasło PostgreSQL
+    description: Opcjonalne hasło użytkownika PostgreSQL.
+  postgres_sslmode:
+    name: Tryb TLS PostgreSQL
+    description: >-
+      disable wysyła dane uwierzytelniające jawnym tekstem, require szyfruje
+      bez weryfikacji certyfikatu serwera, verify-full dodatkowo sprawdza
+      certyfikat wobec zaufanych urzędów certyfikacji.
   app_url:
     name: Adres URL aplikacji
     description: Pełny adres URL dostępu do Bonds, wraz z portem bezpośrednim.
