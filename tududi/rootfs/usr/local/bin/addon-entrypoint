@@ -5,8 +5,8 @@ OPTIONS_PATH=${TUDUDI_OPTIONS_PATH:-/data/options.json}
 CONFIG_DIR=${TUDUDI_CONFIG_DIR:-/config}
 UPSTREAM_INIT=${TUDUDI_INIT:-/app/scripts/docker-entrypoint.sh}
 
-MANAGED_ENV="NODE_ENV HOST PORT DB_FILE TUDUDI_USER_EMAIL TUDUDI_USER_PASSWORD TUDUDI_SESSION_SECRET TUDUDI_ALLOWED_ORIGINS TUDUDI_UPLOAD_PATH TUDUDI_TRUST_PROXY COOKIE_SECURE FILE_UPLOAD_LIMIT_MB DISABLE_SCHEDULER DISABLE_TELEGRAM SWAGGER_ENABLED FF_ENABLE_BACKUPS FF_ENABLE_CALDAV CALDAV_ENABLED FF_ENABLE_MCP BASE_URL"
-PROTECTED_ENV="TUDUDI_OPTIONS_PATH TUDUDI_CONFIG_DIR TUDUDI_INIT TUDUDI_SKIP_CHOWN TUDUDI_TEST_ENV_FILE TUDUDI_TEST_ARGS_FILE PUID PGID APP_UID APP_GID PATH HOME IFS ENV BASH_ENV LD_PRELOAD LD_LIBRARY_PATH NODE_OPTIONS"
+MANAGED_ENV="NODE_ENV HOST PORT DB_FILE TUDUDI_USER_EMAIL TUDUDI_USER_PASSWORD TUDUDI_SESSION_SECRET TUDUDI_ALLOWED_ORIGINS TUDUDI_UPLOAD_PATH TUDUDI_TRUST_PROXY COOKIE_SECURE FILE_UPLOAD_LIMIT_MB DISABLE_SCHEDULER DISABLE_TELEGRAM SWAGGER_ENABLED FF_ENABLE_BACKUPS FF_ENABLE_CALDAV CALDAV_ENABLED FF_ENABLE_MCP BASE_URL ENCRYPTION_KEY"
+PROTECTED_ENV="TUDUDI_OPTIONS_PATH TUDUDI_CONFIG_DIR TUDUDI_INIT TUDUDI_SKIP_CHOWN TUDUDI_TEST_ENV_FILE TUDUDI_TEST_ARGS_FILE TUDUDI_UPSTREAM_BACKUP_DIR PUID PGID APP_UID APP_GID PATH HOME IFS ENV BASH_ENV LD_PRELOAD LD_LIBRARY_PATH NODE_OPTIONS"
 
 log() {
     printf '%s\n' "[tududi-addon] $*" >&2
@@ -26,15 +26,48 @@ is_listed() {
     esac
 }
 
+load_or_create_secret() {
+    secret_path=$1
+    secret_label=$2
+    if [ ! -s "$secret_path" ]; then
+        (
+            umask 077
+            temporary=$(mktemp "${secret_path}.XXXXXX")
+            if ! generated=$(od -An -N64 -tx1 /dev/urandom | tr -d ' \n'); then
+                rm -f "$temporary"
+                exit 1
+            fi
+            case "$generated" in
+                *[!0-9a-f]*|"") rm -f "$temporary"; exit 1 ;;
+            esac
+            printf '%s\n' "$generated" >"$temporary"
+            chmod 0600 "$temporary"
+            mv "$temporary" "$secret_path"
+        ) || fail "Could not generate $secret_label"
+    fi
+    chmod 0600 "$secret_path"
+    cat "$secret_path"
+}
+
 [ -r "$OPTIONS_PATH" ] || fail "Options file is not readable: $OPTIONS_PATH"
 command -v jq >/dev/null 2>&1 || fail "jq is required"
+command -v sqlite3 >/dev/null 2>&1 || fail "sqlite3 is required"
 
 if ! jq -e '
     def control_free: (explode | map(select(. < 32 or . == 127)) | length) == 0;
     def clean: type == "string" and control_free;
+    def valid_email:
+        test("^[^[:space:]@]+@[^[:space:]@]+\\.[^[:space:]@]{2,}$")
+        and (contains("@@") | not)
+        and (contains("@.") | not)
+        and (contains(".@") | not)
+        and (endswith(".") | not);
     type == "object"
-    and ((.user_email // "") | clean)
-    and ((.user_password // "") | clean)
+    and ((.user_email // "") |
+        clean and (length == 0 or valid_email))
+    and ((.user_password // "") |
+        clean and
+        (length == 0 or (length >= 6 and test("[^[:space:]]"))))
     and ((.session_secret // "") |
         type == "string" and control_free and
         (length == 0 or length >= 32))
@@ -67,42 +100,55 @@ fi
 umask 022
 DB_DIR="${CONFIG_DIR}/db"
 UPLOAD_DIR="${CONFIG_DIR}/uploads"
-mkdir -p "$DB_DIR" "$UPLOAD_DIR"
+BACKUP_DIR="${CONFIG_DIR}/backups"
+UPSTREAM_BACKUP_DIR=${TUDUDI_UPSTREAM_BACKUP_DIR:-/app/backend/backups}
+mkdir -p "$DB_DIR" "$UPLOAD_DIR" "$BACKUP_DIR"
+
+# Tududi hard-codes export backups under its immutable application tree.
+if [ -L "$UPSTREAM_BACKUP_DIR" ]; then
+    [ "$(readlink "$UPSTREAM_BACKUP_DIR")" = "$BACKUP_DIR" ] ||
+        fail "Upstream backup link points outside persistent storage"
+elif [ -d "$UPSTREAM_BACKUP_DIR" ]; then
+    [ ! -e "${UPSTREAM_BACKUP_DIR}.image" ] ||
+        fail "Bundled backup directory was already preserved"
+    mv "$UPSTREAM_BACKUP_DIR" "${UPSTREAM_BACKUP_DIR}.image"
+    ln -s "$BACKUP_DIR" "$UPSTREAM_BACKUP_DIR"
+elif [ -e "$UPSTREAM_BACKUP_DIR" ]; then
+    fail "Upstream backup path is not a directory"
+else
+    [ -d "$(dirname "$UPSTREAM_BACKUP_DIR")" ] ||
+        fail "Upstream backup parent directory is missing"
+    ln -s "$BACKUP_DIR" "$UPSTREAM_BACKUP_DIR"
+fi
 
 # The upstream launcher drops to the app user. Make persistent directories
-# writable without changing ownership of the generated secret.
+# writable without changing ownership of generated secrets.
 if [ "${TUDUDI_SKIP_CHOWN:-false}" != "true" ]; then
     id app >/dev/null 2>&1 || fail "Upstream app user is missing"
-    chown -R app:app "$DB_DIR" "$UPLOAD_DIR"
+    chown -R app:app "$DB_DIR" "$UPLOAD_DIR" "$BACKUP_DIR"
 fi
 
 session_secret=$(jq -r '.session_secret // ""' "$OPTIONS_PATH")
 if [ -z "$session_secret" ]; then
-    secret_file="${CONFIG_DIR}/session_secret"
-    if [ ! -s "$secret_file" ]; then
-        (
-            umask 077
-            temporary=$(mktemp "${CONFIG_DIR}/.session_secret.XXXXXX")
-            if ! generated=$(od -An -N64 -tx1 /dev/urandom | tr -d ' \n'); then
-                rm -f "$temporary"
-                exit 1
-            fi
-            case "$generated" in
-                *[!0-9a-f]*|"") rm -f "$temporary"; exit 1 ;;
-            esac
-            printf '%s\n' "$generated" >"$temporary"
-            chmod 0600 "$temporary"
-            mv "$temporary" "$secret_file"
-        ) || fail "Could not generate a session secret"
-    fi
-    chmod 0600 "$secret_file"
-    session_secret=$(cat "$secret_file")
+    session_secret=$(load_or_create_secret \
+        "${CONFIG_DIR}/session_secret" "a session secret")
 fi
+caldav_encryption_key=$(load_or_create_secret \
+    "${CONFIG_DIR}/caldav_encryption_key" "a CalDAV encryption key")
 
 user_email=$(jq -r '.user_email // ""' "$OPTIONS_PATH")
 user_password=$(jq -r '.user_password // ""' "$OPTIONS_PATH")
 allowed_origins=$(jq -r '.allowed_origins // ""' "$OPTIONS_PATH")
 base_url=$(jq -r '.base_url // ""' "$OPTIONS_PATH")
+
+# Initial credentials must not overwrite passwords managed inside Tududi.
+if [ -s "$DB_DIR/production.sqlite3" ] &&
+    sqlite3 "$DB_DIR/production.sqlite3" \
+        'SELECT 1 FROM users LIMIT 1;' 2>/dev/null | grep -qx '1'; then
+    user_email=
+    user_password=
+    log "Existing Tududi user found; skipping credential bootstrap"
+fi
 
 export NODE_ENV=production
 export HOST=0.0.0.0
@@ -123,6 +169,7 @@ export "FF_ENABLE_BACKUPS=$(jq -r '.enable_backups' "$OPTIONS_PATH")"
 export "FF_ENABLE_CALDAV=$(jq -r '.enable_caldav' "$OPTIONS_PATH")"
 export "CALDAV_ENABLED=$(jq -r '(.enable_caldav and (.disable_scheduler | not))' "$OPTIONS_PATH")"
 export "FF_ENABLE_MCP=$(jq -r '.enable_mcp' "$OPTIONS_PATH")"
+export "ENCRYPTION_KEY=$caldav_encryption_key"
 if [ -n "$base_url" ]; then
     export "BASE_URL=$base_url"
 else

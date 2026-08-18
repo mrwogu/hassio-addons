@@ -11,8 +11,9 @@ notes, areas, and habits.
 3. Set the initial user email and password.
 4. Start the add-on and open its web interface on port `3002`.
 
-The SQLite database, uploads, generated session secret, and automatic database
-backups persist in the add-on configuration directory.
+The SQLite database, uploads, database backups, Tududi export backups, generated
+session secret, and CalDAV encryption key persist in the add-on configuration
+directory.
 
 ## Documentation
 

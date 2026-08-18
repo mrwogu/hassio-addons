@@ -2,13 +2,13 @@
 configuration:
   user_email:
     name: User email
-    description: Initial administrator email used during account bootstrap.
+    description: Valid administrator email used only while no users exist.
   user_password:
     name: User password
-    description: Initial administrator password used during account bootstrap.
+    description: Initial password of at least 6 characters, used only while no users exist.
   session_secret:
     name: Session secret
-    description: Optional secret for signing sessions. Leave blank to generate one.
+    description: Optional secret of at least 32 characters. Leave blank to generate one.
   allowed_origins:
     name: Allowed origins
     description: Comma-separated CORS origins for direct access or a reverse proxy.
@@ -32,10 +32,10 @@ configuration:
     description: Expose the authenticated Swagger API page.
   enable_backups:
     name: Enable backups
-    description: Enable Tududi's backup feature.
+    description: Enable persistent Tududi export backups.
   enable_caldav:
     name: Enable CalDAV
-    description: Enable CalDAV synchronization.
+    description: Enable CalDAV synchronization with a generated persistent key.
   enable_mcp:
     name: Enable MCP
     description: Enable the Tududi MCP endpoint.

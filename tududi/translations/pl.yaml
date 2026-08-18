@@ -2,13 +2,13 @@
 configuration:
   user_email:
     name: Adres email użytkownika
-    description: Email administratora używany podczas tworzenia konta.
+    description: Poprawny email administratora używany tylko bez istniejących użytkowników.
   user_password:
     name: Hasło użytkownika
-    description: Hasło administratora używane podczas tworzenia konta.
+    description: Początkowe hasło minimum 6 znaków, używane tylko bez istniejących użytkowników.
   session_secret:
     name: Sekret sesji
-    description: Opcjonalny sekret do podpisywania sesji. Puste pole wygeneruje sekret.
+    description: Opcjonalny sekret minimum 32 znaków. Puste pole wygeneruje sekret.
   allowed_origins:
     name: Dozwolone źródła
     description: Lista źródeł CORS dla dostępu bezpośredniego lub reverse proxy.
@@ -32,10 +32,10 @@ configuration:
     description: Udostępnia uwierzytelnioną stronę API Swagger.
   enable_backups:
     name: Włącz kopie zapasowe
-    description: Włącza funkcję kopii zapasowych Tududi.
+    description: Włącza trwałe kopie eksportowe Tududi.
   enable_caldav:
     name: Włącz CalDAV
-    description: Włącza synchronizację CalDAV.
+    description: Włącza CalDAV z automatycznie generowanym trwałym kluczem.
   enable_mcp:
     name: Włącz MCP
     description: Włącza endpoint MCP Tududi.

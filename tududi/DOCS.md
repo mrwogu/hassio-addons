@@ -7,32 +7,36 @@ port. The add-on does not publish additional ports.
 
 ## First start
 
-Set `user_email` and `user_password` before the first start. When both values
-are set, the upstream launcher creates or updates that account during startup.
-Leave both empty only when the persistent database already contains users and
-account management is handled elsewhere.
+Set a valid `user_email` and a `user_password` containing at least six
+characters before the first start. The adapter passes these credentials only
+while the database contains no users. After successful bootstrap, password
+changes made inside Tududi persist across restarts. Clear both options after
+the first successful start to remove bootstrap credentials from add-on
+configuration.
 
 The adapter generates a cryptographically random session secret on first start
 when `session_secret` is blank. It stores the secret at
 `/config/session_secret` with mode `0600`. Changing the secret invalidates
-existing sessions.
+existing sessions. It also generates a separate persistent CalDAV encryption
+key for remote-calendar credentials.
 
 ## Configuration
 
 ### `user_email`
 
-Initial administrator email. It is passed to the upstream account bootstrap
-only when `user_password` is also set.
+Initial administrator email. It must use a valid email format and is passed to
+upstream only while the database contains no users.
 
 ### `user_password`
 
-Initial administrator password. Store it securely. The value is never written
-to the adapter log.
+Initial administrator password containing at least six characters. Store it
+securely. The value is never written to the adapter log and is ignored after
+the database contains a user.
 
 ### `session_secret`
 
-Optional session signing secret. Leave blank to generate and persist one under
-`/config`.
+Optional session signing secret containing at least 32 characters. Leave blank
+to generate and persist one under `/config`.
 
 ### `allowed_origins`
 
@@ -58,8 +62,9 @@ Maximum upload size per file. Valid range is `1` to `1024` MB.
 - `disable_scheduler` disables background scheduled jobs.
 - `disable_telegram` disables Telegram integration by default.
 - `swagger_enabled` controls the authenticated Swagger API page.
-- `enable_backups` enables Tududi's backup feature.
-- `enable_caldav` enables CalDAV synchronization.
+- `enable_backups` enables Tududi's backup feature under `/config/backups`.
+- `enable_caldav` enables CalDAV synchronization with a generated encryption
+  key stored under `/config`.
 - `enable_mcp` enables the Tududi MCP endpoint.
 
 Telegram, OIDC, email, CalDAV credentials, AI providers, and other advanced
@@ -73,7 +78,9 @@ rejected.
 | --- | --- | --- |
 | SQLite database and database backups | `/config/db` | add-on config `/config/db` |
 | User avatars and task attachments | `/config/uploads` | add-on config `/config/uploads` |
+| Tududi export backups | `/app/backend/backups` | add-on config `/config/backups` |
 | Session signing secret | `/config/session_secret` | add-on config `/config/session_secret` |
+| CalDAV encryption key | `/config/caldav_encryption_key` | add-on config `/config/caldav_encryption_key` |
 
 Home Assistant backups include these paths. Logs are not persisted; use the
 Home Assistant add-on log viewer.

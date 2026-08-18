@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.0-2
+
+- Persist backups, CalDAV key, and one-time bootstrap
+
 ## 1.4.0-1
 
 - Package Tududi [v1.4.0](https://github.com/chrisvel/tududi/releases/tag/v1.4.0).
