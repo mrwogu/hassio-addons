@@ -77,7 +77,7 @@ assert_env "STORAGE_UPLOAD_DIR=${CONFIG_DIR}/uploads"
 assert_env "STORAGE_MAX_SIZE_MB=256"
 assert_env "BLEVE_INDEX_PATH=${CONFIG_DIR}/bonds.bleve"
 assert_env "BACKUP_DIR=${CONFIG_DIR}/backups"
-assert_env "BACKUP_CRON=15 2 * * *"
+assert_env "BACKUP_CRON=0 15 2 * * *"
 assert_env "BACKUP_RETENTION=14"
 [ "$(cat "$ARGS_FILE")" = "--fixture" ] || fail "Arguments were not forwarded"
 
@@ -131,7 +131,20 @@ BONDS_TEST_ARGS_FILE="$ARGS_FILE" \
 
 assert_env "JWT_SECRET=$JWT_SECRET"
 assert_env "SETTINGS_ENC_KEY=$SETTINGS_KEY"
-assert_env "BACKUP_CRON=0 3 * * *"
+assert_env "BACKUP_CRON=0 0 3 * * *"
+
+LEGACY_CRON_OPTIONS="${TEMP_DIR}/legacy-cron-options.json"
+jq '.backup_cron = "15 2 * * *"' "$OPTIONS" >"$LEGACY_CRON_OPTIONS"
+ENV_FILE="${TEMP_DIR}/env-legacy-cron"
+ARGS_FILE="${TEMP_DIR}/args-legacy-cron"
+BONDS_OPTIONS_PATH="$LEGACY_CRON_OPTIONS" \
+BONDS_CONFIG_DIR="$CONFIG_DIR" \
+BONDS_EXECUTABLE="$FAKE_BONDS" \
+BONDS_TEST_ENV_FILE="$ENV_FILE" \
+BONDS_TEST_ARGS_FILE="$ARGS_FILE" \
+    sh "$ENTRYPOINT" >"$LOG_FILE" 2>&1
+
+assert_env "BACKUP_CRON=0 15 2 * * *"
 
 CUSTOM_OPTIONS="${TEMP_DIR}/custom-options.json"
 CUSTOM_JWT="fixture-jwt-secret"
@@ -242,6 +255,11 @@ INVALID_OPTIONS="${TEMP_DIR}/invalid-options.json"
 jq '.storage_max_size_mb = 0' "$OPTIONS" >"$INVALID_OPTIONS"
 expect_failure "Invalid numeric value" "$INVALID_OPTIONS" \
     "Option 'storage_max_size_mb' must be a positive integer"
+
+INVALID_CRON="${TEMP_DIR}/invalid-cron.json"
+jq '.backup_cron = "0 15 * *"' "$OPTIONS" >"$INVALID_CRON"
+expect_failure "Invalid backup cron" "$INVALID_CRON" \
+    "Option 'backup_cron' must contain exactly 5 or 6 fields"
 
 MALFORMED_OPTIONS="${TEMP_DIR}/malformed-options.json"
 printf '%s' '{"database": ' >"$MALFORMED_OPTIONS"

@@ -38,7 +38,9 @@ configuration:
     description: Maksymalny rozmiar wysyłanego pliku w megabajtach.
   backup_cron:
     name: Harmonogram kopii zapasowych
-    description: Opcjonalne wyrażenie cron dla automatycznych kopii zapasowych.
+    description: >-
+      Opcjonalne sześcioelementowe wyrażenie cron dla automatycznych kopii
+      zapasowych. Dla zgodności akceptowane są też wyrażenia pięcioelementowe.
   backup_retention_days:
     name: Retencja kopii zapasowych
     description: Liczba dni przechowywania kopii zapasowych aplikacji.

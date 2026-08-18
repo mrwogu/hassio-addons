@@ -1,6 +1,6 @@
 ---
 name: Bonds
-version: "0.22.3-1"
+version: "0.22.3-2"
 slug: bonds
 description: Personal relationship manager built with Go and React
 url: https://github.com/mrwogu/hassio-addons/tree/main/bonds
@@ -30,7 +30,7 @@ options:
   jwt_secret: ""
   settings_encryption_key: ""
   storage_max_size_mb: 100
-  backup_cron: "0 3 * * *"
+  backup_cron: "0 0 3 * * *"
   backup_retention_days: 30
   debug: false
 schema:
