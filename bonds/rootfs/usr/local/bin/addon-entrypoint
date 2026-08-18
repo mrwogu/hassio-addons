@@ -33,6 +33,27 @@ check_option() {
         fail "$message"
 }
 
+normalize_backup_cron() {
+    (
+        set -f
+        IFS=' '
+        # Word splitting is intentional after pathname expansion is disabled.
+        # shellcheck disable=SC2086
+        set -- $1
+        case "$#" in
+            5) set -- 0 "$@" ;;
+            6) ;;
+            *) exit 1 ;;
+        esac
+        printf '%s' "$1"
+        shift
+        for field in "$@"; do
+            printf ' %s' "$field"
+        done
+        printf '\n'
+    )
+}
+
 random_secret() {
     value=$(od -An -N 32 -tx1 /dev/urandom | tr -d ' \n')
     case "$value" in
@@ -95,7 +116,7 @@ check_option "Option 'settings_encryption_key' must be a string without control 
 check_option "Option 'storage_max_size_mb' must be a positive integer" \
     '.storage_max_size_mb | type == "number" and floor == . and . > 0'
 check_option "Option 'backup_cron' must be a string without control characters" \
-    '(.backup_cron // "0 3 * * *") | optional_clean'
+    '(.backup_cron // "0 0 3 * * *") | optional_clean'
 check_option "Option 'backup_retention_days' must be a positive integer" \
     '.backup_retention_days | type == "number" and floor == . and . > 0'
 check_option "Option 'debug' must be a boolean" '.debug | type == "boolean"'
@@ -110,6 +131,11 @@ check_option "Option 'postgres_user' must be a string without control characters
     '(.postgres_user // "") | optional_clean'
 check_option "Option 'postgres_password' must be a string without control characters" \
     '(.postgres_password // "") | optional_clean'
+
+backup_cron=$(jq -r '.backup_cron // "0 0 3 * * *"' "$OPTIONS_PATH")
+if ! backup_cron=$(normalize_backup_cron "$backup_cron"); then
+    fail "Option 'backup_cron' must contain exactly 5 or 6 fields"
+fi
 
 if [ "$database" = postgres ]; then
     for option in postgres_host postgres_db postgres_user; do
@@ -201,7 +227,6 @@ export "STORAGE_UPLOAD_DIR=${CONFIG_DIR}/uploads"
 export "STORAGE_MAX_SIZE_MB=$(jq -r '.storage_max_size_mb' "$OPTIONS_PATH")"
 export "BLEVE_INDEX_PATH=${CONFIG_DIR}/bonds.bleve"
 export "BACKUP_DIR=${CONFIG_DIR}/backups"
-backup_cron=$(jq -r '.backup_cron // "0 3 * * *"' "$OPTIONS_PATH")
 export "BACKUP_CRON=$backup_cron"
 export "BACKUP_RETENTION=$(jq -r '.backup_retention_days' "$OPTIONS_PATH")"
 

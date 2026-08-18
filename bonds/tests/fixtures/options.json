@@ -10,7 +10,7 @@
   "jwt_secret": "",
   "settings_encryption_key": "",
   "storage_max_size_mb": 256,
-  "backup_cron": "15 2 * * *",
+  "backup_cron": "0 15 2 * * *",
   "backup_retention_days": 14,
   "debug": true
 }

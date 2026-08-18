@@ -38,7 +38,7 @@ configuration:
     description: Maximum uploaded file size in megabytes.
   backup_cron:
     name: Backup schedule
-    description: Optional cron expression used for automatic backups.
+    description: Optional six-field cron expression for automatic backups. Five-field values are accepted for compatibility.
   backup_retention_days:
     name: Backup retention
     description: Number of days to retain application backups.

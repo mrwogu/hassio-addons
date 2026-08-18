@@ -81,7 +81,9 @@ Maximum uploaded file size in megabytes. Must be a positive integer.
 
 ### `backup_cron`
 
-Optional cron schedule for application backups. Default: `0 3 * * *`.
+Optional six-field cron schedule for application backups:
+`second minute hour day month weekday`. Default: `0 0 3 * * *` (03:00 daily).
+Existing five-field values are accepted and get a `0` seconds field prepended.
 
 ### `backup_retention_days`
 

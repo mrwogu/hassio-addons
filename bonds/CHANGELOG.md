@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.22.3-2
+
+- Fix Bonds backup cron field handling
+
 ## 0.22.3-1
 
 - Bring the latest relationship management updates from Bonds [0.22.3](https://github.com/naiba/bonds/releases/tag/v0.22.3).
