@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.22.2-3
+
+- Update Bonds upstream license text
+
 ## 0.22.2-2
 
 - Add optional external PostgreSQL support
