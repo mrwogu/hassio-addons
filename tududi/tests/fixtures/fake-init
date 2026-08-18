@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+
+env | sort >"$TUDUDI_TEST_ENV_FILE"
+printf '%s\n' "$*" >"$TUDUDI_TEST_ARGS_FILE"

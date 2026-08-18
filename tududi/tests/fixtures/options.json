@@ -1,0 +1,26 @@
+{
+  "user_email": "admin@example.com",
+  "user_password": "dummy-admin-password",
+  "session_secret": "",
+  "allowed_origins": "https://tududi.example.com",
+  "trust_proxy": true,
+  "cookie_secure": "true",
+  "file_upload_limit_mb": 25,
+  "disable_scheduler": false,
+  "disable_telegram": true,
+  "swagger_enabled": false,
+  "enable_backups": true,
+  "enable_caldav": true,
+  "enable_mcp": false,
+  "base_url": "https://tududi.example.com",
+  "env_vars": [
+    {
+      "name": "OIDC_ENABLED",
+      "value": "true"
+    },
+    {
+      "name": "OIDC_CLIENT_SECRET",
+      "value": "dummy-client-secret"
+    }
+  ]
+}

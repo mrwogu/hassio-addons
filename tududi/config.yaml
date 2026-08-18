@@ -1,0 +1,54 @@
+---
+name: Tududi
+version: "1.4.0-2"
+slug: tududi
+description: Self-hosted task management and life organization system
+url: https://github.com/mrwogu/hassio-addons/tree/main/tududi
+image: ghcr.io/mrwogu/hassio-tududi
+arch:
+  - aarch64
+  - amd64
+init: false
+startup: services
+webui: http://[HOST]:[PORT:3002]
+map:
+  - type: addon_config
+    read_only: false
+ports:
+  3002/tcp: 3002
+ports_description:
+  3002/tcp: Tududi web interface
+options:
+  user_email: ""
+  user_password: ""
+  session_secret: ""
+  allowed_origins: http://localhost:3002,http://127.0.0.1:3002
+  trust_proxy: false
+  cookie_secure: auto
+  file_upload_limit_mb: 10
+  disable_scheduler: false
+  disable_telegram: true
+  swagger_enabled: false
+  enable_backups: false
+  enable_caldav: false
+  enable_mcp: false
+  base_url: ""
+  env_vars: []
+schema:
+  user_email: str?
+  user_password: password?
+  session_secret: password?
+  allowed_origins: str
+  trust_proxy: bool
+  cookie_secure: list(auto|true|false)
+  file_upload_limit_mb: int(1,1024)
+  disable_scheduler: bool
+  disable_telegram: bool
+  swagger_enabled: bool
+  enable_backups: bool
+  enable_caldav: bool
+  enable_mcp: bool
+  base_url: str?
+  env_vars:
+    - name: str
+      value: str
