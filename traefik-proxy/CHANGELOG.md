@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.7.11-1
+
+- Update Traefik Proxy to [v3.7.11](https://github.com/traefik/traefik/releases/tag/v3.7.11).
+
 ## 3.7.10-2
 
 - Fix runtime configuration, confinement, and smoke tests
