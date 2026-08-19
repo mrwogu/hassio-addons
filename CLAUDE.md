@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-<!-- PromptScript 2026-08-18T09:11:40.031Z | source: .promptscript/project.prs | target: claude - do not edit -->
+<!-- PromptScript 2026-08-19T11:26:25.593Z | source: .promptscript/project.prs | target: claude - do not edit -->
 
 ## Project
 
@@ -196,8 +196,9 @@ architecture natively. It generates an SBOM and attaches it as an OCI
 attestation. After all architectures succeed, it pushes and signs the
 architecture image, then creates and signs immutable version and `latest`
 multi-architecture manifests. Reusing a version manifest during recovery is
-allowed only when its architecture digests and source revision match the
-current commit.
+allowed when its architecture digests match and the add-on files are unchanged
+between the image source revision and current commit. Unrelated repository
+commits do not invalidate an otherwise identical add-on image.
 
 Finally, the workflow creates the immutable `<slug>/<version>` Git tag and a
 GitHub Release using the matching changelog section, upstream release link,
