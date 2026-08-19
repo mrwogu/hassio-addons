@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026.8.0-1
+
+- Refresh authentik's identity, SSO, and directory integration with [2026.8.0](https://github.com/goauthentik/authentik/releases/tag/version/2026.8.0).
+
 ## 2026.8.0-rc7-2
 
 - Remove obsolete Redis configuration; authentik now uses PostgreSQL only

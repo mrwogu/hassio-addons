@@ -1,6 +1,6 @@
 ---
 name: authentik
-version: "2026.8.0-rc7-2"
+version: "2026.8.0-1"
 slug: authentik
 description: Self-hosted identity provider for SSO, SAML, OAuth2, and LDAP
 url: https://github.com/mrwogu/hassio-addons/tree/main/authentik
