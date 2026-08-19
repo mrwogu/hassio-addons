@@ -144,6 +144,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Build image for validation
@@ -187,6 +188,7 @@ jobs:
         if: inputs.publish
         id: publish
         env:
+          ADDON: ${{ inputs.addon }}
           ARCH: ${{ matrix.arch }}
           IMAGE: ${{ matrix.image }}
           VERSION: ${{ needs.prepare.outputs.version }}
@@ -198,11 +200,21 @@ jobs:
             image_arch=$(docker buildx imagetools inspect "$IMAGE:$VERSION" \
               --format '{{json .Image.Config.Labels}}' |
               jq -r '."io.hass.arch" // empty')
-            if [ "$revision" != "$GITHUB_SHA" ] || [ "$image_arch" != "$ARCH" ]; then
-              echo "::error::$IMAGE:$VERSION is immutable and belongs to another build"
+            if [ "$image_arch" != "$ARCH" ]; then
+              echo "::error::$IMAGE:$VERSION has unexpected architecture"
               exit 1
             fi
-            echo "Reusing $IMAGE:$VERSION from the current commit"
+            if [ "$revision" != "$GITHUB_SHA" ]; then
+              if ! git cat-file -e "$revision^{commit}" 2>/dev/null ||
+                ! git diff --quiet "$revision" "$GITHUB_SHA" -- "$ADDON"
+              then
+                echo "::error::$IMAGE:$VERSION belongs to a build with changed $ADDON files"
+                exit 1
+              fi
+              echo "Reusing $IMAGE:$VERSION from compatible commit $revision"
+            else
+              echo "Reusing $IMAGE:$VERSION from the current commit"
+            fi
           elif ! printf '%s\n' "$output" |
             grep -Eiq 'manifest unknown|no such manifest'
           then
@@ -260,6 +272,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Log in to container registry
@@ -280,6 +293,7 @@ jobs:
       - name: Check immutable manifest tag
         id: manifest
         env:
+          ADDON: ${{ inputs.addon }}
           ARCHITECTURES: ${{ needs.prepare.outputs.architectures }}
           IMAGE_NAME: ${{ needs.prepare.outputs.image_name }}
           REGISTRY_PREFIX: ${{ needs.prepare.outputs.registry_prefix }}
@@ -307,8 +321,12 @@ jobs:
                 --format '{{json .Image.Config.Labels}}' |
                 jq -r '."org.opencontainers.image.revision" // empty')
               if [ "$revision" != "$GITHUB_SHA" ]; then
-                echo "::error::$source_image was not built from $GITHUB_SHA"
-                exit 1
+                if ! git cat-file -e "$revision^{commit}" 2>/dev/null ||
+                  ! git diff --quiet "$revision" "$GITHUB_SHA" -- "$ADDON"
+                then
+                  echo "::error::$source_image belongs to a build with changed $ADDON files"
+                  exit 1
+                fi
               fi
               if ! jq -e --arg digest "$source_digest" \
                 'any(.manifests[]?; .digest == $digest)' <<<"$output" >/dev/null
