@@ -311,7 +311,7 @@ jobs:
                 exit 1
               fi
               if ! jq -e --arg digest "$source_digest" \
-                '.manifests[]?.digest == $digest' <<<"$output" >/dev/null
+                'any(.manifests[]?; .digest == $digest)' <<<"$output" >/dev/null
               then
                 echo "::error::Existing manifest does not use $source_image"
                 exit 1
