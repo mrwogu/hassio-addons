@@ -1,6 +1,6 @@
 ---
 name: Bonds
-version: "0.22.3-2"
+version: "0.22.3-3"
 slug: bonds
 description: Personal relationship manager built with Go and React
 url: https://github.com/mrwogu/hassio-addons/tree/main/bonds

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.22.3-3
+
+- Recover Bonds release with new immutable revision
+
 ## 0.22.3-2
 
 - Fix Bonds backup cron field handling
