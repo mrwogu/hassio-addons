@@ -53,7 +53,7 @@ jobs:
           npx --yes @promptscript/cli@1.18.1 check
           npx --yes @promptscript/cli@1.18.1 validate --strict
           npx --yes @promptscript/cli@1.18.1 compile
-          git diff --exit-code -- \
+          git diff --exit-code -I '^# promptscript-generated: ' -- \
             AGENTS.md CLAUDE.md \
             .claude/workflows .claude/skills/promptscript/SKILL.md \
             .factory/skills/promptscript/SKILL.md
