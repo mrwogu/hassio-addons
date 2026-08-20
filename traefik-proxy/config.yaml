@@ -1,6 +1,6 @@
 ---
 name: Traefik Proxy
-version: "3.7.10-2"
+version: "3.7.11-1"
 slug: traefik-proxy
 description: Secure file-configured reverse proxy for Home Assistant
 url: https://github.com/mrwogu/hassio-addons/tree/main/traefik-proxy
