@@ -1,0 +1,10 @@
+@restrictions {
+  - "Never copy, fork, or patch upstream application source in an add-on"
+  - "Never use an unpinned image, a latest base tag, or a mutable GitHub Action reference"
+  - "Never expose credentials, VPN keys, generated secrets, tokens, personal data, or production configuration in code, tests, or logs"
+  - "Never add full_access, host_network, a device, or a capability without a documented runtime requirement and validator coverage"
+  - "Never reuse or overwrite a released package version or Git tag"
+  - "Never execute downloaded bootstrap code without verifying its expected checksum"
+  - "Never edit AGENTS.md or generated .factory content directly; edit .promptscript sources and run promptscript compile"
+  - "Never treat upstream application vulnerabilities as wrapper vulnerabilities without verifying the boundary"
+}

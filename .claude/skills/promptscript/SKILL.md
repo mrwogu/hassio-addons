@@ -1,5 +1,5 @@
 ---
-# promptscript-generated: 2026-08-18T09:11:40.030Z | source: .promptscript/project.prs | target: promptscript
+# promptscript-generated: 2026-08-20T19:37:06.971Z | source: .promptscript/project.prs | target: promptscript
 name: promptscript
 description: >-
   PromptScript language expert for reading, writing, modifying, and

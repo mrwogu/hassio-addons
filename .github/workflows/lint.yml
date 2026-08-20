@@ -23,6 +23,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Set up Python
@@ -38,6 +39,12 @@ jobs:
       - name: Validate repository
         run: python scripts/validate_addons.py
 
+      - name: Validate Dockerfile synchronization
+        if: github.event_name == 'pull_request'
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: python scripts/validate_dockerfile_sync.py "$BASE" "$GITHUB_SHA"
+
       - name: Validate YAML
         run: yamllint .
 
@@ -46,12 +53,18 @@ jobs:
           npx --yes @promptscript/cli@1.18.1 check
           npx --yes @promptscript/cli@1.18.1 validate --strict
           npx --yes @promptscript/cli@1.18.1 compile
-          git diff --exit-code -- \
-            AGENTS.md .factory/skills/promptscript/SKILL.md
+          git diff --exit-code -I '^# promptscript-generated: ' -- \
+            AGENTS.md CLAUDE.md \
+            .claude/workflows .claude/skills/promptscript/SKILL.md \
+            .factory/skills/promptscript/SKILL.md
+          test -z "$(git status --short --untracked-files=all -- \
+            AGENTS.md CLAUDE.md \
+            .claude/workflows .claude/skills/promptscript/SKILL.md \
+            .factory/skills/promptscript/SKILL.md)"
 
       - name: Validate shell
         run: |
-          find authentik bonds gluetun n8n stirling-pdf traefik-proxy tududi -type f \
+          find . -type f -not -path './.git/*' -not -path './.github/*' \
             \( -name '*.sh' -o -name 'addon-entrypoint' \) \
             -print0 | xargs -0 shellcheck
 
@@ -71,13 +84,21 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: "3.14"
+
+      - name: Install manifest dependency
+        run: python -m pip install -r requirements-dev.txt
+
       - name: Select changed add-ons
         id: filter
         env:
           EVENT: ${{ github.event_name }}
           BASE: ${{ github.event.pull_request.base.sha }}
         run: |
-          all='["authentik","bonds","gluetun","n8n","stirling-pdf","traefik-proxy","tududi"]'
+          all=$(python3 scripts/addon_manifest.py json)
           # Lint every add-on on pushes to main and when this workflow changes;
           # otherwise only the add-ons touched by the pull request.
           if [ "$EVENT" != "pull_request" ]; then
@@ -85,16 +106,19 @@ jobs:
             exit 0
           fi
           changed=$(git diff --name-only "$BASE" "$GITHUB_SHA")
-          if printf '%s\n' "$changed" | grep -Eq '^\.github/workflows/lint\.yml$'; then
+          if printf '%s\n' "$changed" | grep -Eq \
+            '^(\.github/workflows/lint\.yml|addons\.yaml|scripts/(addon_manifest|validate_addons)\.py)$'
+          then
             echo "addons=$all" >>"$GITHUB_OUTPUT"
             exit 0
           fi
           addons='[]'
-          for addon in authentik bonds gluetun n8n stirling-pdf traefik-proxy tududi; do
+          manifest_addons=$(python3 scripts/addon_manifest.py list)
+          while IFS= read -r addon; do
             if printf '%s\n' "$changed" | grep -q "^${addon}/"; then
               addons=$(jq -c --arg addon "$addon" '. + [$addon]' <<<"$addons")
             fi
-          done
+          done <<<"$manifest_addons"
           echo "addons=$addons" >>"$GITHUB_OUTPUT"
 
   addon:

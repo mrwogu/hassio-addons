@@ -1,0 +1,9 @@
+---
+blank_issues_enabled: false
+contact_links:
+  - name: Upstream application support
+    url: https://github.com/mrwogu/hassio-addons#support
+    about: Packaging issues belong here. Application bugs belong upstream.
+  - name: Security vulnerability
+    url: https://github.com/mrwogu/hassio-addons/security/advisories/new
+    about: Report wrapper, workflow, supply chain, and secret-handling issues privately.

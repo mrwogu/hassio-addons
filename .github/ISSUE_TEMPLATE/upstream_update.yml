@@ -1,0 +1,34 @@
+---
+name: Upstream update request
+description: Report an upstream release or packaging update issue.
+title: "[Upstream]: "
+labels:
+  - dependencies
+body:
+  - type: input
+    id: addon
+    attributes:
+      label: Add-on
+      placeholder: n8n
+    validations:
+      required: true
+  - type: input
+    id: upstream-release
+    attributes:
+      label: Upstream release
+      placeholder: v2.36.3
+    validations:
+      required: true
+  - type: input
+    id: upstream-url
+    attributes:
+      label: Upstream release URL
+    validations:
+      required: true
+  - type: textarea
+    id: packaging-impact
+    attributes:
+      label: Packaging impact
+      description: Describe adapter, schema, architecture, or migration impact.
+    validations:
+      required: true

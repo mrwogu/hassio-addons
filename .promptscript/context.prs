@@ -1,0 +1,24 @@
+@context {
+  project: "hassio-addons"
+  languages: [python, shell, yaml, dockerfile]
+  architectures: [aarch64, amd64]
+  registry: "ghcr.io/mrwogu"
+  manifest: "addons.yaml"
+  """
+  The repository packages Home Assistant add-ons. Integration code is MIT
+  licensed. Packaged applications retain their upstream licenses. Bonds uses
+  BUSL-1.1 and has commercial-use and managed hosting restrictions. n8n uses
+  the Sustainable Use License and has separate terms for Enterprise source
+  files.
+
+  Each add-on is a thin wrapper. Runtime adapters translate Home Assistant
+  options into upstream environment variables or files, validate untrusted
+  input, persist state under `/config`, and finish with `exec` so signals reach
+  the upstream process.
+
+  `addons.yaml` is the single registry for add-on slugs, images, Dockerfiles,
+  and adapter test scripts. Repository validation, Make targets, workflows, and
+  Renovate patterns must consume this registry instead of maintaining separate
+  add-on lists.
+  """
+}

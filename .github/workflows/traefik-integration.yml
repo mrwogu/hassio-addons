@@ -42,7 +42,7 @@ jobs:
           PLATFORM: ${{ matrix.platform }}
         run: |
           docker buildx build --load --platform "$PLATFORM" \
-            --tag "local/traefik-proxy:3.7.10-$ARCH" traefik-proxy
+            --tag "local/traefik-proxy:integration-$ARCH" traefik-proxy
 
       - name: Load AppArmor profile
         run: |
@@ -58,7 +58,7 @@ jobs:
           APPARMOR_PROFILE: mrwogu-traefik-proxy-${{ matrix.arch }}
           ARCH: ${{ matrix.arch }}
           CONTAINER: traefik-proxy-integration-${{ github.run_id }}-${{ matrix.arch }}
-          IMAGE: local/traefik-proxy:3.7.10-${{ matrix.arch }}
+          IMAGE: local/traefik-proxy:integration-${{ matrix.arch }}
           PLATFORM: ${{ matrix.platform }}
         run: sh traefik-proxy/tests/integration.sh
 

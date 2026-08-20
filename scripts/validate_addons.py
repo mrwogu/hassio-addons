@@ -10,15 +10,11 @@ from typing import Any
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
-ADDONS = {
-    "authentik": "ghcr.io/mrwogu/hassio-authentik",
-    "bonds": "ghcr.io/mrwogu/hassio-bonds",
-    "gluetun": "ghcr.io/mrwogu/hassio-gluetun",
-    "n8n": "ghcr.io/mrwogu/hassio-n8n",
-    "stirling-pdf": "ghcr.io/mrwogu/hassio-stirling-pdf",
-    "traefik-proxy": "ghcr.io/mrwogu/hassio-traefik-proxy",
-    "tududi": "ghcr.io/mrwogu/hassio-tududi",
-}
+try:
+    from scripts.addon_manifest import load_manifest
+except ModuleNotFoundError:
+    from addon_manifest import load_manifest
+
 REQUIRED_ADDON_FILES = (
     "config.yaml",
     "Dockerfile",
@@ -102,6 +98,34 @@ def validate_repository(errors: list[str]) -> None:
             errors.append(f"repository.yaml: missing {key}")
     if data.get("url") != "https://github.com/mrwogu/hassio-addons":
         errors.append("repository.yaml: unexpected repository URL")
+
+
+def validate_manifest_files(
+    addons: dict[str, dict[str, str]],
+    errors: list[str],
+) -> None:
+    for slug, metadata in addons.items():
+        for key in ("dockerfile", "test_script"):
+            relative = metadata[key]
+            path = ROOT / relative
+            if not path.is_file() or path.stat().st_size == 0:
+                errors.append(f"addons.yaml: {slug}.{key} points to missing file {relative}")
+
+
+def validate_manifest_coverage(
+    addons: dict[str, dict[str, str]],
+    errors: list[str],
+) -> None:
+    discovered = {
+        path.parent.name
+        for path in ROOT.glob("*/Dockerfile")
+        if path.parent.is_dir()
+    }
+    registered = set(addons)
+    for slug in sorted(discovered - registered):
+        errors.append(f"addons.yaml: add-on directory {slug!r} is not registered")
+    for slug in sorted(registered - discovered):
+        errors.append(f"addons.yaml: registered add-on {slug!r} has no Dockerfile")
 
 
 def validate_addon(slug: str, expected_image: str, errors: list[str]) -> None:
@@ -245,7 +269,15 @@ def validate_action_pins(errors: list[str]) -> None:
 def main() -> int:
     errors: list[str] = []
     validate_repository(errors)
-    for slug, image in ADDONS.items():
+    try:
+        _, addons = load_manifest(ROOT)
+    except (OSError, UnicodeError, TypeError, ValueError, yaml.YAMLError) as err:
+        errors.append(f"addons.yaml: invalid manifest: {err}")
+        addons = {}
+    validate_manifest_files(addons, errors)
+    validate_manifest_coverage(addons, errors)
+    for slug, metadata in addons.items():
+        image = metadata["image"]
         validate_addon(slug, image, errors)
     validate_yaml_files(errors)
     validate_action_pins(errors)
@@ -255,7 +287,7 @@ def main() -> int:
             print(f"ERROR: {error}", file=sys.stderr)
         return 1
 
-    print(f"Validated repository and {len(ADDONS)} add-ons")
+    print(f"Validated repository and {len(addons)} add-ons")
     return 0
 
 

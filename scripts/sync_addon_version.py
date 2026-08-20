@@ -102,7 +102,7 @@ def render_changelog(
     template: str,
 ) -> str:
     heading = f"## {version}"
-    if heading in content:
+    if re.search(rf"^{re.escape(heading)}$", content, re.MULTILINE):
         return content
     required_placeholders = ("{upstream_version}", "{upstream_link}")
     missing_placeholders = [

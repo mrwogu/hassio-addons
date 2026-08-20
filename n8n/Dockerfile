@@ -21,14 +21,24 @@ LABEL \
 USER root
 
 # The Docker Hardened Alpine base omits the package manager. Bootstrap the
-# signed Alpine package manager before installing the small adapter tools.
+# pinned Alpine package manager before installing the small adapter tools.
 # renovate: datasource=repology depName=alpine_3_24/apk-tools-static versioning=loose
 ARG APK_TOOLS_VERSION="3.0.7-r0"
 ARG ALPINE_VERSION="v3.24"
+ARG APK_TOOLS_SHA256_X86_64="ed1c5e82177844249b7c4ecc2653b78eed096be20496b7fb860a9e165b2e5ce1"
+ARG APK_TOOLS_SHA256_AARCH64="438fca5fefbea4d040e50698b80991a443de066918ec85d10372ad80d07fd485"
 RUN set -eux; \
     cd /tmp; \
-    wget -nv "https://dl-cdn.alpinelinux.org/alpine/${ALPINE_VERSION}/main/$(uname -m)/apk-tools-static-${APK_TOOLS_VERSION}.apk"; \
-    tar -xzf "apk-tools-static-${APK_TOOLS_VERSION}.apk"; \
+    arch=$(uname -m); \
+    case "$arch" in \
+        x86_64) expected="$APK_TOOLS_SHA256_X86_64" ;; \
+        aarch64) expected="$APK_TOOLS_SHA256_AARCH64" ;; \
+        *) echo "Unsupported architecture: $arch" >&2; exit 1 ;; \
+    esac; \
+    package="apk-tools-static-${APK_TOOLS_VERSION}.apk"; \
+    wget -nv "https://dl-cdn.alpinelinux.org/alpine/${ALPINE_VERSION}/main/${arch}/${package}"; \
+    printf '%s  %s\n' "$expected" "$package" | sha256sum -c -; \
+    tar -xzf "$package"; \
     ./sbin/apk.static add --no-cache apk-tools; \
     rm -rf /tmp/*
 

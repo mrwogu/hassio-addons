@@ -23,8 +23,9 @@ jobs:
     if: >-
       github.event.pull_request.head.repo.full_name == github.repository
       && startsWith(github.event.pull_request.head.ref, 'renovate/')
+      && github.event.pull_request.user.login == 'renovate[bot]'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 45
     steps:
       - name: Check out trusted base
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -54,13 +55,35 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           set -eu
-          for addon in authentik bonds gluetun n8n stirling-pdf traefik-proxy tududi; do
+          manifest_addons=$(python3 ../base/scripts/addon_manifest.py list)
+          while IFS= read -r addon; do
             if git diff --name-only "$BASE_SHA...HEAD" -- "${addon}/Dockerfile" |
               grep -qx "${addon}/Dockerfile"
             then
+              metadata_changed_in_pr=false
+              for relative in config.yaml upstream.yaml CHANGELOG.md; do
+                if ! git diff --quiet "$BASE_SHA...HEAD" -- "$addon/$relative"; then
+                  metadata_changed_in_pr=true
+                fi
+              done
+              if [ "$addon" = "n8n" ]; then
+                python3 ../base/scripts/sync_n8n_apk_checksum.py --root "$PWD"
+              fi
               python3 ../base/scripts/sync_addon_version.py "$addon"
+              metadata_changed=false
+              if ! git diff --quiet -- \
+                "$addon/config.yaml" "$addon/upstream.yaml"
+              then
+                metadata_changed=true
+              fi
+              if [ "$metadata_changed_in_pr" = false ] &&
+                [ "$metadata_changed" = false ]
+              then
+                python3 ../base/scripts/bump_addon_revision.py "$addon" \
+                  --message "Refresh packaging dependency"
+              fi
             fi
-          done
+          done <<<"$manifest_addons"
 
       - name: Commit synchronized metadata
         id: commit
@@ -75,14 +98,12 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- \
-            authentik/Dockerfile authentik/config.yaml authentik/upstream.yaml authentik/CHANGELOG.md \
-            bonds/Dockerfile bonds/config.yaml bonds/upstream.yaml bonds/CHANGELOG.md \
-            gluetun/Dockerfile gluetun/config.yaml gluetun/upstream.yaml gluetun/CHANGELOG.md \
-            n8n/Dockerfile n8n/config.yaml n8n/upstream.yaml n8n/CHANGELOG.md \
-            stirling-pdf/Dockerfile stirling-pdf/config.yaml stirling-pdf/upstream.yaml stirling-pdf/CHANGELOG.md \
-            traefik-proxy/Dockerfile traefik-proxy/config.yaml traefik-proxy/upstream.yaml traefik-proxy/CHANGELOG.md \
-            tududi/Dockerfile tududi/config.yaml tududi/upstream.yaml tududi/CHANGELOG.md
+          manifest_addons=$(python3 ../base/scripts/addon_manifest.py list)
+          while IFS= read -r addon; do
+            git add -- \
+              "$addon/Dockerfile" "$addon/config.yaml" \
+              "$addon/upstream.yaml" "$addon/CHANGELOG.md"
+          done <<<"$manifest_addons"
           git commit -m "chore(deps): synchronize add-on metadata"
           echo "head_sha=$(git rev-parse HEAD)" >>"$GITHUB_OUTPUT"
           git push origin "HEAD:${BRANCH}"
@@ -95,18 +116,23 @@ jobs:
           REPOSITORY: ${{ github.repository }}
         run: |
           set -eu
-          for _ in $(seq 1 60); do
+          for _ in $(seq 1 180); do
             run_ids=$(
               gh api \
                 "repos/$REPOSITORY/actions/runs?event=pull_request&head_sha=$HEAD_SHA&per_page=100" \
                 --jq '.workflow_runs[] |
-                  select(.name == "Lint" or .name == "Test") | .id'
+                  select(
+                    .name == "Lint" or
+                    .name == "Test" or
+                    .name == "Build changed add-ons"
+                  ) | .id'
             )
             run_count=$(printf '%s\n' "$run_ids" | sed '/^$/d' | wc -l | tr -d ' ')
-            if [ "$run_count" -lt 2 ]; then
-              sleep 2
+            if [ "$run_count" -lt 3 ]; then
+              sleep 10
               continue
             fi
+            pending=false
             for run_id in $run_ids; do
               conclusion=$(
                 gh api "repos/$REPOSITORY/actions/runs/$run_id" \
@@ -115,9 +141,17 @@ jobs:
               if [ "$conclusion" = "action_required" ]; then
                 gh api --method POST \
                   "repos/$REPOSITORY/actions/runs/$run_id/approve" >/dev/null
+                pending=true
+              elif [ -z "$conclusion" ]; then
+                pending=true
+              elif [ "$conclusion" != "success" ]; then
+                echo "::error::Required workflow $run_id concluded $conclusion"
+                exit 1
               fi
             done
-            exit 0
+            if [ "$pending" = false ]; then
+              exit 0
+            fi
           done
-          echo "::error::Timed out waiting for Renovate checks"
+          echo "::error::Timed out waiting for Renovate checks after 30 minutes"
           exit 1

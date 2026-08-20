@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 from pathlib import Path
 
 import yaml
@@ -42,7 +43,7 @@ def normalize_message(message: str) -> str:
 
 def render_packaging_change(content: str, version: str, message: str) -> str:
     heading = f"## {version}"
-    if heading in content:
+    if re.search(rf"^{re.escape(heading)}$", content, re.MULTILINE):
         raise ValueError(f"changelog already contains {version}")
     entry = f"{heading}\n\n- {message}\n\n"
     if content.startswith("# Changelog\n"):

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import yaml
 
-from scripts.sync_addon_version import recover_text_transaction, sync
+from scripts.sync_addon_version import recover_text_transaction, render_changelog, sync
 
 
 class SyncAddonVersionTest(unittest.TestCase):
@@ -114,6 +114,20 @@ class SyncAddonVersionTest(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, "changelog_template required"):
             sync(addon)
+
+    def test_changelog_does_not_match_prefix_of_later_revision(self) -> None:
+        content = "# Changelog\n\n## 1.0.0-10\n\n- Later change.\n"
+
+        updated = render_changelog(
+            content,
+            "1.0.0-1",
+            "v1.0.0",
+            "https://example.invalid/releases/tag",
+            "v1.0.0",
+            "Refresh [{upstream_version}]({upstream_link}).",
+        )
+
+        self.assertIn("## 1.0.0-1", updated)
 
     def test_interrupted_sync_repairs_config_and_changelog(self) -> None:
         addon = self.make_addon(

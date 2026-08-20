@@ -307,6 +307,7 @@ jobs:
               echo "::error::Existing manifest has unexpected architecture count"
               exit 1
             fi
+            architectures=$(jq -r '.[]' <<<"$ARCHITECTURES")
             while IFS= read -r arch; do
               source_image="$REGISTRY_PREFIX/$arch-$IMAGE_NAME:$VERSION"
               source_digest=$(docker buildx imagetools inspect "$source_image" |
@@ -345,7 +346,7 @@ jobs:
                 echo "::error::$source_image has unexpected manifest architecture"
                 exit 1
               fi
-            done < <(jq -r '.[]' <<<"$ARCHITECTURES")
+            done <<<"$architectures"
             echo "exists=true" >>"$GITHUB_OUTPUT"
             exit 0
           fi

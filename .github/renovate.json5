@@ -26,11 +26,29 @@
     {
       "customType": "regex",
       "description": "Update pinned upstream add-on images",
-      "managerFilePatterns": ["/(^|/)(authentik|bonds|gluetun|n8n|stirling-pdf|traefik-proxy|tududi)/Dockerfile$/"],
+      "managerFilePatterns": ["/^[^/]+/Dockerfile$/"],
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+) versioning=(?<versioning>\\S+)\\nARG UPSTREAM_VERSION=\"(?<currentValue>[^\"]+)\"\\nARG UPSTREAM_DIGEST=\"(?<currentDigest>sha256:[a-f0-9]{64})\""
       ],
       "autoReplaceStringTemplate": "# renovate: datasource={{{datasource}}} depName={{{depName}}} versioning={{{versioning}}}\nARG UPSTREAM_VERSION=\"{{{newValue}}}\"\nARG UPSTREAM_DIGEST=\"{{{newDigest}}}\""
+    },
+    {
+      "customType": "regex",
+      "description": "Update n8n Alpine bootstrap package",
+      "managerFilePatterns": ["/^n8n/Dockerfile$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+) versioning=(?<versioning>\\S+)\\nARG APK_TOOLS_VERSION=\"(?<currentValue>[^\"]+)\""
+      ],
+      "versioningTemplate": "{{{versioning}}}"
+    },
+    {
+      "customType": "regex",
+      "description": "Update n8n task runner image",
+      "managerFilePatterns": ["/^n8n/Dockerfile$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+) versioning=(?<versioning>\\S+)\\nARG RUNNERS_VERSION=\"(?<currentValue>[^\"]+)\"\\nARG RUNNERS_DIGEST=\"(?<currentDigest>sha256:[a-f0-9]{64})\""
+      ],
+      "autoReplaceStringTemplate": "# renovate: datasource={{{datasource}}} depName={{{depName}}} versioning={{{versioning}}}\nARG RUNNERS_VERSION=\"{{{newValue}}}\"\nARG RUNNERS_DIGEST=\"{{{newDigest}}}\""
     }
   ],
   "packageRules": [
@@ -38,15 +56,7 @@
       "description": "Filter upstream versions; preserve prerelease digest refreshes",
       "matchManagers": ["custom.regex"],
       "matchDatasources": ["docker"],
-      "matchFileNames": [
-        "authentik/Dockerfile",
-        "bonds/Dockerfile",
-        "gluetun/Dockerfile",
-        "n8n/Dockerfile",
-        "stirling-pdf/Dockerfile",
-        "traefik-proxy/Dockerfile",
-        "tududi/Dockerfile"
-      ],
+      "matchFileNames": ["/^[^/]+/Dockerfile$/"],
       "ignoreUnstable": true,
       "allowedVersions": "/^v?\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z]+)?$/"
     },
@@ -54,15 +64,7 @@
       "description": "Automerge validated upstream add-on updates",
       "matchManagers": ["custom.regex"],
       "matchDatasources": ["docker"],
-      "matchFileNames": [
-        "authentik/Dockerfile",
-        "bonds/Dockerfile",
-        "gluetun/Dockerfile",
-        "n8n/Dockerfile",
-        "stirling-pdf/Dockerfile",
-        "traefik-proxy/Dockerfile",
-        "tududi/Dockerfile"
-      ],
+      "matchFileNames": ["/^[^/]+/Dockerfile$/"],
       "matchUpdateTypes": ["digest", "patch", "minor", "major"],
       "labels": ["dependencies", "addon-upstream", "automerge"],
       "automerge": true,
@@ -74,6 +76,17 @@
       "description": "Automerge repository tooling",
       "matchManagers": ["github-actions", "pip_requirements"],
       "automerge": true
+    },
+    {
+      "description": "Automerge n8n bootstrap updates after checksum synchronization",
+      "matchManagers": ["custom.regex"],
+      "matchDatasources": ["repology"],
+      "matchFileNames": ["/^n8n/Dockerfile$/"],
+      "labels": ["dependencies", "addon-bootstrap", "automerge"],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": false,
+      "ignoreTests": false
     }
   ]
 }

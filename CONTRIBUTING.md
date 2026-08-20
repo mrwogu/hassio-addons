@@ -10,7 +10,25 @@
 
 Replace `gluetun` with `bonds`, `n8n`, `stirling-pdf`, `authentik`, `traefik-proxy`, or `tududi` when needed. Helper increments packaging revision and prepends changelog entry. Add-on versions use `<upstream-version>-<packaging-revision>`. New upstream versions start at revision `1`; digest and packaging changes increment revision.
 
+`addons.yaml` is the single registry for add-on slugs, images, Dockerfiles, and
+adapter test scripts. New add-ons must update it before validation can pass.
+
 Each `upstream.yaml` contains an add-on-specific `changelog_template`. Keep its wording specific to the add-on and preserve both `{upstream_version}` and `{upstream_link}` placeholders.
+
+## Validation
+
+Required checks:
+
+```sh
+make check
+yamllint .
+actionlint .github/workflows/*.yml
+promptscript check
+promptscript validate --strict
+promptscript diff
+```
+
+Changed add-ons must also pass native `amd64` and `aarch64` build validation.
 
 ## Security
 
