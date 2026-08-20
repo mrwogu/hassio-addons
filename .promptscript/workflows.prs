@@ -1,0 +1,78 @@
+@workflows {
+  feature: {
+    description: "Implement a focused add-on adapter change"
+    content: """
+      1. Read the affected add-on config, Dockerfile, upstream metadata,
+         entrypoint, tests, documentation, translations, changelog, license,
+         addons.yaml, and current workflows.
+      2. Keep changes in the Home Assistant adapter layer. Do not modify
+         upstream application source.
+      3. Validate every new option. Quote shell values, avoid command
+         construction, redact secrets, persist mutable state under /config,
+         and preserve final exec behavior.
+      4. Update focused fixtures for valid, invalid, omitted, persistence, and
+         secret-handling paths.
+      5. Update English and Polish translations and documentation when
+         configuration or behavior changes.
+      6. Run make check, yamllint, actionlint, ShellCheck, PromptScript checks,
+         and the changed add-on architecture build gate.
+      7. Stop before commit, push, release, or publication unless authorized.
+    """
+  }
+
+  new-addon: {
+    description: "Add a new upstream application wrapper"
+    content: """
+      1. Confirm upstream license permits redistribution. Preserve exact
+         license and notices. Document material restrictions.
+      2. Choose a lowercase stable slug and ghcr.io/mrwogu/hassio-<slug>.
+      3. Create required config, Dockerfile, docs, changelog, license, assets,
+         upstream metadata, translations, entrypoint, and adapter tests.
+      4. Add the slug, image, Dockerfile, and test script to addons.yaml.
+      5. Keep config metadata, Dockerfile arguments, upstream.yaml, and
+         changelog synchronized.
+      6. Add the new path only through manifest-driven validation, Make,
+         workflows, and Renovate.
+      7. Run complete local and CI validation before merge.
+    """
+  }
+
+  release: {
+    description: "Verify autonomous upstream release readiness"
+    content: """
+      1. Confirm Renovate update is an upstream image, digest, or repository
+         tooling change.
+      2. Confirm package version and upstream metadata are synchronized.
+      3. Confirm immutable tag does not already exist.
+      4. Run repository validation and changed add-on architecture builds.
+      5. Verify SBOM, Cosign, manifest digest, release notes, and artifacts.
+      6. Let the publish workflow create tags and GitHub Releases.
+      7. Never bypass failed validation or manually reuse a changed version.
+    """
+  }
+
+  security: {
+    description: "Review wrapper and distribution security"
+    content: """
+      1. Identify whether the issue belongs to wrapper code, workflows,
+         artifacts, or upstream application code.
+      2. Check secrets, shell input, capabilities, devices, AppArmor, image
+         digests, downloaded bootstrap artifacts, and workflow permissions.
+      3. Keep upstream application vulnerabilities routed to upstream maintainers.
+      4. Use private vulnerability reporting for wrapper and supply-chain issues.
+      5. Add a focused regression test or validator rule.
+    """
+  }
+
+  promptscript: {
+    description: "Change instructions and regenerate outputs"
+    content: """
+      1. Edit .promptscript source fragments, never generated AGENTS.md,
+         CLAUDE.md, or .factory content.
+      2. Run promptscript check and promptscript validate --strict.
+      3. Run promptscript compile.
+      4. Run promptscript diff and inspect generated output.
+      5. Run make check and workflow validation.
+    """
+  }
+}

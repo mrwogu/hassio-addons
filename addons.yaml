@@ -1,0 +1,33 @@
+---
+architectures:
+  - aarch64
+  - amd64
+addons:
+  authentik:
+    image: ghcr.io/mrwogu/hassio-authentik
+    dockerfile: authentik/Dockerfile
+    test_script: authentik/tests/run.sh
+  bonds:
+    image: ghcr.io/mrwogu/hassio-bonds
+    dockerfile: bonds/Dockerfile
+    test_script: bonds/tests/run.sh
+  gluetun:
+    image: ghcr.io/mrwogu/hassio-gluetun
+    dockerfile: gluetun/Dockerfile
+    test_script: gluetun/tests/run.sh
+  n8n:
+    image: ghcr.io/mrwogu/hassio-n8n
+    dockerfile: n8n/Dockerfile
+    test_script: n8n/tests/run.sh
+  stirling-pdf:
+    image: ghcr.io/mrwogu/hassio-stirling-pdf
+    dockerfile: stirling-pdf/Dockerfile
+    test_script: stirling-pdf/tests/run.sh
+  traefik-proxy:
+    image: ghcr.io/mrwogu/hassio-traefik-proxy
+    dockerfile: traefik-proxy/Dockerfile
+    test_script: traefik-proxy/tests/run.sh
+  tududi:
+    image: ghcr.io/mrwogu/hassio-tududi
+    dockerfile: tududi/Dockerfile
+    test_script: tududi/tests/run.sh

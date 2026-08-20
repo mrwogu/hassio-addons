@@ -6,7 +6,7 @@ from pathlib import Path
 
 import yaml
 
-from scripts.bump_addon_revision import bump, normalize_message
+from scripts.bump_addon_revision import bump, normalize_message, render_packaging_change
 
 
 class BumpAddonRevisionTest(unittest.TestCase):
@@ -88,6 +88,13 @@ class BumpAddonRevisionTest(unittest.TestCase):
         for message in ("", "first\nsecond", "x" * 161):
             with self.subTest(message=message), self.assertRaises(ValueError):
                 normalize_message(message)
+
+    def test_bump_does_not_match_prefix_of_later_revision(self) -> None:
+        content = "# Changelog\n\n## 1.2.3-10\n\n- Later change.\n"
+
+        updated = render_packaging_change(content, "1.2.3-1", "Earlier change.")
+
+        self.assertIn("## 1.2.3-1", updated)
 
 
 if __name__ == "__main__":

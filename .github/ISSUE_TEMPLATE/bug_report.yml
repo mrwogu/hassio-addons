@@ -1,0 +1,71 @@
+---
+name: Add-on packaging bug
+description: Report reproducible packaging, startup, or Home Assistant integration behavior.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include VPN credentials, tokens, private keys, cookies, private
+        URLs, personal data, or production configuration.
+  - type: input
+    id: addon
+    attributes:
+      label: Add-on
+      placeholder: gluetun
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Add-on version
+      placeholder: 3.41.3-1
+    validations:
+      required: true
+  - type: input
+    id: home-assistant
+    attributes:
+      label: Home Assistant version
+      placeholder: 2026.8.0
+    validations:
+      required: true
+  - type: input
+    id: architecture
+    attributes:
+      label: Architecture
+      placeholder: amd64 or aarch64
+    validations:
+      required: true
+  - type: textarea
+    id: configuration
+    attributes:
+      label: Minimal redacted configuration
+      description: Remove credentials and private values.
+      render: yaml
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant redacted logs
+      render: text

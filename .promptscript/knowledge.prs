@@ -1,0 +1,90 @@
+@knowledge {
+  """
+  # Repository workflow
+
+  ## Existing add-on
+
+  1. Start from `main` and inspect the add-on's `config.yaml`, `Dockerfile`,
+     `upstream.yaml`, entrypoint, tests, documentation, translations, changelog,
+     license, and manifest entry before editing.
+  2. Keep changes in the Home Assistant adapter layer. Do not change upstream
+     application code.
+  3. For packaging-only changes, run:
+
+     ```sh
+     make bump ADDON=<slug> MESSAGE="<one-line description>"
+     ```
+
+     The helper increments packaging revision and updates config, metadata, and
+     changelog atomically.
+  4. For upstream tag or digest changes, update Dockerfile source arguments and
+     run:
+
+     ```sh
+     python3 scripts/sync_addon_version.py <slug>
+     ```
+
+  ## Validation
+
+  ```sh
+  make check
+  yamllint .
+  actionlint .github/workflows/*.yml
+  find $(python3 scripts/addon_manifest.py directories) scripts -type f \
+    \( -name '*.sh' -o -name 'addon-entrypoint' \) -print0 |
+    xargs -0 shellcheck
+  promptscript check
+  promptscript validate --strict
+  promptscript compile
+  promptscript diff
+  ```
+
+  CI runs the official Home Assistant add-on linter, changed add-on native
+  architecture builds, and publish validation. Use protected manual workflows
+  for real WireGuard or privileged integration tests.
+
+  ## New add-on
+
+  Required files:
+
+  - `config.yaml`
+  - `Dockerfile`
+  - `README.md`
+  - `DOCS.md`
+  - `CHANGELOG.md`
+  - `LICENSE.upstream`
+  - `icon.png`
+  - `logo.png`
+  - `upstream.yaml`
+  - `translations/en.yaml`
+  - `translations/pl.yaml`
+  - `rootfs/usr/local/bin/addon-entrypoint`
+  - `tests/run.sh`
+
+  Add the slug, image, Dockerfile, and adapter test script to `addons.yaml`.
+  Do not duplicate the slug in Makefiles or workflow loops.
+
+  ## Autonomous release process
+
+  Renovate checks upstream image tags and digests every six hours. Custom Docker
+  manager updates version and digest. Renovate PRs auto-merge after required
+  checks, including major updates by design because this repository distributes
+  upstream applications rather than developing them.
+
+  `renovate-sync` synchronizes package metadata on trusted Renovate branches.
+  It uses `pull_request_target` and write permissions only for the Renovate bot.
+
+  Maintainer adapter changes use `make bump` and a normal pull request.
+  Publish runs on `main`, finds add-ons without immutable `<slug>/<version>`
+  tags, validates all metadata, builds native architectures, signs images,
+  publishes SBOM attestations, creates multi-architecture manifests, and
+  creates matching GitHub Releases.
+
+  ## Security reporting
+
+  Use GitHub private vulnerability reporting for wrapper code, adapter scripts,
+  workflow automation, image supply chain, secret handling, and published
+  artifacts. Route vulnerabilities in packaged upstream applications to the
+  upstream project.
+  """
+}

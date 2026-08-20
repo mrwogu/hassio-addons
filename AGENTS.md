@@ -1,6 +1,6 @@
 # AGENTS.md
 
-<!-- PromptScript 2026-08-19T11:26:25.593Z | source: .promptscript/project.prs | target: factory - do not edit -->
+<!-- PromptScript 2026-08-20T13:47:14.395Z | source: .promptscript/project.prs | target: factory - do not edit -->
 
 ## Project
 
@@ -26,9 +26,15 @@ options into upstream environment variables or files, validate untrusted
 input, persist state under `/config`, and finish with `exec` so signals reach
 the upstream process.
 
+`addons.yaml` is the single registry for add-on slugs, images, Dockerfiles,
+and adapter test scripts. Repository validation, Make targets, workflows, and
+Renovate patterns must consume this registry instead of maintaining separate
+add-on lists.
+
 - Project: hassio-addons
 - Architectures: aarch64, amd64
 - Registry: ghcr.io/mrwogu
+- Manifest: addons.yaml
 
 ## Conventions & Patterns
 
@@ -42,6 +48,7 @@ the upstream process.
 - Store all mutable application data and generated secrets under /config
 - Create generated secrets atomically with mode 0600 and never log their values
 - Preserve upstream licenses and attribution in every add-on
+- Use addons.yaml as the registry for add-on-specific automation
 
 ### Security
 
@@ -49,13 +56,15 @@ the upstream process.
 - Gluetun may use only NET_ADMIN and /dev/net/tun with its bounded AppArmor profile
 - Reject control characters, unsafe custom environment names, and overrides of managed variables
 - Pin every external GitHub Action to a full 40-character commit SHA
+- Verify downloaded bootstrap artifacts with a pinned checksum
 
 ### Validation
 
 - Run make check after repository changes
 - Run yamllint and actionlint after YAML or workflow changes
 - Run ShellCheck after shell changes
-- Build and smoke-test every changed architecture when runtime behavior changes
+- Build every changed add-on for aarch64 and amd64 before merge
+- Run architecture integration workflows manually when credentials or privileged runtime are required
 
 ## Commands
 
@@ -67,69 +76,53 @@ the upstream process.
 
 # Repository workflow
 
-## Working on an existing add-on
+## Existing add-on
 
 1. Start from `main` and inspect the add-on's `config.yaml`, `Dockerfile`,
    `upstream.yaml`, entrypoint, tests, documentation, translations, changelog,
-   license before editing.
+   license, and manifest entry before editing.
 
 2. Keep changes in the Home Assistant adapter layer. Do not change upstream
    application code.
 
-3. Validate every new option in the entrypoint. Quote shell values, avoid
-   command construction, redact secrets, persist mutable state under
-   `/config`, and preserve final `exec` behavior.
-
-4. Update adapter fixtures for valid, invalid, omitted, persistence, and
-   secret-handling paths. Update English and Polish translations and user
-   documentation whenever configuration or behavior changes.
-
-5. For a packaging-only change, run:
+3. For packaging-only changes, run:
 
 ```sh
      make bump ADDON=<slug> MESSAGE="<one-line description>"
 ```
 
-The message is required, one line, and at most 160 characters. The helper
-atomically increments the packaging revision and updates `config.yaml`,
-`upstream.yaml`, and `CHANGELOG.md`.
+The helper increments packaging revision and updates config, metadata, and
+changelog atomically.
 
-6. For an upstream tag or digest change, edit only `UPSTREAM_VERSION` and
-   `UPSTREAM_DIGEST` in the Dockerfile, then run:
+4. For upstream tag or digest changes, update Dockerfile source arguments and
+   run:
 
 ```sh
      python3 scripts/sync_addon_version.py <slug>
 ```
 
-A new upstream version starts at revision `1`. A digest-only update
-increments the current revision. The helper is idempotent and repairs an
-interrupted metadata, config, or changelog synchronization.
-
-7. Run the validation gate:
+## Validation
 
 ```sh
-     make check
-     yamllint .
-     actionlint .github/workflows/*.yml
-     find authentik bonds gluetun n8n stirling-pdf traefik-proxy tududi -type f \
-       \( -name '*.sh' -o -name 'addon-entrypoint' \) -print0 |
-       xargs -0 shellcheck
-     promptscript validate
-     promptscript compile
-     promptscript diff
+  make check
+  yamllint .
+  actionlint .github/workflows/*.yml
+  find $(python3 scripts/addon_manifest.py directories) scripts -type f \
+    \( -name '*.sh' -o -name 'addon-entrypoint' \) -print0 |
+    xargs -0 shellcheck
+  promptscript check
+  promptscript validate --strict
+  promptscript compile
+  promptscript diff
 ```
 
-CI also runs the official Home Assistant add-on linter and native
-architecture builds. Use the protected, manual `vpn-integration` workflow
-for a real WireGuard test.
+CI runs the official Home Assistant add-on linter, changed add-on native
+architecture builds, and publish validation. Use protected manual workflows
+for real WireGuard or privileged integration tests.
 
-## Adding a new add-on
+## New add-on
 
-1. Confirm that the upstream license permits redistribution and include its
-   exact license and notices. Document material restrictions.
-
-2. Choose a lowercase stable slug and `ghcr.io/mrwogu/hassio-<slug>`.
-3. Create `<slug>/` with all required files:
+Required files:
 
 - `config.yaml`
 - `Dockerfile`
@@ -145,81 +138,31 @@ for a real WireGuard test.
 - `rootfs/usr/local/bin/addon-entrypoint`
 - `tests/run.sh`
 
-4. In `config.yaml`, set the required metadata, exact architecture order,
-   `init: false`, writable `addon_config`, minimal ports, and only required
-   devices or capabilities. Add `apparmor.txt` only when a bounded profile is
-   needed.
+Add the slug, image, Dockerfile, and adapter test script to `addons.yaml`.
+Do not duplicate the slug in Makefiles or workflow loops.
 
-5. In the Dockerfile, place the Renovate annotation immediately before
-   `UPSTREAM_VERSION` and `UPSTREAM_DIGEST`, then use
-   `FROM <image>:${UPSTREAM_VERSION}@${UPSTREAM_DIGEST}`. Keep the wrapper
-   minimal and add a native healthcheck.
+## Autonomous release process
 
-6. In `upstream.yaml`, provide `image`, `version`, `digest`,
-   `package_version`, `source`, and `release_url`. Add
-   `release_tag_prefix` when upstream release tags require it.
+Renovate checks upstream image tags and digests every six hours. Custom Docker
+manager updates version and digest. Renovate PRs auto-merge after required
+checks, including major updates by design because this repository distributes
+upstream applications rather than developing them.
 
-7. Implement persistence, upgrades, secret generation, option validation,
-   health behavior, and signal forwarding. Add realistic adapter tests and
-   architecture smoke tests.
+`renovate-sync` synchronizes package metadata on trusted Renovate branches.
+It uses `pull_request_target` and write permissions only for the Renovate bot.
 
-8. Update every explicit add-on registry:
+Maintainer adapter changes use `make bump` and a normal pull request.
+Publish runs on `main`, finds add-ons without immutable `<slug>/<version>`
+tags, validates all metadata, builds native architectures, signs images,
+publishes SBOM attestations, creates multi-architecture manifests, and
+creates matching GitHub Releases.
 
-- `scripts/validate_addons.py`: slug, image, and any narrowly justified
-  privilege policy.
+## Security reporting
 
-- `Makefile`: bump allowlist, shell paths, and adapter test loop.
-- `.github/workflows/lint.yml`: shell paths and the changed-add-on list.
-- `.github/workflows/publish.yml`: shell paths, Home Assistant linter, and
-  unreleased-add-on loop.
-
-- `.github/renovate.json5`: Dockerfile manager pattern, post-upgrade
-  commands, and automerge policy consumed by the Renovate GitHub App.
-
-- `.github/CODEOWNERS`, `README.md`, `CONTRIBUTING.md`, and `SECURITY.md`.
-
-9. Run the complete local and CI validation gates before merge. After first
-   publication, make the GHCR package public and link it to this repository.
-
-## Release process
-
-### Automated upstream releases
-
-Renovate runs as the hosted GitHub App on `mrwogu/hassio-addons` and checks
-upstream image tags and digests every six hours. The custom Docker manager
-updates the pinned tag and digest. The `renovate-sync` workflow then synchronizes
-add-on metadata in the Renovate pull request. Tooling and GitHub Action
-updates never automerge. Upstream add-on pull requests automerge without
-review after the normal repository checks pass.
-
-### Packaging releases
-
-Maintainer-authored adapter changes use `make bump` and a normal pull
-request. Every push to `main` searches for add-on versions without the
-immutable Git tag `<slug>/<version>`, so a failed or cancelled publication is
-retried on a later push.
-
-The reusable release workflow validates the repository and builds each
-architecture natively. It generates an SBOM and attaches it as an OCI
-attestation. After all architectures succeed, it pushes and signs the
-architecture image, then creates and signs immutable version and `latest`
-multi-architecture manifests. Reusing a version manifest during recovery is
-allowed when its architecture digests match and the add-on files are unchanged
-between the image source revision and current commit. Unrelated repository
-commits do not invalidate an otherwise identical add-on image.
-
-Finally, the workflow creates the immutable `<slug>/<version>` Git tag and a
-GitHub Release using the matching changelog section, upstream release link,
-image tag, and manifest digest. Never create these artifacts manually to
-bypass failed checks.
-
-### Recovery and support
-
-Before major upstream upgrades, preserve Home Assistant add-on backups.
-Roll back by selecting a previous immutable add-on version and restoring the
-matching configuration backup while the add-on is stopped. Previous images
-remain available for rollback, but only the latest published version receives
-security support.
+Use GitHub private vulnerability reporting for wrapper code, adapter scripts,
+workflow automation, image supply chain, secret handling, and published
+artifacts. Route vulnerabilities in packaged upstream applications to the
+upstream project.
 
 ## Don'ts
 
@@ -228,4 +171,6 @@ security support.
 - Don't expose credentials, VPN keys, generated secrets, tokens, personal data, or production configuration in code, tests, or logs
 - Don't add full_access, host_network, a device, or a capability without a documented runtime requirement and validator coverage
 - Don't reuse or overwrite a released package version or Git tag
+- Don't execute downloaded bootstrap code without verifying its expected checksum
 - Don't edit AGENTS.md or generated .factory content directly; edit .promptscript sources and run promptscript compile
+- Don't treat upstream application vulnerabilities as wrapper vulnerabilities without verifying the boundary

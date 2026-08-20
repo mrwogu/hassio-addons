@@ -1,0 +1,113 @@
+---
+name: Build add-on for pull request
+
+on:
+  workflow_call:
+    inputs:
+      addon:
+        required: true
+        type: string
+
+jobs:
+  prepare:
+    name: Prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      build_matrix: ${{ steps.matrix.outputs.matrix }}
+      created: ${{ steps.source.outputs.created }}
+      description: ${{ steps.metadata.outputs.description }}
+      image_name: ${{ steps.normalize.outputs.image_name }}
+      name: ${{ steps.metadata.outputs.name }}
+      registry_prefix: ${{ steps.normalize.outputs.registry_prefix }}
+      url: ${{ steps.metadata.outputs.url }}
+      version: ${{ steps.metadata.outputs.version }}
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Read add-on information
+        id: info
+        uses: home-assistant/actions/helpers/info@a7c616ce81ccda50150bf1595786c71b1883fabb  # master
+        with:
+          path: ./${{ inputs.addon }}
+
+      - name: Normalize add-on metadata
+        id: metadata
+        env:
+          VERSION: ${{ steps.info.outputs.version }}
+          NAME: ${{ steps.info.outputs.name }}
+          DESCRIPTION: ${{ steps.info.outputs.description }}
+          URL: ${{ steps.info.outputs.url }}
+          IMAGE: ${{ steps.info.outputs.image }}
+        run: |
+          strip() { local v=$1; v=${v#\"}; v=${v%\"}; printf '%s' "$v"; }
+          {
+            echo "version=$(strip "$VERSION")"
+            echo "name=$(strip "$NAME")"
+            echo "description=$(strip "$DESCRIPTION")"
+            echo "url=$(strip "$URL")"
+            echo "image=$(strip "$IMAGE")"
+          } >>"$GITHUB_OUTPUT"
+
+      - name: Read source metadata
+        id: source
+        run: echo "created=$(git show -s --format=%cI "$GITHUB_SHA")" >>"$GITHUB_OUTPUT"
+
+      - name: Normalize image information
+        id: normalize
+        env:
+          IMAGE: ${{ steps.metadata.outputs.image }}
+        run: |
+          image_name=${IMAGE##*/}
+          image_name=${image_name#\{arch\}-}
+          echo "image_name=$image_name" >>"$GITHUB_OUTPUT"
+          echo "registry_prefix=${IMAGE%/*}" >>"$GITHUB_OUTPUT"
+
+      - name: Prepare architecture matrix
+        id: matrix
+        uses: home-assistant/builder/actions/prepare-multi-arch-matrix@4de35182ce1e329181bffcbcc84d33db5e2c7e10  # 2026.06.0
+        with:
+          architectures: ${{ steps.info.outputs.architectures }}
+          image-name: ${{ steps.normalize.outputs.image_name }}
+          registry-prefix: ${{ steps.normalize.outputs.registry_prefix }}
+
+  build:
+    name: Build ${{ matrix.arch }}
+    needs: prepare
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.prepare.outputs.build_matrix) }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build image for validation
+        uses: home-assistant/builder/actions/build-image@4de35182ce1e329181bffcbcc84d33db5e2c7e10  # 2026.06.0
+        with:
+          arch: ${{ matrix.arch }}
+          cache-gha: false
+          context: ./${{ inputs.addon }}
+          cosign: false
+          image: ${{ matrix.image }}
+          image-tags: ${{ needs.prepare.outputs.version }}
+          labels: |
+            io.hass.type=app
+            io.hass.name=${{ needs.prepare.outputs.name }}
+            io.hass.description=${{ needs.prepare.outputs.description }}
+            io.hass.url=${{ needs.prepare.outputs.url }}
+            org.opencontainers.image.created=${{ needs.prepare.outputs.created }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          load: false
+          push: false
+          version: ${{ needs.prepare.outputs.version }}

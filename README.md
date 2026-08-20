@@ -72,13 +72,20 @@ Home Assistant add-ons packaged from upstream projects with automated updates, m
 
 ## Updates
 
-Renovate checks upstream releases and image digests every six hours. Updates become eligible after three days, receive a pull request, pass required checks on `amd64` and `aarch64`, and merge without review. Successful merges publish immutable GHCR images and per-add-on GitHub Releases.
+Renovate checks upstream releases and image digests every six hours. Updates
+become eligible after three days, receive a pull request, pass adapter tests
+and changed add-on builds on `amd64` and `aarch64`, and merge without review.
+Successful merges publish immutable GHCR images and per-add-on GitHub Releases.
 
 ## Support
 
 Report packaging, startup, or Home Assistant integration problems in this repository. Report application bugs directly to the respective upstream project.
 
 These packages are community-maintained and are not endorsed by Home Assistant or the upstream projects.
+
+Report packaging, workflow, supply-chain, or secret-handling vulnerabilities
+through [private vulnerability reporting](https://github.com/mrwogu/hassio-addons/security/advisories/new).
+Report application vulnerabilities to the relevant upstream project.
 
 ## License
 

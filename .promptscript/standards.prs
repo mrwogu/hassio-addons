@@ -1,0 +1,27 @@
+@standards {
+  packaging: [
+    "Pin every upstream image by both an explicit version and sha256 digest",
+    "Use package versions in the exact form <upstream-version>-<positive-revision>",
+    "Keep Dockerfile, upstream.yaml, config.yaml, and CHANGELOG.md synchronized",
+    "Support aarch64 and amd64 in that order",
+    "Keep init false and provide a writable addon_config mapping",
+    "Store all mutable application data and generated secrets under /config",
+    "Create generated secrets atomically with mode 0600 and never log their values",
+    "Preserve upstream licenses and attribution in every add-on",
+    "Use addons.yaml as the registry for add-on-specific automation"
+  ]
+  security: [
+    "Grant no capabilities by default",
+    "Gluetun may use only NET_ADMIN and /dev/net/tun with its bounded AppArmor profile",
+    "Reject control characters, unsafe custom environment names, and overrides of managed variables",
+    "Pin every external GitHub Action to a full 40-character commit SHA",
+    "Verify downloaded bootstrap artifacts with a pinned checksum"
+  ]
+  validation: [
+    "Run make check after repository changes",
+    "Run yamllint and actionlint after YAML or workflow changes",
+    "Run ShellCheck after shell changes",
+    "Build every changed add-on for aarch64 and amd64 before merge",
+    "Run architecture integration workflows manually when credentials or privileged runtime are required"
+  ]
+}
