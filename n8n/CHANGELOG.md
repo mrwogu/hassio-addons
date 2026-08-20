@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.36.3-3
+
+- Refresh packaging dependency
+
 ## 2.36.3-2
 
 - Pin Alpine bootstrap checksums.
