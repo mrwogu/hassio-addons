@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.1-1
+
+- Bring the latest task management and life organization updates from Tududi [1.4.1](https://github.com/chrisvel/tududi/releases/tag/v1.4.1).
+
 ## 1.4.0-2
 
 - Persist backups, CalDAV key, and one-time bootstrap
