@@ -1,6 +1,6 @@
 ---
 name: Tududi
-version: "1.4.0-2"
+version: "1.4.1-1"
 slug: tududi
 description: Self-hosted task management and life organization system
 url: https://github.com/mrwogu/hassio-addons/tree/main/tududi
