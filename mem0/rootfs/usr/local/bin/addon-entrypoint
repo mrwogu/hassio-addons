@@ -6,6 +6,20 @@ CONFIG_DIR=${MEM0_CONFIG_DIR:-/config}
 APP_DIR=${MEM0_APP_DIR:-/app}
 SECRETS_FILE="${CONFIG_DIR}/.secrets"
 
+# Variables the add-on translates from options; custom env_vars must not
+# shadow them or break out of the adapter environment.
+MANAGED_ENV="OPENAI_API_KEY OPENAI_BASE_URL ANTHROPIC_API_KEY GOOGLE_API_KEY ADMIN_API_KEY JWT_SECRET AUTH_DISABLED POSTGRES_HOST POSTGRES_PORT POSTGRES_DB POSTGRES_USER POSTGRES_PASSWORD POSTGRES_COLLECTION_NAME APP_DB_NAME MEM0_DEFAULT_LLM_MODEL MEM0_DEFAULT_EMBEDDER_MODEL MEM0_TELEMETRY REQUEST_LOG_RETENTION_DAYS HISTORY_DB_PATH"
+PROTECTED_ENV="ADDON_OPTIONS_PATH ADDON_SECRETS_DIR MEM0_ENTRYPOINT PATH HOME IFS ENV BASH_ENV LD_PRELOAD LD_LIBRARY_PATH PYTHONPATH PYTHONUNBUFFERED PYTHONDONTWRITEBYTECODE PIP_NO_CACHE_DIR UVICORN_PORT UVICORN_HOST"
+
+is_listed() {
+    list=$1
+    candidate=$2
+    case " $list " in
+        *" $candidate "*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
 log() {
     printf '%s\n' "[mem0-addon] $*" >&2
 }
@@ -95,6 +109,10 @@ check_option "Option 'default_embedder_model' must be a non-empty string" \
 check_option "Option 'telemetry' must be a boolean" '.telemetry | type == "boolean"'
 check_option "Option 'request_log_retention_days' must be a positive integer" \
     '.request_log_retention_days | type == "number" and floor == . and . > 0'
+check_option "Option 'env_vars' must be a list of name/value string pairs" \
+    '(.env_vars // []) | type == "array" and
+        all(.[]; type == "object" and
+            (.name | type == "string") and (.value | type == "string"))'
 
 admin_api_key=$(jq -r '.admin_api_key // ""' "$OPTIONS_PATH")
 if [ -n "$admin_api_key" ] && [ "${#admin_api_key}" -lt 16 ]; then
@@ -159,6 +177,41 @@ export POSTGRES_COLLECTION_NAME APP_DB_NAME
 export MEM0_DEFAULT_LLM_MODEL MEM0_DEFAULT_EMBEDDER_MODEL MEM0_TELEMETRY
 export REQUEST_LOG_RETENTION_DAYS HISTORY_DB_PATH
 
+# User-provided environment variables, applied last. Names must be plain
+# uppercase identifiers and may never shadow managed or protected variables.
+CUSTOM_ENV_NAMES=
+env_count=$(jq -r '(.env_vars // []) | length' "$OPTIONS_PATH")
+index=0
+while [ "$index" -lt "$env_count" ]; do
+    name=$(jq -r ".env_vars[$index].name" "$OPTIONS_PATH")
+    value=$(jq -r ".env_vars[$index].value" "$OPTIONS_PATH")
+
+    case "$name" in
+        [A-Z]*)
+            if ! printf '%s' "$name" | grep -Eq '^[A-Z][A-Z0-9_]*$'; then
+                fail "Invalid custom environment variable name: $name"
+            fi
+            ;;
+        *) fail "Invalid custom environment variable name: $name" ;;
+    esac
+
+    if is_listed "$MANAGED_ENV" "$name"; then
+        fail "Custom environment variable overrides managed variable: $name"
+    fi
+    if is_listed "$PROTECTED_ENV" "$name"; then
+        fail "Custom environment variable overrides protected variable: $name"
+    fi
+    if ! jq -en --arg value "$value" \
+        '$value | test("[\u0000-\u001F\u007F]") | not' \
+        >/dev/null 2>&1; then
+        fail "Custom environment variable contains control characters: $name"
+    fi
+
+    export "$name=$value"
+    CUSTOM_ENV_NAMES="$CUSTOM_ENV_NAMES $name"
+    index=$((index + 1))
+done
+
 # Fixture mode for adapter tests: export the environment and exit.
 if [ -n "${MEM0_TEST_ENV_FILE:-}" ]; then
     : >"$MEM0_TEST_ENV_FILE"
@@ -185,6 +238,10 @@ MEM0_TELEMETRY=$MEM0_TELEMETRY
 REQUEST_LOG_RETENTION_DAYS=$REQUEST_LOG_RETENTION_DAYS
 HISTORY_DB_PATH=$HISTORY_DB_PATH
 EOF
+    for name in $CUSTOM_ENV_NAMES; do
+        eval "value=\$$name"
+        printf '%s=%s\n' "$name" "$value" >>"$MEM0_TEST_ENV_FILE"
+    done
     exit 0
 fi
 

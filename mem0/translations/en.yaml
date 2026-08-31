@@ -51,5 +51,10 @@ configuration:
   request_log_retention_days:
     name: Request log retention
     description: Days of request log history to keep.
+  env_vars:
+    name: Custom environment variables
+    description: >-
+      Extra variables passed to the Mem0 server, for example OPENAI_BASE_URL
+      or ANTHROPIC_BASE_URL. Names may never shadow options the add-on manages.
 network:
   8000/tcp: Mem0 REST API

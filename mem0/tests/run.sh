@@ -70,6 +70,7 @@ assert_env "MEM0_DEFAULT_EMBEDDER_MODEL=text-embedding-3-small"
 assert_env "MEM0_TELEMETRY=false"
 assert_env "REQUEST_LOG_RETENTION_DAYS=14"
 assert_env "HISTORY_DB_PATH=${CONFIG_DIR}/history.db"
+assert_env "MEM0_FIXTURE_FLAG=fixture-custom"
 
 # Generated JWT secrets persist in the configuration directory.
 SECRETS_FILE="${CONFIG_DIR}/.secrets"
@@ -146,6 +147,26 @@ CONTROL_BASE_URL="${TEMP_DIR}/control-base-url.json"
 jq '.openai_base_url = "http://gateway.test/v1\u0000"' "$OPTIONS" >"$CONTROL_BASE_URL"
 expect_failure "Control character in base URL" "$CONTROL_BASE_URL" \
     "Option 'openai_base_url' must be a string without control characters"
+
+BAD_ENV_NAME="${TEMP_DIR}/bad-env-name.json"
+jq '.env_vars = [{"name": "bad-name", "value": "x"}]' "$OPTIONS" >"$BAD_ENV_NAME"
+expect_failure "Invalid custom environment name" "$BAD_ENV_NAME" \
+    "Invalid custom environment variable name: bad-name"
+
+MANAGED_OVERRIDE="${TEMP_DIR}/managed-override.json"
+jq '.env_vars = [{"name": "OPENAI_API_KEY", "value": "shadow"}]' "$OPTIONS" >"$MANAGED_OVERRIDE"
+expect_failure "Managed variable override" "$MANAGED_OVERRIDE" \
+    "Custom environment variable overrides managed variable: OPENAI_API_KEY"
+
+PROTECTED_OVERRIDE="${TEMP_DIR}/protected-override.json"
+jq '.env_vars = [{"name": "PATH", "value": "/tmp"}]' "$OPTIONS" >"$PROTECTED_OVERRIDE"
+expect_failure "Protected variable override" "$PROTECTED_OVERRIDE" \
+    "Custom environment variable overrides protected variable: PATH"
+
+CONTROL_ENV_VALUE="${TEMP_DIR}/control-env-value.json"
+jq '.env_vars = [{"name": "MEM0_FIXTURE_FLAG", "value": "line\u0009break"}]' "$OPTIONS" >"$CONTROL_ENV_VALUE"
+expect_failure "Control character in custom environment value" "$CONTROL_ENV_VALUE" \
+    "Custom environment variable contains control characters: MEM0_FIXTURE_FLAG"
 
 MALFORMED_OPTIONS="${TEMP_DIR}/malformed-options.json"
 printf '%s' '{"openai_api_key": ' >"$MALFORMED_OPTIONS"
