@@ -99,6 +99,8 @@ accepted.
 ## Updates
 
 Renovate opens pull requests for new Mem0 releases tracked from GitHub
-releases. The source checksum must be updated together with the version in
-the Dockerfile; the build fails with a checksum mismatch message until the
-pinned `MEM0_SOURCE_SHA256` matches the new tarball.
+releases. The `renovate-sync` workflow recomputes the pinned
+`MEM0_SOURCE_SHA256` from the matching upstream tarball, synchronizes the
+package metadata, and the pull request auto-merges after the required
+checks. The build verifies the checksum again before extracting, so a
+mismatched tarball can never enter the image.

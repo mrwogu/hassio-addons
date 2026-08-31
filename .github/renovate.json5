@@ -80,7 +80,7 @@
       "description": "Filter upstream versions; preserve prerelease digest refreshes",
       "matchManagers": ["custom.regex"],
       "matchDatasources": ["docker"],
-      "matchFileNames": ["/^(?!mem0/)[^/]+/Dockerfile$/"],
+      "matchFileNames": ["/^[^/]+/Dockerfile$/"],
       "ignoreUnstable": true,
       "allowedVersions": "/^v?\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z]+)?$/"
     },
@@ -88,7 +88,7 @@
       "description": "Automerge validated upstream add-on updates",
       "matchManagers": ["custom.regex"],
       "matchDatasources": ["docker"],
-      "matchFileNames": ["/^(?!mem0/)[^/]+/Dockerfile$/"],
+      "matchFileNames": ["/^[^/]+/Dockerfile$/"],
       "matchUpdateTypes": ["digest", "patch", "minor", "major"],
       "labels": ["dependencies", "addon-upstream", "automerge"],
       "automerge": true,
@@ -97,25 +97,16 @@
       "ignoreTests": false
     },
     {
-      "description": "Automerge mem0 base image digest refreshes",
+      "description": "Automerge mem0 source updates after checksum synchronization",
       "matchManagers": ["custom.regex"],
-      "matchDatasources": ["docker"],
+      "matchDatasources": ["github-releases"],
       "matchFileNames": ["/^mem0/Dockerfile$/"],
-      "matchUpdateTypes": ["digest"],
+      "matchUpdateTypes": ["digest", "patch", "minor", "major"],
       "labels": ["dependencies", "addon-upstream", "automerge"],
       "automerge": true,
       "automergeType": "pr",
       "platformAutomerge": false,
       "ignoreTests": false
-    },
-    {
-      "description": "Keep mem0 source version updates manual until the checksum is pinned",
-      "matchManagers": ["custom.regex"],
-      "matchDatasources": ["github-releases"],
-      "matchFileNames": ["/^mem0/Dockerfile$/"],
-      "matchUpdateTypes": ["major", "minor", "patch"],
-      "labels": ["dependencies", "addon-upstream"],
-      "automerge": false
     },
     {
       "description": "Automerge repository tooling",
