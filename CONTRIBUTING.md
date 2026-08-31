@@ -8,7 +8,7 @@
 4. Run `make check`.
 5. Open a pull request.
 
-Replace `gluetun` with `bonds`, `n8n`, `stirling-pdf`, `authentik`, `traefik-proxy`, or `tududi` when needed. Helper increments packaging revision and prepends changelog entry. Add-on versions use `<upstream-version>-<packaging-revision>`. New upstream versions start at revision `1`; digest and packaging changes increment revision.
+Replace `gluetun` with `bonds`, `n8n`, `stirling-pdf`, `authentik`, `traefik-proxy`, `tududi`, or `mem0` when needed. Helper increments packaging revision and prepends changelog entry. Add-on versions use `<upstream-version>-<packaging-revision>`. New upstream versions start at revision `1`; digest and packaging changes increment revision.
 
 `addons.yaml` is the single registry for add-on slugs, images, Dockerfiles, and
 adapter test scripts. New add-ons must update it before validation can pass.

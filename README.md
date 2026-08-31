@@ -59,6 +59,13 @@ Home Assistant add-ons packaged from upstream projects with automated updates, m
       <p>Self-hosted task management and life organization system for tasks, projects, notes, and areas.</p>
       <p><sub><code>amd64</code> <code>aarch64</code> · Port <code>3002</code><br><a href="https://github.com/chrisvel/tududi">Upstream</a> · MIT</sub></p>
     </td>
+    <td align="center" valign="top" width="33%">
+      <a href="mem0/"><img src="mem0/logo.png" alt="Mem0" width="220"></a>
+      <h3><a href="mem0/">Mem0</a></h3>
+      <p>Self-hosted AI memory layer with a REST API for assistants and agents.</p>
+      <p><sub><code>amd64</code> <code>aarch64</code> · Port <code>8000</code><br><a href="https://github.com/mem0ai/mem0">Upstream</a> · Apache 2.0</sub></p>
+      <p><sub>REST API only. Requires external PostgreSQL with pgvector.</sub></p>
+    </td>
   </tr>
 </table>
 
