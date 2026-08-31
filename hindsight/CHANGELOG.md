@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.2-2
+
+- Fix env_vars schema and app_config mapping
+
 ## 0.9.2-1
 
 - Package Hindsight [0.9.2](https://github.com/vectorize-io/hindsight/releases/tag/v0.9.2).
