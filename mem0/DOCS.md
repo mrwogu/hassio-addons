@@ -58,6 +58,34 @@ request logs) in a separate database; it must exist before start.
 Generated secrets are written atomically with mode `0600` under
 `/config/.secrets` and are never logged.
 
+## Custom provider endpoints
+
+Point Mem0 at an OpenAI-compatible gateway, OpenRouter, or a self-hosted
+endpoint with `POST /configure`. The server deep-merges the update into the
+runtime config, stores it in the application database, and reapplies it on
+every start.
+
+OpenAI-compatible endpoint for the LLM and the embedder:
+
+```sh
+curl -s -X POST http://homeassistant.local:8000/configure \
+    -H "X-API-Key: m0sk_your_admin_key" \
+    -H "Content-Type: application/json" \
+    -d '{
+        "llm": {"config": {"openai_base_url": "https://gateway.example:8000/v1"}},
+        "embedder": {"config": {"openai_base_url": "https://gateway.example:8000/v1"}}
+    }'
+```
+
+Other supported endpoint fields: `anthropic_base_url` (Anthropic LLM) and
+`openrouter_base_url` (OpenRouter LLM). The Gemini provider has no endpoint
+override upstream. Verify with `GET /configure`; secret values are always
+redacted in responses.
+
+Keep provider keys in the add-on options (they become environment variables)
+and pass only endpoint URLs through `/configure`; configuration overrides
+are stored in plain JSON in the application database.
+
 ## Usage
 
 The server listens on port `8000`. Migrations run automatically on start;
