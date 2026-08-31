@@ -1,6 +1,6 @@
 ---
 name: Mem0
-version: "2.0.19-1"
+version: "2.0.19-2"
 slug: mem0
 description: Self-hosted AI memory layer with a REST API for AI assistants
 url: https://github.com/mrwogu/hassio-addons/tree/main/mem0

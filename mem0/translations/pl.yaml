@@ -5,48 +5,48 @@ configuration:
     description: Wymagany klucz dla domyślnego modelu LLM i osadzania OpenAI.
   anthropic_api_key:
     name: Klucz API Anthropic
-    description: Opcjonalny klucz wlaczajacy dostawce LLM Anthropic.
+    description: Opcjonalny klucz włączający dostawcę LLM Anthropic.
   google_api_key:
     name: Klucz API Google
-    description: Opcjonalny klucz wlaczajacy dostawcow LLM i osadzania Gemini.
+    description: Opcjonalny klucz włączający dostawców LLM i osadzania Gemini.
   admin_api_key:
     name: Klucz API administratora
-    description: Starszy wspoldzielony klucz do chronionych punktow. Uzyj co najmniej 16 losowych znakow.
+    description: Starszy współdzielony klucz do chronionych punktów końcowych. Użyj co najmniej 16 losowych znaków.
   jwt_secret:
     name: Sekret JWT
-    description: Opcjonalny sekret do podpisywania tokenow. Puste pole generuje i zapisuje sekret automatycznie.
+    description: Opcjonalny sekret do podpisywania tokenów. Puste pole generuje i zapisuje sekret automatycznie.
   postgres_host:
     name: Host PostgreSQL
-    description: Adres zewnetrznego serwera PostgreSQL z rozszerzeniem pgvector.
+    description: Adres zewnętrznego serwera PostgreSQL z rozszerzeniem pgvector.
   postgres_port:
     name: Port PostgreSQL
     description: Port serwera PostgreSQL.
   postgres_db:
     name: Baza danych PostgreSQL
-    description: Baza przechowujaca kolekcje wektorow i tabele aplikacji.
+    description: Baza przechowująca kolekcję wektorów i tabele aplikacji.
   postgres_user:
-    name: Uzytkownik PostgreSQL
-    description: Uzytkownik bazy danych, ktorym laczy sie Mem0.
+    name: Użytkownik PostgreSQL
+    description: Użytkownik bazy danych, którym łączy się Mem0.
   postgres_password:
-    name: Haslo PostgreSQL
-    description: Opcjonalne haslo uzytkownika bazy danych.
+    name: Hasło PostgreSQL
+    description: Opcjonalne hasło użytkownika bazy danych.
   postgres_collection_name:
-    name: Nazwa kolekcji wektorow
-    description: Nazwa kolekcji pgvector przechowujacej wspomnienia.
+    name: Nazwa kolekcji wektorów
+    description: Nazwa kolekcji pgvector przechowującej wspomnienia.
   app_db_name:
     name: Nazwa bazy aplikacji
-    description: Opcjonalna osobna baza dla uzytkownikow, kluczy API i dziennika zapytan. Puste pole uzywa bazy wektorow.
+    description: Opcjonalna osobna baza dla użytkowników, kluczy API i dziennika zapytań. Puste pole używa bazy wektorów.
   default_llm_model:
-    name: Domyslny model LLM
-    description: Model uzywany dopoki nie zostanie nadpisany konfiguracja serwera.
+    name: Domyślny model LLM
+    description: Model używany, dopóki nie zostanie nadpisany konfiguracją serwera.
   default_embedder_model:
-    name: Domyslny model osadzania
-    description: Model osadzania uzywany dopoki nie zostanie nadpisany konfiguracja serwera.
+    name: Domyślny model osadzania
+    description: Model osadzania używany, dopóki nie zostanie nadpisany konfiguracją serwera.
   telemetry:
     name: Anonimowa telemetria
-    description: Wysyla pojedyncze anonimowe zdarzenie instalacji do Mem0. Domyslnie wylaczone.
+    description: Wysyła pojedyncze anonimowe zdarzenie instalacji do Mem0. Domyślnie wyłączone.
   request_log_retention_days:
     name: Przechowywanie dziennika
-    description: Liczba dni przechowywania historii dziennika zapytan.
+    description: Liczba dni przechowywania historii dziennika zapytań.
 network:
   8000/tcp: API REST Mem0
