@@ -1,0 +1,18 @@
+{
+    "openai_api_key": "sk-fixture-openai-key",
+    "anthropic_api_key": "sk-ant-fixture",
+    "google_api_key": "",
+    "admin_api_key": "m0sk-fixture-admin-key-0001",
+    "jwt_secret": "",
+    "postgres_host": "postgres.local",
+    "postgres_port": 5433,
+    "postgres_db": "mem0",
+    "postgres_user": "mem0",
+    "postgres_password": "pg-secret-$pass word",
+    "postgres_collection_name": "memories",
+    "app_db_name": "",
+    "default_llm_model": "gpt-5-mini",
+    "default_embedder_model": "text-embedding-3-small",
+    "telemetry": false,
+    "request_log_retention_days": 14
+}

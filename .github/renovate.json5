@@ -49,6 +49,30 @@
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+) versioning=(?<versioning>\\S+)\\nARG RUNNERS_VERSION=\"(?<currentValue>[^\"]+)\"\\nARG RUNNERS_DIGEST=\"(?<currentDigest>sha256:[a-f0-9]{64})\""
       ],
       "autoReplaceStringTemplate": "# renovate: datasource={{{datasource}}} depName={{{depName}}} versioning={{{versioning}}}\nARG RUNNERS_VERSION=\"{{{newValue}}}\"\nARG RUNNERS_DIGEST=\"{{{newDigest}}}\""
+    },
+    {
+      "customType": "regex",
+      "description": "Update the mem0 upstream source version; the source checksum must be bumped manually in the same pull request",
+      "managerFilePatterns": ["/^mem0/Dockerfile$/"],
+      "matchStrings": [
+        "# renovate: datasource=github-releases depName=mem0ai/mem0 versioning=semver extractVersion=\\^v\\(\\?<version>\\\\d\\+\\\\.\\\\d\\+\\\\.\\\\d\\+\\)\\$\\nARG UPSTREAM_VERSION=\"(?<currentValue>[^\"]+)\""
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "mem0ai/mem0",
+      "versioningTemplate": "semver",
+      "extractVersionTemplate": "^v(?<version>\\d+\\.\\d+\\.\\d+)$",
+      "autoReplaceStringTemplate": "# renovate: datasource=github-releases depName=mem0ai/mem0 versioning=semver extractVersion=^v(?<version>\\d+\\.\\d+\\.\\d+)$\nARG UPSTREAM_VERSION=\"{{{newValue}}}\""
+    },
+    {
+      "customType": "regex",
+      "description": "Update the mem0 python base image digest",
+      "managerFilePatterns": ["/^mem0/Dockerfile$/"],
+      "matchStrings": [
+        "ARG UPSTREAM_DIGEST=\"(?<currentDigest>sha256:[a-f0-9]{64})\""
+      ],
+      "datasourceTemplate": "docker",
+      "depNameTemplate": "docker.io/library/python",
+      "currentValueTemplate": "3.12-slim"
     }
   ],
   "packageRules": [
@@ -65,6 +89,18 @@
       "matchManagers": ["custom.regex"],
       "matchDatasources": ["docker"],
       "matchFileNames": ["/^[^/]+/Dockerfile$/"],
+      "matchUpdateTypes": ["digest", "patch", "minor", "major"],
+      "labels": ["dependencies", "addon-upstream", "automerge"],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": false,
+      "ignoreTests": false
+    },
+    {
+      "description": "Automerge mem0 source updates after checksum synchronization",
+      "matchManagers": ["custom.regex"],
+      "matchDatasources": ["github-releases"],
+      "matchFileNames": ["/^mem0/Dockerfile$/"],
       "matchUpdateTypes": ["digest", "patch", "minor", "major"],
       "labels": ["dependencies", "addon-upstream", "automerge"],
       "automerge": true,
