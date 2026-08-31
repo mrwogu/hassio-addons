@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.14.3-2
+
+- Use app_config mapping for supervisor compatibility
+
 ## 2.14.3-1
 
 - Bring the latest PDF processing and document workflow fixes from Stirling-PDF [2.14.3](https://github.com/Stirling-Tools/Stirling-PDF/releases/tag/v2.14.3).

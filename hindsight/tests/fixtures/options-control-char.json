@@ -11,5 +11,5 @@
   "database_sslmode": "prefer",
   "tenant_api_key": "",
   "worker_id": "hindsight-hassio",
-  "env_vars": {}
+  "env_vars": []
 }

@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.37.6-3
+
+- Use app_config mapping for supervisor compatibility
+
 ## 2.37.6-2
 
 - Refresh packaging dependency

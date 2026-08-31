@@ -11,7 +11,10 @@
   "database_sslmode": "prefer",
   "tenant_api_key": "",
   "worker_id": "hindsight-hassio",
-  "env_vars": {
-    "HINDSIGHT_API_LLM_PROVIDER": "hijacked"
-  }
+  "env_vars": [
+    {
+      "name": "HINDSIGHT_API_LLM_PROVIDER",
+      "value": "hijacked"
+    }
+  ]
 }

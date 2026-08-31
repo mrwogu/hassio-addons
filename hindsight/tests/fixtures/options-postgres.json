@@ -11,5 +11,5 @@
   "database_sslmode": "require",
   "tenant_api_key": "tenant-secret-key-123",
   "worker_id": "worker-1",
-  "env_vars": {}
+  "env_vars": []
 }

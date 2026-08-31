@@ -34,7 +34,7 @@ Home Assistant add-on packaging [Hindsight](https://github.com/vectorize-io/hind
 | `database_sslmode` | `prefer` | External database TLS mode. |
 | `tenant_api_key` | - | Optional API key required on every memory API request. |
 | `worker_id` | `hindsight-hassio` | Stable worker identifier. |
-| `env_vars` | `{}` | Additional environment variables. |
+| `env_vars` | `[]` | Additional environment variables as name/value pairs. |
 
 See [DOCS.md](DOCS.md) for the full documentation.
 

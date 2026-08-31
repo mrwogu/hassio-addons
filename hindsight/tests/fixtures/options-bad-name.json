@@ -11,7 +11,10 @@
   "database_sslmode": "prefer",
   "tenant_api_key": "",
   "worker_id": "hindsight-hassio",
-  "env_vars": {
-    "bad-name": "value"
-  }
+  "env_vars": [
+    {
+      "name": "bad-name",
+      "value": "value"
+    }
+  ]
 }
