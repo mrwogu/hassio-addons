@@ -2,7 +2,7 @@
 image: ghcr.io/goauthentik/server
 version: 2026.8.0
 digest: sha256:7421753cfea67e89a6d295a1f0173ccea3866b33768c88dad90453b151cdcfd5
-package_version: 2026.8.0-1
+package_version: 2026.8.0-2
 source: https://github.com/goauthentik/authentik
 release_url: https://github.com/goauthentik/authentik/releases/tag
 release_tag_prefix: version/

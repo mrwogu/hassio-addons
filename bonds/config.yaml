@@ -1,6 +1,6 @@
 ---
 name: Bonds
-version: "0.22.12-1"
+version: "0.22.12-2"
 slug: bonds
 description: Personal relationship manager built with Go and React
 url: https://github.com/mrwogu/hassio-addons/tree/main/bonds
@@ -12,7 +12,7 @@ init: false
 startup: services
 webui: http://[HOST]:[PORT:8080]
 map:
-  - type: addon_config
+  - type: app_config
     read_only: false
 ports:
   8080/tcp: 8080

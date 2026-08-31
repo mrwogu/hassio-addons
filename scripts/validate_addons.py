@@ -166,17 +166,19 @@ def validate_addon(slug: str, expected_image: str, errors: list[str]) -> None:
             errors.append(f"{slug}/CHANGELOG.md: current version section required")
 
     maps = config.get("map", [])
+    config_types = ("addon_config", "app_config")
     has_addon_config = any(
         item == "addon_config:rw"
+        or item == "app_config:rw"
         or (
             isinstance(item, dict)
-            and item.get("type") == "addon_config"
+            and item.get("type") in config_types
             and item.get("read_only") is False
         )
         for item in maps
     )
     if not has_addon_config:
-        errors.append(f"{slug}/config.yaml: addon_config:rw mapping required")
+        errors.append(f"{slug}/config.yaml: app_config:rw mapping required")
 
     for unsafe_key in ("full_access", "host_network"):
         if config.get(unsafe_key):

@@ -1,6 +1,6 @@
 ---
 name: Gluetun VPN
-version: "3.41.3-1"
+version: "3.41.3-2"
 slug: gluetun
 description: VPN client with firewall, DNS, and proxy services
 url: https://github.com/mrwogu/hassio-addons/tree/main/gluetun
@@ -15,7 +15,7 @@ privileged:
 devices:
   - /dev/net/tun
 map:
-  - type: addon_config
+  - type: app_config
     read_only: false
 ports:
   8888/tcp: null

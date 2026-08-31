@@ -12,7 +12,7 @@ init: false
 startup: services
 webui: http://[HOST]:[PORT:9999]
 map:
-  - type: addon_config
+  - type: app_config
     read_only: false
 ports:
   8888/tcp: 8888

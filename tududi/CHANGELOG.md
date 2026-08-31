@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.0-3
+
+- Use app_config mapping for supervisor compatibility
+
 ## 1.4.0-2
 
 - Persist backups, CalDAV key, and one-time bootstrap

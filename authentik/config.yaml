@@ -1,6 +1,6 @@
 ---
 name: authentik
-version: "2026.8.0-1"
+version: "2026.8.0-2"
 slug: authentik
 description: Self-hosted identity provider for SSO, SAML, OAuth2, and LDAP
 url: https://github.com/mrwogu/hassio-addons/tree/main/authentik
@@ -12,7 +12,7 @@ init: false
 startup: services
 webui: http://[HOST]:[PORT:9000]
 map:
-  - type: addon_config
+  - type: app_config
     read_only: false
 ports:
   9000/tcp: 9000

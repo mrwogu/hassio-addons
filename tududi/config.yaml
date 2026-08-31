@@ -1,6 +1,6 @@
 ---
 name: Tududi
-version: "1.4.0-2"
+version: "1.4.0-3"
 slug: tududi
 description: Self-hosted task management and life organization system
 url: https://github.com/mrwogu/hassio-addons/tree/main/tududi
@@ -12,7 +12,7 @@ init: false
 startup: services
 webui: http://[HOST]:[PORT:3002]
 map:
-  - type: addon_config
+  - type: app_config
     read_only: false
 ports:
   3002/tcp: 3002

@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.41.3-2
+
+- Use app_config mapping for supervisor compatibility
+
 ## 3.41.3-1
 
 - Refresh Gluetun's VPN routing, firewall, DNS, and proxy stack with [v3.41.3](https://github.com/passteque/gluetun/releases/tag/v3.41.3).
