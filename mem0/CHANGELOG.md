@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.19-3
+
+- Add openai_base_url option for custom endpoints
+
 ## 2.0.19-2
 
 - Fix Polish diacritics in option translations

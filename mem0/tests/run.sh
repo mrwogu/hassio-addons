@@ -53,6 +53,7 @@ CONFIG_DIR="${TEMP_DIR}/config"
 run_entrypoint "$OPTIONS" "$CONFIG_DIR" main
 
 assert_env "OPENAI_API_KEY=sk-fixture-openai-key"
+assert_env "OPENAI_BASE_URL=https://gateway.fixture.test/v1"
 assert_env "ANTHROPIC_API_KEY=sk-ant-fixture"
 assert_env "GOOGLE_API_KEY="
 assert_env "ADMIN_API_KEY=m0sk-fixture-admin-key-0001"
@@ -106,10 +107,11 @@ fi
 
 # Missing optional keys default to empty values.
 OPTIONAL_OPTIONS="${TEMP_DIR}/optional-options.json"
-jq 'del(.anthropic_api_key, .google_api_key, .admin_api_key)' \
+jq 'del(.openai_base_url, .anthropic_api_key, .google_api_key, .admin_api_key)' \
     "$OPTIONS" >"$OPTIONAL_OPTIONS"
 OPTIONAL_CONFIG_DIR="${TEMP_DIR}/config-optional"
 run_entrypoint "$OPTIONAL_OPTIONS" "$OPTIONAL_CONFIG_DIR" optional
+assert_env "OPENAI_BASE_URL="
 assert_env "ANTHROPIC_API_KEY="
 assert_env "GOOGLE_API_KEY="
 assert_env "ADMIN_API_KEY="
@@ -139,6 +141,11 @@ CONTROL_ADMIN_KEY="${TEMP_DIR}/control-admin.json"
 jq '.admin_api_key = "key\u001b[31m"' "$OPTIONS" >"$CONTROL_ADMIN_KEY"
 expect_failure "Control character in admin API key" "$CONTROL_ADMIN_KEY" \
     "Option 'admin_api_key' must be a string without control characters"
+
+CONTROL_BASE_URL="${TEMP_DIR}/control-base-url.json"
+jq '.openai_base_url = "http://gateway.test/v1\u0000"' "$OPTIONS" >"$CONTROL_BASE_URL"
+expect_failure "Control character in base URL" "$CONTROL_BASE_URL" \
+    "Option 'openai_base_url' must be a string without control characters"
 
 MALFORMED_OPTIONS="${TEMP_DIR}/malformed-options.json"
 printf '%s' '{"openai_api_key": ' >"$MALFORMED_OPTIONS"

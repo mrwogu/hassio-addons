@@ -64,6 +64,8 @@ jq -e 'type == "object"' "$OPTIONS_PATH" >/dev/null 2>&1 ||
 # Auth is always enabled; the add-on never exposes AUTH_DISABLED.
 check_option "Option 'openai_api_key' is required and must be a non-empty string" \
     '.openai_api_key | nonempty_clean'
+check_option "Option 'openai_base_url' must be a string without control characters" \
+    '(.openai_base_url // "") | optional_clean'
 check_option "Option 'anthropic_api_key' must be a string without control characters" \
     '(.anthropic_api_key // "") | optional_clean'
 check_option "Option 'google_api_key' must be a string without control characters" \
@@ -131,6 +133,7 @@ if [ "$secrets_changed" = true ]; then
 fi
 
 OPENAI_API_KEY=$(jq -r '.openai_api_key' "$OPTIONS_PATH")
+OPENAI_BASE_URL=$(jq -r '.openai_base_url // ""' "$OPTIONS_PATH")
 ANTHROPIC_API_KEY=$(jq -r '.anthropic_api_key // ""' "$OPTIONS_PATH")
 GOOGLE_API_KEY=$(jq -r '.google_api_key // ""' "$OPTIONS_PATH")
 JWT_SECRET=$jwt_secret
@@ -149,7 +152,7 @@ MEM0_TELEMETRY=$(jq -r 'if .telemetry then "true" else "false" end' "$OPTIONS_PA
 REQUEST_LOG_RETENTION_DAYS=$(jq -r '.request_log_retention_days // 30' "$OPTIONS_PATH")
 HISTORY_DB_PATH="${CONFIG_DIR}/history.db"
 ADMIN_API_KEY=$admin_api_key
-export OPENAI_API_KEY ANTHROPIC_API_KEY GOOGLE_API_KEY ADMIN_API_KEY JWT_SECRET
+export OPENAI_API_KEY OPENAI_BASE_URL ANTHROPIC_API_KEY GOOGLE_API_KEY ADMIN_API_KEY JWT_SECRET
 export AUTH_DISABLED=false
 export POSTGRES_HOST POSTGRES_PORT POSTGRES_DB POSTGRES_USER POSTGRES_PASSWORD
 export POSTGRES_COLLECTION_NAME APP_DB_NAME
@@ -163,6 +166,7 @@ if [ -n "${MEM0_TEST_ENV_FILE:-}" ]; then
         printf '%s=%s\n' "$name" "$value" >>"$MEM0_TEST_ENV_FILE"
     done <<EOF
 OPENAI_API_KEY=$OPENAI_API_KEY
+OPENAI_BASE_URL=$OPENAI_BASE_URL
 ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
 GOOGLE_API_KEY=$GOOGLE_API_KEY
 ADMIN_API_KEY=$ADMIN_API_KEY

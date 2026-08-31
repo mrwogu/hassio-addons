@@ -1,5 +1,6 @@
 {
     "openai_api_key": "sk-fixture-openai-key",
+    "openai_base_url": "https://gateway.fixture.test/v1",
     "anthropic_api_key": "sk-ant-fixture",
     "google_api_key": "",
     "admin_api_key": "m0sk-fixture-admin-key-0001",

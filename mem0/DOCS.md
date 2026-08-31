@@ -43,6 +43,7 @@ request logs) in a separate database; it must exist before start.
 | Option | Description |
 | --- | --- |
 | `openai_api_key` | Required OpenAI key for the default LLM and embedder. |
+| `openai_base_url` | Optional custom endpoint for OpenAI-compatible services (LLM and embedder). Blank uses the official API. |
 | `anthropic_api_key` | Optional Anthropic key for the bundled Anthropic provider. |
 | `google_api_key` | Optional Google key for the bundled Gemini providers. |
 | `admin_api_key` | Optional legacy shared key for protected endpoints. Use 16+ random characters. |
@@ -60,10 +61,14 @@ Generated secrets are written atomically with mode `0600` under
 
 ## Custom provider endpoints
 
-Point Mem0 at an OpenAI-compatible gateway, OpenRouter, or a self-hosted
-endpoint with `POST /configure`. The server deep-merges the update into the
-runtime config, stores it in the application database, and reapplies it on
-every start.
+Two independent layers decide where requests go:
+
+1. **`openai_base_url` add-on option** (default value): exported as the
+   `OPENAI_BASE_URL` environment variable. The mem0 library falls back to it
+   whenever the runtime config has no explicit endpoint. Change it in the
+   add-on options and restart.
+2. **`POST /configure` runtime override**: stored in the application database
+   and reapplied on every start; it always wins over the environment value.
 
 OpenAI-compatible endpoint for the LLM and the embedder:
 
@@ -85,6 +90,17 @@ redacted in responses.
 Keep provider keys in the add-on options (they become environment variables)
 and pass only endpoint URLs through `/configure`; configuration overrides
 are stored in plain JSON in the application database.
+
+## Dashboard note
+
+The upstream dashboard has **no UI for provider endpoints**; it exposes only
+providers from the bundled list, models, and API keys. Endpoint URLs are set
+exactly through the two mechanisms above (add-on option or `POST /configure`).
+The add-on options only provide defaults: a value already stored by
+`POST /configure` in the application database overrides them, and changing
+add-on options cannot remove such an override (clear it with
+`POST /configure` using the official URL, or reset the override row in the
+`settings` table).
 
 ## Usage
 

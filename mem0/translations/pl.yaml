@@ -3,6 +3,9 @@ configuration:
   openai_api_key:
     name: Klucz API OpenAI
     description: Wymagany klucz dla domyślnego modelu LLM i osadzania OpenAI.
+  openai_base_url:
+    name: Bazowy adres URL OpenAI
+    description: Opcjonalny własny endpoint dla usług zgodnych z OpenAI. Puste pole używa oficjalnego API.
   anthropic_api_key:
     name: Klucz API Anthropic
     description: Opcjonalny klucz włączający dostawcę LLM Anthropic.

@@ -3,6 +3,9 @@ configuration:
   openai_api_key:
     name: OpenAI API key
     description: Required key for the default OpenAI LLM and embedder.
+  openai_base_url:
+    name: OpenAI base URL
+    description: Optional custom endpoint for OpenAI-compatible services (LLM and embedder). Leave blank to use the official API.
   anthropic_api_key:
     name: Anthropic API key
     description: Optional key enabling the bundled Anthropic LLM provider.
