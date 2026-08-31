@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.19-2
+
+- Fix Polish diacritics in option translations
+
 ## 2.0.19-1
 
 - Package the Mem0 self-hosted REST server [v2.0.19](https://github.com/mem0ai/mem0/releases/tag/v2.0.19).

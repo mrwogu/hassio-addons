@@ -2,7 +2,7 @@
 image: docker.io/library/python:3.12-slim
 version: 2.0.19
 digest: sha256:09f7da3bc104798d0afb40bc08d23ab2da20a76130cec1f2ef170848f5d85217
-package_version: 2.0.19-1
+package_version: 2.0.19-2
 source: https://github.com/mem0ai/mem0
 release_url: https://github.com/mem0ai/mem0/releases/tag
 release_tag_prefix: v
