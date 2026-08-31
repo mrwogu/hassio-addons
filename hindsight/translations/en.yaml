@@ -1,0 +1,57 @@
+---
+configuration:
+  llm_provider:
+    name: LLM provider
+    description: >-
+      LLM backend used for memory extraction. Use openai, anthropic, gemini,
+      ollama, openrouter, or another supported provider name.
+  llm_api_key:
+    name: LLM API key
+    description: API key for the selected provider. Leave blank for local providers such as Ollama.
+  llm_model:
+    name: LLM model
+    description: Model name used for memory operations. Leave blank to use the provider default.
+  llm_base_url:
+    name: LLM base URL
+    description: >-
+      Optional OpenAI-compatible endpoint override, for example
+      http://192.168.1.50:11434/v1 for a local Ollama server.
+  database_host:
+    name: PostgreSQL host
+    description: >-
+      Hostname of an external PostgreSQL 14+ server with pgvector. Leave blank
+      to use the embedded database stored in the add-on configuration.
+  database_port:
+    name: PostgreSQL port
+    description: Port of the external PostgreSQL server.
+  database_name:
+    name: PostgreSQL database
+    description: Name of the Hindsight database on the external server.
+  database_user:
+    name: PostgreSQL user
+    description: User the Hindsight API connects as.
+  database_password:
+    name: PostgreSQL password
+    description: Optional password for the PostgreSQL user.
+  database_sslmode:
+    name: PostgreSQL TLS mode
+    description: >-
+      disable sends credentials in clear text, require encrypts without
+      verifying the server certificate, verify-full also validates the
+      certificate against the trusted certificate authorities.
+  tenant_api_key:
+    name: API key protection
+    description: >-
+      Optional API key required by clients on every memory API request. Leave
+      blank to keep the API open on your network.
+  worker_id:
+    name: Worker ID
+    description: Stable identifier for this Hindsight instance. Change only when running several instances.
+  env_vars:
+    name: Custom environment variables
+    description: >-
+      Additional environment variables passed to Hindsight. Managed and
+      protected variables cannot be overridden.
+network:
+  8888/tcp: Hindsight memory API
+  9999/tcp: Hindsight control plane

@@ -1,0 +1,15 @@
+{
+  "llm_provider": "ollama",
+  "llm_api_key": "",
+  "llm_model": "llama3",
+  "llm_base_url": "http://192.168.1.50:11434/v1",
+  "database_host": "db.example.com",
+  "database_port": 6543,
+  "database_name": "hindsight-db",
+  "database_user": "hindsight@sa",
+  "database_password": "p@ss word",
+  "database_sslmode": "require",
+  "tenant_api_key": "tenant-secret-key-123",
+  "worker_id": "worker-1",
+  "env_vars": {}
+}
