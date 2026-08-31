@@ -1,6 +1,6 @@
 ---
 name: Mem0
-version: "2.0.19-3"
+version: "2.0.19-4"
 slug: mem0
 description: Self-hosted AI memory layer with a REST API for AI assistants
 url: https://github.com/mrwogu/hassio-addons/tree/main/mem0
@@ -35,6 +35,7 @@ options:
   default_embedder_model: text-embedding-3-small
   telemetry: false
   request_log_retention_days: 30
+  env_vars: []
 schema:
   openai_api_key: password
   openai_base_url: str?
@@ -53,3 +54,6 @@ schema:
   default_embedder_model: str
   telemetry: bool
   request_log_retention_days: int(1,)
+  env_vars:
+    - name: str
+      value: str

@@ -55,6 +55,7 @@ request logs) in a separate database; it must exist before start.
 | `default_embedder_model` | Default embedding model. Default `text-embedding-3-small`. |
 | `telemetry` | Anonymous onboarding telemetry. Disabled by default. |
 | `request_log_retention_days` | Request log retention. Default `30`. |
+| `env_vars` | Optional custom environment variables, for example `OPENAI_BASE_URL` or `ANTHROPIC_BASE_URL`. |
 
 Generated secrets are written atomically with mode `0600` under
 `/config/.secrets` and are never logged.
@@ -63,12 +64,13 @@ Generated secrets are written atomically with mode `0600` under
 
 Two independent layers decide where requests go:
 
-1. **`openai_base_url` add-on option** (default value): exported as the
-   `OPENAI_BASE_URL` environment variable. The mem0 library falls back to it
-   whenever the runtime config has no explicit endpoint. Change it in the
-   add-on options and restart.
+1. **Add-on options / `env_vars`** (default layer): `openai_base_url` and any
+   entry in `env_vars` become environment variables, for example
+   `OPENAI_BASE_URL` (LLM and embedder) or `ANTHROPIC_BASE_URL` (Anthropic
+   LLM). The mem0 library falls back to these whenever the runtime config has
+   no explicit endpoint. Change them in the add-on options and restart.
 2. **`POST /configure` runtime override**: stored in the application database
-   and reapplied on every start; it always wins over the environment value.
+   and reapplied on every start; it always wins over the environment values.
 
 OpenAI-compatible endpoint for the LLM and the embedder:
 
@@ -95,7 +97,7 @@ are stored in plain JSON in the application database.
 
 The upstream dashboard has **no UI for provider endpoints**; it exposes only
 providers from the bundled list, models, and API keys. Endpoint URLs are set
-exactly through the two mechanisms above (add-on option or `POST /configure`).
+exactly through the two mechanisms above (`env_vars` or `POST /configure`).
 The add-on options only provide defaults: a value already stored by
 `POST /configure` in the application database overrides them, and changing
 add-on options cannot remove such an override (clear it with

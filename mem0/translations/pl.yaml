@@ -51,5 +51,11 @@ configuration:
   request_log_retention_days:
     name: Przechowywanie dziennika
     description: Liczba dni przechowywania historii dziennika zapytań.
+  env_vars:
+    name: Własne zmienne środowiskowe
+    description: >-
+      Dodatkowe zmienne przekazywane do serwera Mem0, na przykład
+      OPENAI_BASE_URL lub ANTHROPIC_BASE_URL. Nazwy nie mogą nadpisywać opcji
+      zarządzanych przez dodatek.
 network:
   8000/tcp: API REST Mem0

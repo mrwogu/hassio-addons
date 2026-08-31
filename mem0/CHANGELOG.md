@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.19-4
+
+- Add custom environment variables option
+
 ## 2.0.19-3
 
 - Add openai_base_url option for custom endpoints

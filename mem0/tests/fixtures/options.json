@@ -15,5 +15,8 @@
     "default_llm_model": "gpt-5-mini",
     "default_embedder_model": "text-embedding-3-small",
     "telemetry": false,
-    "request_log_retention_days": 14
+    "request_log_retention_days": 14,
+    "env_vars": [
+        {"name": "MEM0_FIXTURE_FLAG", "value": "fixture-custom"}
+    ]
 }
