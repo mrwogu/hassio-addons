@@ -42,8 +42,10 @@ Without `tenant_api_key` the memory API is open to anything that can reach port 
 
 ```yaml
 env_vars:
-  HINDSIGHT_API_MODEL_INIT_TIMEOUT: "3600"
-  HINDSIGHT_WAIT_FOR_DEPS: "true"
+  - name: HINDSIGHT_API_MODEL_INIT_TIMEOUT
+    value: "3600"
+  - name: HINDSIGHT_WAIT_FOR_DEPS
+    value: "true"
 ```
 
 Names must be plain uppercase identifiers. The adapter rejects overrides of managed variables (`HINDSIGHT_API_DATABASE_URL`, `HINDSIGHT_API_LLM_*`, `HINDSIGHT_API_TENANT_*`, `HOME`, and others) and protected variables (`PATH`, `NODE_OPTIONS`, `PYTHONPATH`, and others). Values may not contain control characters. Custom variables apply after all managed variables.

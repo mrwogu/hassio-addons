@@ -11,8 +11,14 @@
   "database_sslmode": "prefer",
   "tenant_api_key": "",
   "worker_id": "hindsight-hassio",
-  "env_vars": {
-    "HINDSIGHT_EXTRA_FLAG": "enabled",
-    "MY_CUSTOM_SETTING": "custom-value"
-  }
+  "env_vars": [
+    {
+      "name": "HINDSIGHT_EXTRA_FLAG",
+      "value": "enabled"
+    },
+    {
+      "name": "MY_CUSTOM_SETTING",
+      "value": "custom-value"
+    }
+  ]
 }

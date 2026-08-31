@@ -73,9 +73,10 @@ check_option "Option 'tenant_api_key' must be a string without control character
     '(.tenant_api_key // "") | optional_clean'
 check_option "Option 'worker_id' must be a string without control characters" \
     '(.worker_id // "") | optional_clean'
-check_option "Option 'env_vars' must be an object with string values" \
-    '(.env_vars // {}) | type == "object" and
-        ([to_entries[].value | type == "string"] | all)'
+check_option "Option 'env_vars' must be a list of name/value string pairs" \
+    '(.env_vars // []) | type == "array" and
+        all(.[]; type == "object" and
+            (.name | type == "string") and (.value | type == "string"))'
 
 # Persist the embedded pg0 database and any generated state under /config so
 # addon updates and container restarts keep memory data.
@@ -131,13 +132,11 @@ worker_id=$(jq -r '.worker_id // ""' "$OPTIONS_PATH")
 # User-provided environment variables, applied last. Names must be plain
 # uppercase identifiers and may never shadow managed or protected variables.
 CUSTOM_ENV_NAMES=
-env_count=$(jq -r '(.env_vars // {}) | keys | length' "$OPTIONS_PATH")
+env_count=$(jq -r '(.env_vars // []) | length' "$OPTIONS_PATH")
 index=0
-keys=$(jq -r '(.env_vars // {}) | keys[]' "$OPTIONS_PATH")
-# Word splitting over validated uppercase identifier keys is intentional.
-# shellcheck disable=SC2086
-for name in $keys; do
-    value=$(jq -r --arg name "$name" '(.env_vars // {})[$name]' "$OPTIONS_PATH")
+while [ "$index" -lt "$env_count" ]; do
+    name=$(jq -r ".env_vars[$index].name" "$OPTIONS_PATH")
+    value=$(jq -r ".env_vars[$index].value" "$OPTIONS_PATH")
 
     case "$name" in
         [A-Z]*)
@@ -164,8 +163,6 @@ for name in $keys; do
     CUSTOM_ENV_NAMES="$CUSTOM_ENV_NAMES $name"
     index=$((index + 1))
 done
-env_count_check=$(printf '%s' "$CUSTOM_ENV_NAMES" | wc -w | tr -d ' ')
-[ "$env_count_check" -eq "$env_count" ] || fail "Custom environment variables failed to apply"
 
 # Fixture mode for adapter tests: export the environment and exit.
 if [ -n "${HINDSIGHT_TEST_ENV_FILE:-}" ]; then

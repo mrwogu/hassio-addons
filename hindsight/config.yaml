@@ -33,7 +33,7 @@ options:
   database_sslmode: prefer
   tenant_api_key: ""
   worker_id: hindsight-hassio
-  env_vars: {}
+  env_vars: []
 schema:
   llm_provider: str?
   llm_api_key: password?
@@ -47,4 +47,6 @@ schema:
   database_sslmode: list(disable|allow|prefer|require|verify-ca|verify-full)?
   tenant_api_key: password?
   worker_id: str?
-  env_vars: dict?
+  env_vars:
+    - name: str
+      value: str
