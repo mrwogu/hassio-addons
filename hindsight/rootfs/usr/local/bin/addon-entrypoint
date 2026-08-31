@@ -1,0 +1,207 @@
+#!/bin/sh
+set -eu
+
+OPTIONS_PATH=${HINDSIGHT_OPTIONS_PATH:-/data/options.json}
+CONFIG_DIR=${HINDSIGHT_CONFIG_DIR:-/config}
+START_ALL=${HINDSIGHT_EXECUTABLE:-/app/start-all.sh}
+
+# Variables the add-on translates from options; custom env_vars must not
+# shadow them or break out of the adapter environment.
+MANAGED_ENV="HOME HINDSIGHT_API_DATABASE_URL HINDSIGHT_API_LLM_PROVIDER HINDSIGHT_API_LLM_API_KEY HINDSIGHT_API_LLM_MODEL HINDSIGHT_API_LLM_BASE_URL HINDSIGHT_API_TENANT_EXTENSION HINDSIGHT_API_TENANT_API_KEY HINDSIGHT_API_WORKER_ID HINDSIGHT_API_PORT HINDSIGHT_CP_PORT HINDSIGHT_ENABLE_API HINDSIGHT_ENABLE_CP HINDSIGHT_WAIT_FOR_DEPS"
+PROTECTED_ENV="PATH HOSTNAME PWD SHLVL LANG LC_ALL LC_CTYPE IFS ENV BASH_ENV GLOBIGNORE LD_PRELOAD LD_LIBRARY_PATH PYTHONPATH PYTHONUNBUFFERED PYTHONDONTWRITEBYTECODE NODE_OPTIONS NODE_ENV"
+
+is_listed() {
+    list=$1
+    candidate=$2
+    case " $list " in
+        *" $candidate "*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+log() {
+    printf '%s\n' "[hindsight-addon] $*" >&2
+}
+
+fail() {
+    log "Error: $*"
+    exit 1
+}
+
+JQ_DEFS='
+    def control_free: (explode | map(select(. < 32 or . == 127)) | length) == 0;
+    def nonempty_clean: type == "string" and length > 0 and control_free;
+    def optional_clean: type == "string" and control_free;
+    def no_ws_clean: type == "string" and length > 0 and
+        (explode | map(select(. <= 32 or . == 127)) | length) == 0;
+'
+
+check_option() {
+    message=$1
+    filter=$2
+    jq -e "${JQ_DEFS} ${filter}" "$OPTIONS_PATH" >/dev/null 2>&1 ||
+        fail "$message"
+}
+
+[ -r "$OPTIONS_PATH" ] || fail "Options file is not readable: $OPTIONS_PATH"
+command -v jq >/dev/null 2>&1 || fail "jq is required"
+
+jq -e 'type == "object"' "$OPTIONS_PATH" >/dev/null 2>&1 ||
+    fail "Invalid options file: expected a JSON object"
+
+check_option "Option 'llm_provider' must be a string without control characters" \
+    '(.llm_provider // "") | optional_clean'
+check_option "Option 'llm_api_key' must be a string without control characters" \
+    '(.llm_api_key // "") | optional_clean'
+check_option "Option 'llm_model' must be a string without control characters" \
+    '(.llm_model // "") | optional_clean'
+check_option "Option 'llm_base_url' must be a string without control characters" \
+    '(.llm_base_url // "") | optional_clean'
+check_option "Option 'database_host' must be a string without control characters" \
+    '(.database_host // "") | optional_clean'
+check_option "Option 'database_port' must be an integer between 1 and 65535" \
+    '(.database_port // 5432) | type == "number" and floor == . and . >= 1 and . <= 65535'
+check_option "Option 'database_name' must be a string without control characters" \
+    '(.database_name // "") | optional_clean'
+check_option "Option 'database_user' must be a string without control characters" \
+    '(.database_user // "") | optional_clean'
+check_option "Option 'database_password' must be a string without control characters" \
+    '(.database_password // "") | optional_clean'
+check_option "Option 'database_sslmode' must be a string without control characters" \
+    '(.database_sslmode // "") | optional_clean'
+check_option "Option 'tenant_api_key' must be a string without control characters" \
+    '(.tenant_api_key // "") | optional_clean'
+check_option "Option 'worker_id' must be a string without control characters" \
+    '(.worker_id // "") | optional_clean'
+check_option "Option 'env_vars' must be an object with string values" \
+    '(.env_vars // {}) | type == "object" and
+        ([to_entries[].value | type == "string"] | all)'
+
+# Persist the embedded pg0 database and any generated state under /config so
+# addon updates and container restarts keep memory data.
+export HOME="$CONFIG_DIR"
+mkdir -p "$CONFIG_DIR"
+
+llm_provider=$(jq -r '.llm_provider // ""' "$OPTIONS_PATH")
+llm_api_key=$(jq -r '.llm_api_key // ""' "$OPTIONS_PATH")
+llm_model=$(jq -r '.llm_model // ""' "$OPTIONS_PATH")
+llm_base_url=$(jq -r '.llm_base_url // ""' "$OPTIONS_PATH")
+
+[ -z "$llm_provider" ] || export HINDSIGHT_API_LLM_PROVIDER="$llm_provider"
+[ -z "$llm_api_key" ] || export HINDSIGHT_API_LLM_API_KEY="$llm_api_key"
+[ -z "$llm_model" ] || export HINDSIGHT_API_LLM_MODEL="$llm_model"
+[ -z "$llm_base_url" ] || export HINDSIGHT_API_LLM_BASE_URL="$llm_base_url"
+
+db_host=$(jq -r '.database_host // ""' "$OPTIONS_PATH")
+database_url=
+if [ -n "$db_host" ]; then
+    check_option "Option 'database_host' must be non-empty without whitespace" \
+        '.database_host | no_ws_clean'
+    db_port=$(jq -r '.database_port // 5432' "$OPTIONS_PATH")
+    db_name=$(jq -r '.database_name // "hindsight"' "$OPTIONS_PATH")
+    db_user=$(jq -r '.database_user // "hindsight"' "$OPTIONS_PATH")
+    db_password=$(jq -r '.database_password // ""' "$OPTIONS_PATH")
+    db_sslmode=$(jq -r '.database_sslmode // "prefer"' "$OPTIONS_PATH")
+    [ -n "$db_name" ] || fail "Option 'database_name' is required with an external database"
+    check_option "Option 'database_name' must be non-empty without whitespace" \
+        '.database_name | no_ws_clean'
+
+    userinfo=
+    if [ -n "$db_user" ]; then
+        encoded_user=$(printf '%s' "$db_user" | jq -rR '@uri')
+        encoded_password=
+        if [ -n "$db_password" ]; then
+            encoded_password=":$(printf '%s' "$db_password" | jq -rR '@uri')"
+        fi
+        userinfo="${encoded_user}${encoded_password}@"
+    fi
+    database_url="postgresql://${userinfo}${db_host}:${db_port}/$(printf '%s' "$db_name" | jq -rR '@uri')?sslmode=${db_sslmode}"
+    export HINDSIGHT_API_DATABASE_URL="$database_url"
+fi
+
+tenant_api_key=$(jq -r '.tenant_api_key // ""' "$OPTIONS_PATH")
+if [ -n "$tenant_api_key" ]; then
+    export HINDSIGHT_API_TENANT_EXTENSION="hindsight_api.extensions.builtin.tenant:ApiKeyTenantExtension"
+    export HINDSIGHT_API_TENANT_API_KEY="$tenant_api_key"
+fi
+
+worker_id=$(jq -r '.worker_id // ""' "$OPTIONS_PATH")
+[ -z "$worker_id" ] || export HINDSIGHT_API_WORKER_ID="$worker_id"
+
+# User-provided environment variables, applied last. Names must be plain
+# uppercase identifiers and may never shadow managed or protected variables.
+CUSTOM_ENV_NAMES=
+env_count=$(jq -r '(.env_vars // {}) | keys | length' "$OPTIONS_PATH")
+index=0
+keys=$(jq -r '(.env_vars // {}) | keys[]' "$OPTIONS_PATH")
+# Word splitting over validated uppercase identifier keys is intentional.
+# shellcheck disable=SC2086
+for name in $keys; do
+    value=$(jq -r --arg name "$name" '(.env_vars // {})[$name]' "$OPTIONS_PATH")
+
+    case "$name" in
+        [A-Z]*)
+            if ! printf '%s' "$name" | grep -Eq '^[A-Z][A-Z0-9_]*$'; then
+                fail "Invalid custom environment variable name: $name"
+            fi
+            ;;
+        *) fail "Invalid custom environment variable name: $name" ;;
+    esac
+
+    if is_listed "$MANAGED_ENV" "$name"; then
+        fail "Custom environment variable overrides managed variable: $name"
+    fi
+    if is_listed "$PROTECTED_ENV" "$name"; then
+        fail "Custom environment variable overrides protected variable: $name"
+    fi
+    if ! jq -en --arg value "$value" \
+        '$value | test("[\u0000-\u001F\u007F]") | not' \
+        >/dev/null 2>&1; then
+        fail "Custom environment variable contains control characters: $name"
+    fi
+
+    export "$name=$value"
+    CUSTOM_ENV_NAMES="$CUSTOM_ENV_NAMES $name"
+    index=$((index + 1))
+done
+env_count_check=$(printf '%s' "$CUSTOM_ENV_NAMES" | wc -w | tr -d ' ')
+[ "$env_count_check" -eq "$env_count" ] || fail "Custom environment variables failed to apply"
+
+# Fixture mode for adapter tests: export the environment and exit.
+if [ -n "${HINDSIGHT_TEST_ENV_FILE:-}" ]; then
+    : >"$HINDSIGHT_TEST_ENV_FILE"
+    tenant_extension=
+    tenant_key_masked=
+    if [ -n "$tenant_api_key" ]; then
+        tenant_extension="hindsight_api.extensions.builtin.tenant:ApiKeyTenantExtension"
+        tenant_key_masked="****************"
+    fi
+    llm_key_masked=
+    [ -z "$llm_api_key" ] || llm_key_masked="****************"
+    database_url_masked=$database_url
+    if [ -n "$database_url" ]; then
+        database_url_masked=$(
+            printf '%s' "$database_url" | sed 's/:[^:@/]*@/:****@/'
+        )
+    fi
+    {
+        printf 'HOME=%s\n' "$CONFIG_DIR"
+        printf 'HINDSIGHT_API_LLM_PROVIDER=%s\n' "$llm_provider"
+        printf 'HINDSIGHT_API_LLM_API_KEY=%s\n' "$llm_key_masked"
+        printf 'HINDSIGHT_API_LLM_MODEL=%s\n' "$llm_model"
+        printf 'HINDSIGHT_API_LLM_BASE_URL=%s\n' "$llm_base_url"
+        printf 'HINDSIGHT_API_DATABASE_URL=%s\n' "$database_url_masked"
+        printf 'HINDSIGHT_API_TENANT_EXTENSION=%s\n' "$tenant_extension"
+        printf 'HINDSIGHT_API_TENANT_API_KEY=%s\n' "$tenant_key_masked"
+        printf 'HINDSIGHT_API_WORKER_ID=%s\n' "$worker_id"
+    } >>"$HINDSIGHT_TEST_ENV_FILE"
+    for name in $CUSTOM_ENV_NAMES; do
+        eval "value=\$$name"
+        printf '%s=%s\n' "$name" "$value" >>"$HINDSIGHT_TEST_ENV_FILE"
+    done
+    exit 0
+fi
+
+[ -f "$START_ALL" ] || fail "Hindsight startup script is missing: $START_ALL"
+log "Configuration validated; starting Hindsight"
+exec "$START_ALL"

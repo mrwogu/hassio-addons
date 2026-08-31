@@ -1,0 +1,15 @@
+{
+  "llm_provider": "openai",
+  "llm_api_key": "sk-key\nwith-newline",
+  "llm_model": "",
+  "llm_base_url": "",
+  "database_host": "",
+  "database_port": 5432,
+  "database_name": "hindsight",
+  "database_user": "hindsight",
+  "database_password": "",
+  "database_sslmode": "prefer",
+  "tenant_api_key": "",
+  "worker_id": "hindsight-hassio",
+  "env_vars": {}
+}

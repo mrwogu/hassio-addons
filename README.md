@@ -60,11 +60,11 @@ Home Assistant add-ons packaged from upstream projects with automated updates, m
       <p><sub><code>amd64</code> <code>aarch64</code> · Port <code>3002</code><br><a href="https://github.com/chrisvel/tududi">Upstream</a> · MIT</sub></p>
     </td>
     <td align="center" valign="top" width="33%">
-      <a href="mem0/"><img src="mem0/logo.png" alt="Mem0" width="220"></a>
-      <h3><a href="mem0/">Mem0</a></h3>
-      <p>Self-hosted AI memory layer with a REST API for assistants and agents.</p>
-      <p><sub><code>amd64</code> <code>aarch64</code> · Port <code>8000</code><br><a href="https://github.com/mem0ai/mem0">Upstream</a> · Apache 2.0</sub></p>
-      <p><sub>REST API only. Requires external PostgreSQL with pgvector.</sub></p>
+      <a href="hindsight/"><img src="hindsight/logo.png" alt="Hindsight" width="220"></a>
+      <h3><a href="hindsight/">Hindsight</a></h3>
+      <p>Agent memory system with an OpenAI-compatible REST API and a web control plane.</p>
+      <p><sub><code>amd64</code> <code>aarch64</code> · Ports <code>8888</code> and <code>9999</code><br><a href="https://github.com/vectorize-io/hindsight">Upstream</a> · MIT</sub></p>
+      <p><sub>Embedded database by default. External PostgreSQL with pgvector optional.</sub></p>
     </td>
   </tr>
 </table>

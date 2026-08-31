@@ -1,0 +1,57 @@
+---
+configuration:
+  llm_provider:
+    name: Dostawca LLM
+    description: >-
+      Backend LLM używany do ekstrakcji pamięci. Użyj openai, anthropic,
+      gemini, ollama, openrouter lub innej obsługiwanej nazwy dostawcy.
+  llm_api_key:
+    name: Klucz API LLM
+    description: Klucz API wybranego dostawcy. Pozostaw pusty dla dostawców lokalnych, np. Ollama.
+  llm_model:
+    name: Model LLM
+    description: Nazwa modelu używanego do operacji pamięci. Pozostaw puste, aby użyć domyślnego dostawcy.
+  llm_base_url:
+    name: Bazowy adres URL LLM
+    description: >-
+      Opcjonalne nadpisanie zgodnego z OpenAI punktu końcowego, np.
+      http://192.168.1.50:11434/v1 dla lokalnego serwera Ollama.
+  database_host:
+    name: Host PostgreSQL
+    description: >-
+      Nazwa hosta zewnętrznego serwera PostgreSQL 14+ z pgvector. Pozostaw
+      puste, aby użyć wbudowanej bazy danych zapisanej w konfiguracji add-onu.
+  database_port:
+    name: Port PostgreSQL
+    description: Port zewnętrznego serwera PostgreSQL.
+  database_name:
+    name: Baza PostgreSQL
+    description: Nazwa bazy danych Hindsight na serwerze zewnętrznym.
+  database_user:
+    name: Użytkownik PostgreSQL
+    description: Użytkownik, z którym API Hindsight łączy się z bazą danych.
+  database_password:
+    name: Hasło PostgreSQL
+    description: Opcjonalne hasło użytkownika PostgreSQL.
+  database_sslmode:
+    name: Tryb TLS PostgreSQL
+    description: >-
+      disable wysyła dane uwierzytelniające jawnym tekstem, require szyfruje
+      bez weryfikacji certyfikatu serwera, verify-full dodatkowo sprawdza
+      certyfikat wobec zaufanych urzędów certyfikacji.
+  tenant_api_key:
+    name: Ochrona kluczem API
+    description: >-
+      Opcjonalny klucz API wymagany od klientów przy każdym żądaniu do API
+      pamięci. Pozostaw pusty, aby zostawić API otwartego w Twojej sieci.
+  worker_id:
+    name: Identyfikator workera
+    description: Stabilny identyfikator tej instancji Hindsight. Zmieniaj tylko przy wielu instancjach.
+  env_vars:
+    name: Niestandardowe zmienne środowiskowe
+    description: >-
+      Dodatkowe zmienne środowiskowe przekazywane do Hindsight. Zmiennych
+      zarządzanych i chronionych nie można nadpisywać.
+network:
+  8888/tcp: API pamięci Hindsight
+  9999/tcp: Panel sterowania Hindsight

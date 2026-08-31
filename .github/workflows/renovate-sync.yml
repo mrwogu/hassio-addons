@@ -69,9 +69,6 @@ jobs:
               if [ "$addon" = "n8n" ]; then
                 python3 ../base/scripts/sync_n8n_apk_checksum.py --root "$PWD"
               fi
-              if [ "$addon" = "mem0" ]; then
-                python3 ../base/scripts/sync_mem0_checksum.py --root "$PWD"
-              fi
               python3 ../base/scripts/sync_addon_version.py "$addon"
               metadata_changed=false
               if ! git diff --quiet -- \
