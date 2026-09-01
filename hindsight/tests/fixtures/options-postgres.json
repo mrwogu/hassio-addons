@@ -10,6 +10,7 @@
   "database_password": "p@ss word",
   "database_sslmode": "require",
   "tenant_api_key": "tenant-secret-key-123",
+  "cp_access_key": "cp-secret-key-456",
   "worker_id": "worker-1",
   "env_vars": []
 }

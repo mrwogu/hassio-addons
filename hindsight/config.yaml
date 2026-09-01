@@ -1,6 +1,6 @@
 ---
 name: Hindsight
-version: "0.9.2-3"
+version: "0.9.2-4"
 slug: hindsight
 description: Agent memory system with an OpenAI-compatible API and web control plane
 url: https://github.com/mrwogu/hassio-addons/tree/main/hindsight
@@ -32,6 +32,7 @@ options:
   database_password: ""
   database_sslmode: prefer
   tenant_api_key: ""
+  cp_access_key: ""
   worker_id: hindsight-hassio
   env_vars: []
 schema:
@@ -46,6 +47,7 @@ schema:
   database_password: password?
   database_sslmode: list(disable|allow|prefer|require|verify-ca|verify-full)?
   tenant_api_key: password?
+  cp_access_key: password?
   worker_id: str?
   env_vars:
     - name: str

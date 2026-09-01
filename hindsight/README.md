@@ -9,6 +9,7 @@ Home Assistant add-on packaging [Hindsight](https://github.com/vectorize-io/hind
 - Embedded database by default, persisted in add-on configuration storage.
 - Optional external PostgreSQL 14+ with pgvector for shared or production deployments.
 - Optional API key protection for the memory API.
+- Optional access key for the web control plane login.
 - OpenAI-compatible LLM endpoint override for local models such as Ollama.
 
 ## Installation
@@ -33,6 +34,7 @@ Home Assistant add-on packaging [Hindsight](https://github.com/vectorize-io/hind
 | `database_password` | - | External database password. |
 | `database_sslmode` | `prefer` | External database TLS mode. |
 | `tenant_api_key` | - | Optional API key required on every memory API request. |
+| `cp_access_key` | - | Optional access key for the web control plane login on port 9999. |
 | `worker_id` | `hindsight-hassio` | Stable worker identifier. |
 | `env_vars` | `[]` | Additional environment variables as name/value pairs. |
 

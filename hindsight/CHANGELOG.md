@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.2-4
+
+- Add control plane access key and dataplane key passthrough
+
 ## 0.9.2-3
 
 - Fix options.json read by dropping to hindsight user only for app start
