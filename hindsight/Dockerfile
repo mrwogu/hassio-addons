@@ -10,14 +10,13 @@ LABEL \
     org.opencontainers.image.licenses="MIT"
 
 # The adapter needs jq for option parsing; the upstream image ships without it.
+# gosu drops to the upstream non-root user after the Supervisor-only option
+# reads; Supervisor keeps /data root-only, so parsing must run as root.
 USER root
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends jq \
+    && apt-get install -y --no-install-recommends jq gosu \
     && rm -rf /var/lib/apt/lists/*
-USER hindsight
 
-# The upstream image runs as a non-root user; use COPY --chmod instead of a
-# RUN chmod, which would need elevated privileges the build does not have.
 COPY --chmod=0755 rootfs/usr/local/bin/addon-entrypoint /usr/local/bin/addon-entrypoint
 
 ENTRYPOINT ["/usr/local/bin/addon-entrypoint"]
