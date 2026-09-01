@@ -39,6 +39,14 @@ BRAND_COLORS = {
     "tududi": "#059669",
 }
 
+# White chip behind the logo by default; slugs whose logo is white need a
+# dark chip to stay visible.
+CHIP_COLORS = {
+    "hindsight": "#1E1B4B",
+}
+
+DEFAULT_CHIP_COLOR = "#ffffff"
+
 FONT_STACK = "-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
 
 
@@ -83,7 +91,9 @@ def estimate_text_width(name: str) -> float:
     return 0.62 * 15 * len(name)
 
 
-def build_badge_svg(name: str, color: str, logo_data: bytes) -> str:
+def build_badge_svg(
+    name: str, color: str, logo_data: bytes, chip_color: str = DEFAULT_CHIP_COLOR
+) -> str:
     width, height = png_dimensions(logo_data)
     logo_w, logo_h = logo_geometry(width / height)
 
@@ -104,7 +114,7 @@ def build_badge_svg(name: str, color: str, logo_data: bytes) -> str:
         f'  <rect width="{PILL_WIDTH}" height="{PILL_HEIGHT}" rx="20" '
         f'fill="{color}"/>\n'
         f'  <rect x="{chip_x:.1f}" y="{chip_y:.1f}" width="{chip_w:.1f}" '
-        f'height="{chip_h:.1f}" rx="8" fill="#ffffff"/>\n'
+        f'height="{chip_h:.1f}" rx="8" fill="{chip_color}"/>\n'
         f'  <image x="{chip_x + 4:.1f}" y="{chip_y + 4:.1f}" '
         f'width="{logo_w:.1f}" height="{logo_h:.1f}" '
         f'preserveAspectRatio="xMidYMid meet" '
@@ -123,7 +133,10 @@ def render_badges() -> dict[str, str]:
             raise ValueError(f"No brand color registered for add-on {slug}")
         logo_path = REPO_ROOT / slug / "logo.png"
         badges[slug] = build_badge_svg(
-            read_addon_name(slug), BRAND_COLORS[slug], logo_path.read_bytes()
+            read_addon_name(slug),
+            BRAND_COLORS[slug],
+            logo_path.read_bytes(),
+            CHIP_COLORS.get(slug, DEFAULT_CHIP_COLOR),
         )
     return badges
 

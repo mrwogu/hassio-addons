@@ -80,6 +80,17 @@ class BadgeGeneratorTest(unittest.TestCase):
         self.assertIn("A&lt;B&gt;", svg)
         self.assertNotIn("A<B>", svg)
 
+    def test_badge_svg_chip_defaults_to_white(self) -> None:
+        svg = build_badge_svg("Hindsight", "#4F46E5", make_png(4, 4))
+        self.assertIn('rx="8" fill="#ffffff"', svg)
+
+    def test_badge_svg_chip_color_is_overridable(self) -> None:
+        svg = build_badge_svg(
+            "Hindsight", "#4F46E5", make_png(4, 4), chip_color="#1E1B4B"
+        )
+        self.assertIn('rx="8" fill="#1E1B4B"', svg)
+        self.assertNotIn('rx="8" fill="#ffffff"', svg)
+
     def test_text_estimate_grows_with_length(self) -> None:
         self.assertLess(estimate_text_width("n8n"), estimate_text_width("Traefik Proxy"))
 
