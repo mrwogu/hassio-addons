@@ -44,6 +44,11 @@ configuration:
     description: >-
       Optional API key required by clients on every memory API request. Leave
       blank to keep the API open on your network.
+  cp_access_key:
+    name: Control plane access key
+    description: >-
+      Optional access key for the web control plane login on port 9999. Leave
+      blank to keep the control plane open on your network.
   worker_id:
     name: Worker ID
     description: Stable identifier for this Hindsight instance. Change only when running several instances.

@@ -34,7 +34,11 @@ Special characters in the database user and password are supported and URL-encod
 
 ## API protection
 
-Without `tenant_api_key` the memory API is open to anything that can reach port `8888`. On a trusted home network this is acceptable; otherwise set `tenant_api_key` and pass the key in the `Authorization: Bearer <key>` header on every API request. The health endpoints stay open. The control plane on port `9999` has no separate authentication; protect it with a reverse proxy if it must stay reachable beyond the local network.
+Without `tenant_api_key` the memory API is open to anything that can reach port `8888`. On a trusted home network this is acceptable; otherwise set `tenant_api_key` and pass the key in the `Authorization: Bearer <key>` header on every API request. The health endpoints stay open.
+
+Without `cp_access_key` the control plane on port `9999` has no login; anyone who can reach the port can use the web interface. Set `cp_access_key` to require the key at the control plane login screen.
+
+When `tenant_api_key` is set, the control plane receives the same key automatically (as `HINDSIGHT_CP_DATAPLANE_API_KEY`), so its server-side calls to the memory API keep working. The key values may differ: `tenant_api_key` protects the API, `cp_access_key` protects the web login.
 
 ## Custom environment variables
 
@@ -48,7 +52,7 @@ env_vars:
     value: "true"
 ```
 
-Names must be plain uppercase identifiers. The adapter rejects overrides of managed variables (`HINDSIGHT_API_DATABASE_URL`, `HINDSIGHT_API_LLM_*`, `HINDSIGHT_API_TENANT_*`, `HOME`, and others) and protected variables (`PATH`, `NODE_OPTIONS`, `PYTHONPATH`, and others). Values may not contain control characters. Custom variables apply after all managed variables.
+Names must be plain uppercase identifiers. The adapter rejects overrides of managed variables (`HINDSIGHT_API_DATABASE_URL`, `HINDSIGHT_API_LLM_*`, `HINDSIGHT_API_TENANT_*`, `HINDSIGHT_CP_ACCESS_KEY`, `HINDSIGHT_CP_DATAPLANE_API_KEY`, `HOME`, and others) and protected variables (`PATH`, `NODE_OPTIONS`, `PYTHONPATH`, and others). Values may not contain control characters. Custom variables apply after all managed variables.
 
 ## Data storage
 

@@ -44,6 +44,11 @@ configuration:
     description: >-
       Opcjonalny klucz API wymagany od klientów przy każdym żądaniu do API
       pamięci. Pozostaw pusty, aby zostawić API otwartego w Twojej sieci.
+  cp_access_key:
+    name: Klucz dostępu do panelu
+    description: >-
+      Opcjonalny klucz dostępu do logowania w panelu webowym na porcie 9999.
+      Pozostaw pusty, aby zostawić panel otwarty w Twojej sieci.
   worker_id:
     name: Identyfikator workera
     description: Stabilny identyfikator tej instancji Hindsight. Zmieniaj tylko przy wielu instancjach.

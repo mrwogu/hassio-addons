@@ -7,7 +7,7 @@ START_ALL=${HINDSIGHT_EXECUTABLE:-/app/start-all.sh}
 
 # Variables the add-on translates from options; custom env_vars must not
 # shadow them or break out of the adapter environment.
-MANAGED_ENV="HOME HINDSIGHT_API_DATABASE_URL HINDSIGHT_API_LLM_PROVIDER HINDSIGHT_API_LLM_API_KEY HINDSIGHT_API_LLM_MODEL HINDSIGHT_API_LLM_BASE_URL HINDSIGHT_API_TENANT_EXTENSION HINDSIGHT_API_TENANT_API_KEY HINDSIGHT_API_WORKER_ID HINDSIGHT_API_PORT HINDSIGHT_CP_PORT HINDSIGHT_ENABLE_API HINDSIGHT_ENABLE_CP HINDSIGHT_WAIT_FOR_DEPS"
+MANAGED_ENV="HOME HINDSIGHT_API_DATABASE_URL HINDSIGHT_API_LLM_PROVIDER HINDSIGHT_API_LLM_API_KEY HINDSIGHT_API_LLM_MODEL HINDSIGHT_API_LLM_BASE_URL HINDSIGHT_API_TENANT_EXTENSION HINDSIGHT_API_TENANT_API_KEY HINDSIGHT_API_WORKER_ID HINDSIGHT_API_PORT HINDSIGHT_CP_PORT HINDSIGHT_CP_ACCESS_KEY HINDSIGHT_CP_DATAPLANE_API_KEY HINDSIGHT_ENABLE_API HINDSIGHT_ENABLE_CP HINDSIGHT_WAIT_FOR_DEPS"
 PROTECTED_ENV="PATH HOSTNAME PWD SHLVL LANG LC_ALL LC_CTYPE IFS ENV BASH_ENV GLOBIGNORE LD_PRELOAD LD_LIBRARY_PATH PYTHONPATH PYTHONUNBUFFERED PYTHONDONTWRITEBYTECODE NODE_OPTIONS NODE_ENV"
 
 is_listed() {
@@ -71,6 +71,8 @@ check_option "Option 'database_sslmode' must be a string without control charact
     '(.database_sslmode // "") | optional_clean'
 check_option "Option 'tenant_api_key' must be a string without control characters" \
     '(.tenant_api_key // "") | optional_clean'
+check_option "Option 'cp_access_key' must be a string without control characters" \
+    '(.cp_access_key // "") | optional_clean'
 check_option "Option 'worker_id' must be a string without control characters" \
     '(.worker_id // "") | optional_clean'
 check_option "Option 'env_vars' must be a list of name/value string pairs" \
@@ -124,7 +126,13 @@ tenant_api_key=$(jq -r '.tenant_api_key // ""' "$OPTIONS_PATH")
 if [ -n "$tenant_api_key" ]; then
     export HINDSIGHT_API_TENANT_EXTENSION="hindsight_api.extensions.builtin.tenant:ApiKeyTenantExtension"
     export HINDSIGHT_API_TENANT_API_KEY="$tenant_api_key"
+    # The control plane runs in the same container and calls the API on
+    # localhost; give it the same key so its requests pass API authentication.
+    export HINDSIGHT_CP_DATAPLANE_API_KEY="$tenant_api_key"
 fi
+
+cp_access_key=$(jq -r '.cp_access_key // ""' "$OPTIONS_PATH")
+[ -z "$cp_access_key" ] || export HINDSIGHT_CP_ACCESS_KEY="$cp_access_key"
 
 worker_id=$(jq -r '.worker_id // ""' "$OPTIONS_PATH")
 [ -z "$worker_id" ] || export HINDSIGHT_API_WORKER_ID="$worker_id"
@@ -169,10 +177,14 @@ if [ -n "${HINDSIGHT_TEST_ENV_FILE:-}" ]; then
     : >"$HINDSIGHT_TEST_ENV_FILE"
     tenant_extension=
     tenant_key_masked=
+    cp_key_masked=
     if [ -n "$tenant_api_key" ]; then
         tenant_extension="hindsight_api.extensions.builtin.tenant:ApiKeyTenantExtension"
         tenant_key_masked="****************"
+        cp_key_masked="****************"
     fi
+    ui_key_masked=
+    [ -z "$cp_access_key" ] || ui_key_masked="****************"
     llm_key_masked=
     [ -z "$llm_api_key" ] || llm_key_masked="****************"
     database_url_masked=$database_url
@@ -190,6 +202,8 @@ if [ -n "${HINDSIGHT_TEST_ENV_FILE:-}" ]; then
         printf 'HINDSIGHT_API_DATABASE_URL=%s\n' "$database_url_masked"
         printf 'HINDSIGHT_API_TENANT_EXTENSION=%s\n' "$tenant_extension"
         printf 'HINDSIGHT_API_TENANT_API_KEY=%s\n' "$tenant_key_masked"
+        printf 'HINDSIGHT_CP_ACCESS_KEY=%s\n' "$ui_key_masked"
+        printf 'HINDSIGHT_CP_DATAPLANE_API_KEY=%s\n' "$cp_key_masked"
         printf 'HINDSIGHT_API_WORKER_ID=%s\n' "$worker_id"
     } >>"$HINDSIGHT_TEST_ENV_FILE"
     for name in $CUSTOM_ENV_NAMES; do
