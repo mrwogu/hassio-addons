@@ -9,44 +9,38 @@ Home Assistant add-ons packaged from upstream projects with automated updates, m
 <table>
   <tr>
     <td align="center" valign="top" width="33%">
-      <a href="gluetun/"><img src="gluetun/logo.png" alt="Gluetun" width="220"></a>
-      <h3><a href="gluetun/">Gluetun VPN</a></h3>
+      <a href="gluetun/"><img src="assets/badges/gluetun.svg" alt="Gluetun VPN" width="220"></a>
       <p>VPN client supporting multiple providers, OpenVPN, WireGuard, DNS filtering, and proxy services.</p>
       <p><sub><code>amd64</code> <code>aarch64</code><br><a href="https://github.com/passteque/gluetun">Upstream</a> · MIT</sub></p>
     </td>
     <td align="center" valign="top" width="33%">
-      <a href="bonds/"><img src="bonds/logo.png" alt="Bonds" width="220"></a>
-      <h3><a href="bonds/">Bonds</a></h3>
+      <a href="bonds/"><img src="assets/badges/bonds.svg" alt="Bonds" width="220"></a>
       <p>Personal relationship manager built with Go and React.</p>
       <p><sub><code>amd64</code> <code>aarch64</code><br><a href="https://github.com/naiba/bonds">Upstream</a> · Business Source License 1.1</sub></p>
       <p><sub>SQLite by default. PostgreSQL is optional and external.</sub></p>
       <p><sub>Commercial use and managed hosting restrictions apply.</sub></p>
     </td>
     <td align="center" valign="top" width="33%">
-      <a href="stirling-pdf/"><img src="stirling-pdf/logo.png" alt="Stirling-PDF" width="220"></a>
-      <h3><a href="stirling-pdf/">Stirling-PDF</a></h3>
+      <a href="stirling-pdf/"><img src="assets/badges/stirling-pdf.svg" alt="Stirling-PDF" width="220"></a>
       <p>Locally hosted web application for splitting, merging, converting, OCR, and otherwise manipulating PDF files.</p>
       <p><sub><code>amd64</code> <code>aarch64</code> · Port <code>8080</code><br><a href="https://github.com/Stirling-Tools/Stirling-PDF">Upstream</a> · MIT</sub></p>
     </td>
   </tr>
   <tr>
     <td align="center" valign="top" width="33%">
-      <a href="authentik/"><img src="authentik/logo.png" alt="authentik" width="220"></a>
-      <h3><a href="authentik/">authentik</a></h3>
+      <a href="authentik/"><img src="assets/badges/authentik.svg" alt="authentik" width="220"></a>
       <p>Self-hosted identity provider for single sign-on, SAML, OAuth2, and LDAP.</p>
       <p><sub><code>amd64</code> <code>aarch64</code> · Port <code>9000</code><br><a href="https://github.com/goauthentik/authentik">Upstream</a> · MIT</sub></p>
       <p><sub>Requires external PostgreSQL.</sub></p>
     </td>
     <td align="center" valign="top" width="33%">
-      <a href="n8n/"><img src="n8n/logo.png" alt="n8n" width="220"></a>
-      <h3><a href="n8n/">n8n</a></h3>
+      <a href="n8n/"><img src="assets/badges/n8n.svg" alt="n8n" width="220"></a>
       <p>Workflow automation platform for connecting apps and services.</p>
       <p><sub><code>amd64</code> <code>aarch64</code> · Port <code>5678</code><br><a href="https://github.com/n8n-io/n8n">Upstream</a> · Sustainable Use License</sub></p>
       <p><sub>SQLite by default. PostgreSQL and Redis are optional.</sub></p>
     </td>
     <td align="center" valign="top" width="33%">
-      <a href="traefik-proxy/"><img src="traefik-proxy/logo.png" alt="Traefik Proxy" width="220"></a>
-      <h3><a href="traefik-proxy/">Traefik Proxy</a></h3>
+      <a href="traefik-proxy/"><img src="assets/badges/traefik-proxy.svg" alt="Traefik Proxy" width="220"></a>
       <p>File-configured reverse proxy with TLS, real-IP logging, and Cloudflare-aware operations.</p>
       <p><sub><code>amd64</code> <code>aarch64</code> · Ports <code>80</code> and <code>443</code><br><a href="https://github.com/traefik/traefik">Upstream</a> · MIT</sub></p>
       <p><sub>Docker provider disabled. Dashboard is not published.</sub></p>
@@ -54,14 +48,12 @@ Home Assistant add-ons packaged from upstream projects with automated updates, m
   </tr>
   <tr>
     <td align="center" valign="top" width="33%">
-      <a href="tududi/"><img src="tududi/logo.png" alt="Tududi" width="220"></a>
-      <h3><a href="tududi/">Tududi</a></h3>
+      <a href="tududi/"><img src="assets/badges/tududi.svg" alt="Tududi" width="220"></a>
       <p>Self-hosted task management and life organization system for tasks, projects, notes, and areas.</p>
       <p><sub><code>amd64</code> <code>aarch64</code> · Port <code>3002</code><br><a href="https://github.com/chrisvel/tududi">Upstream</a> · MIT</sub></p>
     </td>
     <td align="center" valign="top" width="33%">
-      <a href="hindsight/"><img src="hindsight/logo.png" alt="Hindsight" width="220"></a>
-      <h3><a href="hindsight/">Hindsight</a></h3>
+      <a href="hindsight/"><img src="assets/badges/hindsight.svg" alt="Hindsight" width="220"></a>
       <p>Agent memory system with an OpenAI-compatible REST API and a web control plane.</p>
       <p><sub><code>amd64</code> <code>aarch64</code> · Ports <code>8888</code> and <code>9999</code><br><a href="https://github.com/vectorize-io/hindsight">Upstream</a> · MIT</sub></p>
       <p><sub>Embedded database by default. External PostgreSQL with pgvector optional.</sub></p>
