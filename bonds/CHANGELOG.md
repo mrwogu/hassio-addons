@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.22.13-1
+
+- Bring the latest relationship management updates from Bonds [0.22.13](https://github.com/naiba/bonds/releases/tag/v0.22.13).
+
 ## 0.22.12-2
 
 - Use app_config mapping for supervisor compatibility
