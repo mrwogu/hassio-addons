@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.2-3
+
+- Fix options.json read by dropping to hindsight user only for app start
+
 ## 0.9.2-2
 
 - Fix env_vars schema and app_config mapping

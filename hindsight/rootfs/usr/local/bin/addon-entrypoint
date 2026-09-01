@@ -200,5 +200,14 @@ if [ -n "${HINDSIGHT_TEST_ENV_FILE:-}" ]; then
 fi
 
 [ -f "$START_ALL" ] || fail "Hindsight startup script is missing: $START_ALL"
+
+# Supervisor keeps /data root-only, so options parsing must run as root.
+# Drop to the upstream non-root user only for the application process.
+if [ "$(id -u)" = "0" ] && id hindsight >/dev/null 2>&1 \
+    && command -v gosu >/dev/null 2>&1; then
+    chown hindsight "$CONFIG_DIR"
+    log "Configuration validated; starting Hindsight"
+    exec gosu hindsight "$START_ALL"
+fi
 log "Configuration validated; starting Hindsight"
 exec "$START_ALL"
