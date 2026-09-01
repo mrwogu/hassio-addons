@@ -4,7 +4,7 @@ ADDONS := $(shell $(PYTHON) scripts/addon_manifest.py list)
 export ADDON
 export MESSAGE
 
-.PHONY: bump check validate syntax test integration-traefik
+.PHONY: bump check validate syntax test badges integration-traefik
 
 bump:
 	@if ! printf '%s\n' "$(ADDONS)" | tr ' ' '\n' | grep -Fxq "$$ADDON"; then \
@@ -32,6 +32,9 @@ test:
 		echo "Running $$test_script"; \
 		sh "$$test_script"; \
 	done
+
+badges:
+	$(PYTHON) scripts/generate_addon_badges.py --check
 
 integration-traefik:
 	@set -eu; \
