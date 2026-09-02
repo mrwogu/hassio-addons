@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.22.14-1
+
+- Bring the latest relationship management updates from Bonds [0.22.14](https://github.com/naiba/bonds/releases/tag/v0.22.14).
+
 ## 0.22.13-1
 
 - Bring the latest relationship management updates from Bonds [0.22.13](https://github.com/naiba/bonds/releases/tag/v0.22.13).
