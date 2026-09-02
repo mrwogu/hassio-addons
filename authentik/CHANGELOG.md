@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026.8.1-1
+
+- Refresh authentik's identity, SSO, and directory integration with [2026.8.1](https://github.com/goauthentik/authentik/releases/tag/version/2026.8.1).
+
 ## 2026.8.0-2
 
 - Use app_config mapping for supervisor compatibility
