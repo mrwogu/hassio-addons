@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.38.3-1
+
+- Refresh n8n workflow automation and task-runner support with [2.38.3](https://github.com/n8n-io/n8n/releases/tag/n8n@2.38.3).
+
 ## 2.38.2-1
 
 - Refresh n8n workflow automation and task-runner support with [2.38.2](https://github.com/n8n-io/n8n/releases/tag/n8n@2.38.2).
