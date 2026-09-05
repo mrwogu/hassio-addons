@@ -1,8 +1,8 @@
 ---
 image: chrisvel/tududi
-version: 1.4.0
-digest: sha256:acef0f75778da375db3a54d07a5e0930091a3f20af0b8892528c373de777d981
-package_version: 1.4.0-3
+version: 1.4.2
+digest: sha256:1433ec2ea84d563c1ffe61195a53ed2a0f7a1981d39d7f15a446cdf0a39824ad
+package_version: 1.4.2-1
 source: https://github.com/chrisvel/tududi
 release_url: https://github.com/chrisvel/tududi/releases/tag
 release_tag_prefix: v
