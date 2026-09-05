@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.7.13-1
+
+- Update Traefik Proxy to [v3.7.13](https://github.com/traefik/traefik/releases/tag/v3.7.13).
+
 ## 3.7.12-3
 
 - Use app_config mapping for supervisor compatibility
