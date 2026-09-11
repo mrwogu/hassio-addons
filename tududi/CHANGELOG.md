@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.2-1
+
+- Bring the latest task management and life organization updates from Tududi [1.4.2](https://github.com/chrisvel/tududi/releases/tag/v1.4.2).
+
 ## 1.4.0-3
 
 - Use app_config mapping for supervisor compatibility
