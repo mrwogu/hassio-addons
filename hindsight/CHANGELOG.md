@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.0-1
+
+- Bring the latest agent memory improvements from Hindsight [0.10.0](https://github.com/vectorize-io/hindsight/releases/tag/v0.10.0).
+
 ## 0.9.2-4
 
 - Add control plane access key and dataplane key passthrough
