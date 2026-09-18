@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.39.1-3
+
+- Refresh packaging dependency
+
 ## 2.39.1-2
 
 - Refresh packaging dependency
