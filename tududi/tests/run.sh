@@ -61,7 +61,9 @@ run_entrypoint() {
         sh "$ENTRYPOINT" --fixture >"$LOG_FILE" 2>&1
 }
 
-grep -Fq 'ARG UPSTREAM_VERSION="1.4.0"' "$ADDON_DIR/Dockerfile" ||
+# The version is intentionally not pinned to a literal here: Renovate bumps
+# it on every upstream release and the pin itself lives in the Dockerfile.
+grep -Eq 'ARG UPSTREAM_VERSION="[0-9][0-9.]*"' "$ADDON_DIR/Dockerfile" ||
     fail "Upstream version is not pinned"
 # shellcheck disable=SC2016  # the literal Dockerfile expression is under test
 grep -Fq \
