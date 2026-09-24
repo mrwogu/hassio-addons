@@ -1,8 +1,8 @@
 ---
 image: ghcr.io/stirling-tools/stirling-pdf
-version: 2.14.3
-digest: sha256:3b3670fce70b396ec56ba380a3cc7858e0abf83fe13f31c88f7737847763a396
-package_version: 2.14.3-2
+version: 3.0.0
+digest: sha256:66b6edb8ee62e307a8b335166e8931a6e65b39c9bf73b5e517fbfe9c613ba221
+package_version: 3.0.0-1
 source: https://github.com/Stirling-Tools/Stirling-PDF
 release_url: https://github.com/Stirling-Tools/Stirling-PDF/releases/tag
 release_tag_prefix: v
