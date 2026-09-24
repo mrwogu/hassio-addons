@@ -1,6 +1,6 @@
 # renovate: datasource=docker depName=ghcr.io/stirling-tools/stirling-pdf versioning=semver
-ARG UPSTREAM_VERSION="2.14.3"
-ARG UPSTREAM_DIGEST="sha256:3b3670fce70b396ec56ba380a3cc7858e0abf83fe13f31c88f7737847763a396"
+ARG UPSTREAM_VERSION="3.0.0"
+ARG UPSTREAM_DIGEST="sha256:66b6edb8ee62e307a8b335166e8931a6e65b39c9bf73b5e517fbfe9c613ba221"
 FROM ghcr.io/stirling-tools/stirling-pdf:${UPSTREAM_VERSION}@${UPSTREAM_DIGEST}
 
 LABEL \
