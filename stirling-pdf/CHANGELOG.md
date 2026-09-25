@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.0-1
+
+- Bring the latest PDF processing and document workflow fixes from Stirling-PDF [3.0.0](https://github.com/Stirling-Tools/Stirling-PDF/releases/tag/v3.0.0).
+
 ## 2.14.3-2
 
 - Use app_config mapping for supervisor compatibility
