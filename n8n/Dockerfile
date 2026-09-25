@@ -3,8 +3,8 @@ ARG UPSTREAM_VERSION="2.41.3"
 ARG UPSTREAM_DIGEST="sha256:fdce8f852ac7abbb2f31a53170bc3c2eeec45c37c0692a99f2d6c11b3822cd98"
 
 # renovate: datasource=docker depName=ghcr.io/n8n-io/runners versioning=semver
-ARG RUNNERS_VERSION="2.41.0"
-ARG RUNNERS_DIGEST="sha256:fbe8c7d0782ef0ea7ad65db3e15e73d8f194b2885e459323c3576a8caffdfb52"
+ARG RUNNERS_VERSION="2.41.3"
+ARG RUNNERS_DIGEST="sha256:1522f8179b76adcdb7900864c18b2ec57d63af472baeed874ed220bab3e66ecc"
 FROM ghcr.io/n8n-io/runners:${RUNNERS_VERSION}@${RUNNERS_DIGEST} AS task-runners
 
 FROM ghcr.io/n8n-io/n8n:${UPSTREAM_VERSION}@${UPSTREAM_DIGEST}
