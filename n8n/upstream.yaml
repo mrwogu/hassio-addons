@@ -2,7 +2,7 @@
 image: ghcr.io/n8n-io/n8n
 version: 2.42.2
 digest: sha256:4867554ea7e90d996debeed6cdcdae676e66d949dbd0a05176b87792843d59f5
-package_version: 2.42.2-1
+package_version: 2.42.2-2
 source: https://github.com/n8n-io/n8n
 release_url: https://github.com/n8n-io/n8n/releases/tag
 release_tag_prefix: n8n@

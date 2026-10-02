@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.42.2-2
+
+- Refresh packaging dependency
+
 ## 2.42.2-1
 
 - Refresh n8n workflow automation and task-runner support with [2.42.2](https://github.com/n8n-io/n8n/releases/tag/n8n@2.42.2).
