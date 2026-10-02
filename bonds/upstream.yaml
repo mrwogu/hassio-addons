@@ -1,8 +1,8 @@
 ---
 image: ghcr.io/naiba/bonds
-version: 0.23.0
-digest: sha256:9844365e0b7d154f63e49f0cc0012d91317aebe0428989d3b8c66a0ab6591255
-package_version: 0.23.0-1
+version: 0.23.1
+digest: sha256:311b7ad44a7008b08b50189ca557f3e8aeb1fad43e0d5fb7220ee977e956473d
+package_version: 0.23.1-1
 source: https://github.com/naiba/bonds
 release_url: https://github.com/naiba/bonds/releases/tag
 release_tag_prefix: v
