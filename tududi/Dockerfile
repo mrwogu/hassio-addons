@@ -1,6 +1,6 @@
 # renovate: datasource=docker depName=chrisvel/tududi versioning=semver
-ARG UPSTREAM_VERSION="1.7.1"
-ARG UPSTREAM_DIGEST="sha256:c639c80415d993ba272d78f473691ddbad0ddc6c1af1d1e5bbb8304873cfe4a1"
+ARG UPSTREAM_VERSION="1.7.3"
+ARG UPSTREAM_DIGEST="sha256:ba5ab5dea7a763dc4ee6ab6453b044b2df448f3483e9e337e3f894bdcd68e116"
 FROM chrisvel/tududi:${UPSTREAM_VERSION}@${UPSTREAM_DIGEST}
 
 LABEL \
