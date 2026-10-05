@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.6-1
+
+- Bring the latest task management and life organization updates from Tududi [1.7.6](https://github.com/chrisvel/tududi/releases/tag/v1.7.6).
+
 ## 1.7.5-1
 
 - Bring the latest task management and life organization updates from Tududi [1.7.5](https://github.com/chrisvel/tududi/releases/tag/v1.7.5).
