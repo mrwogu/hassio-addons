@@ -8,7 +8,7 @@ configuration:
     description: Publiczny URL za reverse proxy. Wymagany dla OIDC.
   api_key:
     name: Klucz API
-    description: Opcjonalny sekret X-Api-Key minimum 32 znaków bez spacji.
+    description: Opcjonalny sekret X-Api-Key minimum 32 znaków bez białych znaków.
   oidc_discovery_url:
     name: URL discovery OIDC
     description: Adres discovery dostawcy tożsamości, używany gdy auth to oidc.

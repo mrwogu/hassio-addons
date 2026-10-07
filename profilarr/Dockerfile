@@ -7,7 +7,7 @@ LABEL \
     org.opencontainers.image.title="Home Assistant Profilarr addon" \
     org.opencontainers.image.description="Home Assistant adapter for Profilarr" \
     org.opencontainers.image.source="https://github.com/mrwogu/hassio-addons" \
-    org.opencontainers.image.licenses="MIT"
+    org.opencontainers.image.licenses="AGPL-3.0"
 
 # jq parses the add-on options; the upstream Alpine image keeps its own
 # PUID/PGID setup and privilege drop.
