@@ -1,0 +1,38 @@
+---
+name: Profilarr
+version: "2.2.0-1"
+slug: profilarr
+description: Configuration management platform for Radarr and Sonarr
+url: https://github.com/mrwogu/hassio-addons/tree/main/profilarr
+image: ghcr.io/mrwogu/hassio-profilarr
+arch:
+  - aarch64
+  - amd64
+init: false
+startup: services
+webui: http://[HOST]:[PORT:6868]
+map:
+  - type: app_config
+    read_only: false
+ports:
+  6868/tcp: 6868
+ports_description:
+  6868/tcp: Profilarr web interface
+options:
+  auth: "on"
+  origin: ""
+  api_key: ""
+  oidc_discovery_url: ""
+  oidc_client_id: ""
+  oidc_client_secret: ""
+  env_vars: []
+schema:
+  auth: list(on|oidc|off)
+  origin: str?
+  api_key: password?
+  oidc_discovery_url: str?
+  oidc_client_id: str?
+  oidc_client_secret: password?
+  env_vars:
+    - name: str
+      value: str

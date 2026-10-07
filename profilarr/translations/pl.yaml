@@ -1,0 +1,25 @@
+---
+configuration:
+  auth:
+    name: Tryb uwierzytelniania
+    description: "on to lokalne konta, oidc to dostawca tożsamości, off wyłącza logowanie."
+  origin:
+    name: Publiczny adres
+    description: Publiczny URL za reverse proxy. Wymagany dla OIDC.
+  api_key:
+    name: Klucz API
+    description: Opcjonalny sekret X-Api-Key minimum 32 znaków bez spacji.
+  oidc_discovery_url:
+    name: URL discovery OIDC
+    description: Adres discovery dostawcy tożsamości, używany gdy auth to oidc.
+  oidc_client_id:
+    name: ID klienta OIDC
+    description: ID klienta zarejestrowanego u dostawcy tożsamości.
+  oidc_client_secret:
+    name: Sekret klienta OIDC
+    description: Sekret klienta zarejestrowanego u dostawcy tożsamości.
+  env_vars:
+    name: Zaawansowane zmienne środowiskowe
+    description: Dodatkowe zmienne upstream z nazwami wielkimi literami.
+network:
+  6868/tcp: Interfejs internetowy Profilarr

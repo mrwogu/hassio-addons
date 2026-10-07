@@ -1,0 +1,10 @@
+---
+image: ghcr.io/dictionarry-hub/profilarr
+version: 2.2.0
+digest: sha256:ddcdd0f340043c2ec0a85ca74b9a6be9be42b1c0288c75fc36a26a43f695860b
+package_version: 2.2.0-1
+source: https://github.com/Dictionarry-Hub/profilarr
+release_url: https://github.com/Dictionarry-Hub/profilarr/releases/tag
+release_tag_prefix: v
+changelog_template: Bring the latest Radarr and Sonarr configuration management
+  updates from Profilarr [{upstream_version}]({upstream_link}).

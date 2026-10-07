@@ -20,7 +20,7 @@ Report only vulnerabilities caused by this repository's:
 Include affected add-on version, Home Assistant version, architecture, impact,
 and reproduction steps.
 
-Report vulnerabilities in Gluetun, Bonds, n8n, Stirling-PDF, authentik, Traefik Proxy, or Tududi directly to their upstream maintainers when the issue is not caused by this packaging.
+Report vulnerabilities in Gluetun, Bonds, n8n, Stirling-PDF, authentik, Traefik Proxy, Tududi, or Profilarr directly to their upstream maintainers when the issue is not caused by this packaging.
 
 ## Supported versions
 
