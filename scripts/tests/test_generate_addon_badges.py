@@ -61,6 +61,7 @@ class BadgeGeneratorTest(unittest.TestCase):
             "gluetun",
             "hindsight",
             "n8n",
+            "profilarr",
             "stirling-pdf",
             "traefik-proxy",
             "tududi",

@@ -23,6 +23,10 @@ addons:
     image: ghcr.io/mrwogu/hassio-n8n
     dockerfile: n8n/Dockerfile
     test_script: n8n/tests/run.sh
+  profilarr:
+    image: ghcr.io/mrwogu/hassio-profilarr
+    dockerfile: profilarr/Dockerfile
+    test_script: profilarr/tests/run.sh
   stirling-pdf:
     image: ghcr.io/mrwogu/hassio-stirling-pdf
     dockerfile: stirling-pdf/Dockerfile

@@ -1,0 +1,25 @@
+---
+configuration:
+  auth:
+    name: Authentication mode
+    description: "on uses local accounts, oidc uses an identity provider, off disables login."
+  origin:
+    name: Public origin
+    description: Public URL behind a reverse proxy. Required for OIDC.
+  api_key:
+    name: API key
+    description: Optional X-Api-Key secret of at least 32 characters without whitespace.
+  oidc_discovery_url:
+    name: OIDC discovery URL
+    description: Identity provider discovery URL, used when auth is oidc.
+  oidc_client_id:
+    name: OIDC client ID
+    description: Client ID registered at the identity provider.
+  oidc_client_secret:
+    name: OIDC client secret
+    description: Client secret registered at the identity provider.
+  env_vars:
+    name: Advanced environment variables
+    description: Extra upstream environment variables with uppercase names.
+network:
+  6868/tcp: Profilarr web interface

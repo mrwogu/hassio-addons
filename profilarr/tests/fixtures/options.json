@@ -1,0 +1,18 @@
+{
+  "auth": "oidc",
+  "origin": "https://profilarr.example.com",
+  "api_key": "dummy-api-key-0123456789abcdef0123",
+  "oidc_discovery_url": "https://auth.example.com/.well-known/openid-configuration",
+  "oidc_client_id": "profilarr",
+  "oidc_client_secret": "dummy-oidc-secret",
+  "env_vars": [
+    {
+      "name": "PARSER_HOST",
+      "value": "parser.example.com"
+    },
+    {
+      "name": "PROFILARR_BULLETIN_URL",
+      "value": "dummy-bulletin-url"
+    }
+  ]
+}

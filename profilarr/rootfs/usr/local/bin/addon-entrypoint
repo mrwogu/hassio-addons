@@ -1,0 +1,106 @@
+#!/bin/sh
+set -eu
+
+OPTIONS_PATH=${PROFILARR_OPTIONS_PATH:-/data/options.json}
+UPSTREAM_INIT=${PROFILARR_INIT:-/entrypoint.sh}
+
+MANAGED_ENV="PORT HOST APP_BASE_PATH AUTH ORIGIN PROFILARR_API_KEY OIDC_DISCOVERY_URL OIDC_CLIENT_ID OIDC_CLIENT_SECRET"
+PROTECTED_ENV="PROFILARR_OPTIONS_PATH PROFILARR_INIT PROFILARR_TEST_ENV_FILE PROFILARR_TEST_ARGS_FILE PUID PGID UMASK PATH HOME IFS ENV BASH_ENV LD_PRELOAD LD_LIBRARY_PATH"
+
+log() {
+    printf '%s\n' "[profilarr-addon] $*" >&2
+}
+
+fail() {
+    log "Error: $*"
+    exit 1
+}
+
+is_listed() {
+    list=$1
+    candidate=$2
+    case " $list " in
+        *" $candidate "*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+[ -r "$OPTIONS_PATH" ] || fail "Options file is not readable: $OPTIONS_PATH"
+command -v jq >/dev/null 2>&1 || fail "jq is required"
+
+if ! jq -e '
+    def control_free: (explode | map(select(. < 32 or . == 127)) | length) == 0;
+    def clean: type == "string" and control_free;
+    def http_url: test("^https?://[^[:space:]]+$");
+    type == "object"
+    and (.auth == "on" or .auth == "oidc" or .auth == "off")
+    and ((.origin // "") | clean and (length == 0 or http_url))
+    and ((.api_key // "") |
+        clean and (length == 0 or (length >= 32 and test("^[^[:space:]]+$"))))
+    and ((.oidc_discovery_url // "") | clean and (length == 0 or http_url))
+    and ((.oidc_client_id // "") | clean)
+    and ((.oidc_client_secret // "") | clean)
+    and (.auth != "oidc" or (
+        ((.origin // "") | length > 0)
+        and ((.oidc_discovery_url // "") | length > 0)
+        and ((.oidc_client_id // "") | length > 0)
+        and ((.oidc_client_secret // "") | length > 0)))
+    and ((.env_vars // []) |
+        type == "array"
+        and all(.[]; type == "object"
+            and (.name | type == "string" and test("^[A-Z][A-Z0-9_]*$"))
+            and (.value | type == "string" and control_free)))
+' "$OPTIONS_PATH" >/dev/null 2>&1; then
+    fail "Invalid options: check auth mode, URLs, API key, OIDC settings, or environment variables"
+fi
+
+auth=$(jq -r '.auth' "$OPTIONS_PATH")
+if [ "$auth" = "off" ]; then
+    log "Warning: authentication is disabled; protect Profilarr with a trusted proxy"
+fi
+
+# Upstream reads data from /config, which is the Home Assistant addon_config.
+export PORT=6868
+export HOST=0.0.0.0
+export APP_BASE_PATH=/config
+export "AUTH=$auth"
+export "ORIGIN=$(jq -r '.origin // ""' "$OPTIONS_PATH")"
+export "PROFILARR_API_KEY=$(jq -r '.api_key // ""' "$OPTIONS_PATH")"
+export "OIDC_DISCOVERY_URL=$(jq -r '.oidc_discovery_url // ""' "$OPTIONS_PATH")"
+export "OIDC_CLIENT_ID=$(jq -r '.oidc_client_id // ""' "$OPTIONS_PATH")"
+export "OIDC_CLIENT_SECRET=$(jq -r '.oidc_client_secret // ""' "$OPTIONS_PATH")"
+
+env_count=$(jq -r '(.env_vars // []) | length' "$OPTIONS_PATH")
+index=0
+while [ "$index" -lt "$env_count" ]; do
+    name=$(jq -r ".env_vars[$index].name" "$OPTIONS_PATH")
+    value=$(jq -r ".env_vars[$index].value" "$OPTIONS_PATH")
+
+    if ! printf '%s' "$name" | grep -Eq '^[A-Z][A-Z0-9_]*$'; then
+        fail "Invalid custom environment variable name: $name"
+    fi
+    if is_listed "$MANAGED_ENV" "$name"; then
+        fail "Custom environment variable overrides managed variable: $name"
+    fi
+    if is_listed "$PROTECTED_ENV" "$name"; then
+        fail "Custom environment variable overrides protected variable: $name"
+    fi
+    case "$name" in
+        # The upstream entrypoint reads any *_FILE path as root.
+        ADDON_* | DENO_* | DYLD_* | LD_* | *_FILE)
+            fail "Custom environment variable uses protected namespace: $name"
+            ;;
+    esac
+    if ! jq -en --arg value "$value" \
+        '$value | test("[\u0000-\u001F\u007F]") | not' \
+        >/dev/null 2>&1; then
+        fail "Custom environment variable contains control characters: $name"
+    fi
+
+    export "$name=$value"
+    log "Exported custom environment variable: $name"
+    index=$((index + 1))
+done
+
+log "Configuration validated; starting Profilarr"
+exec "$UPSTREAM_INIT" "$@"
