@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.7.14-2
+
+- Update Traefik Proxy to [v3.7.14](https://github.com/traefik/traefik/releases/tag/v3.7.14).
+
 ## 3.7.14-1
 
 - Update Traefik Proxy to [v3.7.14](https://github.com/traefik/traefik/releases/tag/v3.7.14).
