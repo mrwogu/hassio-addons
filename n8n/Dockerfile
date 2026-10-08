@@ -1,6 +1,6 @@
 # renovate: datasource=docker depName=ghcr.io/n8n-io/n8n versioning=semver
-ARG UPSTREAM_VERSION="2.43.1"
-ARG UPSTREAM_DIGEST="sha256:096332e76b93fb697163cb4efade7b5ae42f08c379311674f45594366e74f678"
+ARG UPSTREAM_VERSION="2.43.2"
+ARG UPSTREAM_DIGEST="sha256:7ac2b8fbc369681c0ae15d2722ecea5c416827c0d9ed5fb6b952512b8bc7614c"
 
 # renovate: datasource=docker depName=ghcr.io/n8n-io/runners versioning=semver
 ARG RUNNERS_VERSION="2.43.1"
