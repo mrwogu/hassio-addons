@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.3-1
+
+- Bring the latest agent memory improvements from Hindsight [0.10.3](https://github.com/vectorize-io/hindsight/releases/tag/v0.10.3).
+
 ## 0.10.2-1
 
 - Bring the latest agent memory improvements from Hindsight [0.10.2](https://github.com/vectorize-io/hindsight/releases/tag/v0.10.2).
