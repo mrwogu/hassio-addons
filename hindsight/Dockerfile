@@ -1,6 +1,6 @@
 # renovate: datasource=docker depName=ghcr.io/vectorize-io/hindsight versioning=semver
-ARG UPSTREAM_VERSION="0.10.3"
-ARG UPSTREAM_DIGEST="sha256:b5da1a9aece1f53a15f12821fb1470f358ed6c74dfaa0c4b1a39c3f3ae93e002"
+ARG UPSTREAM_VERSION="1.0.0"
+ARG UPSTREAM_DIGEST="sha256:a88678c038b0e4340822b02a5efc566c56d8176b5bffa731bc433fd37f978e4c"
 FROM ghcr.io/vectorize-io/hindsight:${UPSTREAM_VERSION}@${UPSTREAM_DIGEST}
 
 LABEL \
