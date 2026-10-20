@@ -42,6 +42,9 @@ configuration:
   base_url:
     name: Publiczny adres bazowy
     description: Publiczny URL dla callbacków OIDC i generowanych linków.
+  oidc_client_secret:
+    name: Sekret klienta OIDC
+    description: Sekret klienta do logowania OIDC. Puste pole, jeśli OIDC nie jest używane.
   env_vars:
     name: Zaawansowane zmienne środowiskowe
     description: Dodatkowe zmienne upstream z nazwami wielkimi literami.

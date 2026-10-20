@@ -1,6 +1,6 @@
 ---
 name: Tududi
-version: "1.9.4-1"
+version: "1.9.4-2"
 slug: tududi
 description: Self-hosted task management and life organization system
 url: https://github.com/mrwogu/hassio-addons/tree/main/tududi
@@ -33,6 +33,7 @@ options:
   enable_caldav: false
   enable_mcp: false
   base_url: ""
+  oidc_client_secret: ""
   env_vars: []
 schema:
   user_email: str?
@@ -49,6 +50,7 @@ schema:
   enable_caldav: bool
   enable_mcp: bool
   base_url: str?
+  oidc_client_secret: password?
   env_vars:
     - name: str
       value: str

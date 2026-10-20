@@ -13,14 +13,11 @@
   "enable_caldav": true,
   "enable_mcp": false,
   "base_url": "https://tududi.example.com",
+  "oidc_client_secret": "dummy-client-secret",
   "env_vars": [
     {
       "name": "OIDC_ENABLED",
       "value": "true"
-    },
-    {
-      "name": "OIDC_CLIENT_SECRET",
-      "value": "dummy-client-secret"
     }
   ]
 }
