@@ -70,7 +70,8 @@ Maximum upload size per file. Valid range is `1` to `1024` MB.
 ### `oidc_client_secret`
 
 OIDC client secret, stored as a Home Assistant password field so it is masked
-in the add-on UI and API. Leave blank when OIDC is not used. Setting
+in the add-on UI. Authorized API clients can receive this value and must treat
+returned options as sensitive. Leave blank when OIDC is not used. Setting
 `OIDC_CLIENT_SECRET` in `env_vars` is rejected; use this option instead.
 
 Telegram, OIDC settings other than the client secret, email, CalDAV
