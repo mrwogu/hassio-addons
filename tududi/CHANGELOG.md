@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.9.5-1
+
+- Bring the latest task management and life organization updates from Tududi [1.9.5](https://github.com/chrisvel/tududi/releases/tag/v1.9.5).
+
 ## 1.9.4-3
 
 - Pass trust proxy as a single hop number
