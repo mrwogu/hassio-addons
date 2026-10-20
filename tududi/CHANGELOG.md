@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.9.4-3
+
+- Pass trust proxy as a single hop number
+
 ## 1.9.4-2
 
 - Move OIDC client secret to a password option
