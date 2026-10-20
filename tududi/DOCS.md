@@ -67,8 +67,15 @@ Maximum upload size per file. Valid range is `1` to `1024` MB.
   key stored under `/config`.
 - `enable_mcp` enables the Tududi MCP endpoint.
 
-Telegram, OIDC, email, CalDAV credentials, AI providers, and other advanced
-upstream settings can be passed through `env_vars`. Names must be uppercase
+### `oidc_client_secret`
+
+OIDC client secret, stored as a Home Assistant password field so it is masked
+in the add-on UI and API. Leave blank when OIDC is not used. Setting
+`OIDC_CLIENT_SECRET` in `env_vars` is rejected; use this option instead.
+
+Telegram, OIDC settings other than the client secret, email, CalDAV
+credentials, AI providers, and other advanced upstream settings can be passed
+through `env_vars`. Names must be uppercase
 environment identifiers. Managed adapter variables and control characters are
 rejected.
 

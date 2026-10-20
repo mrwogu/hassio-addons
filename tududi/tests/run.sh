@@ -97,10 +97,8 @@ encryption_key=$(env_value "ENCRYPTION_KEY")
 assert_env "BASE_URL=https://tududi.example.com"
 assert_env "OIDC_ENABLED=true"
 assert_env "OIDC_CLIENT_SECRET=dummy-client-secret"
-grep -Fq "OIDC_CLIENT_SECRET" "$LOG_FILE" ||
-    fail "Custom environment variable name was not logged"
 if grep -Fq "dummy-client-secret" "$LOG_FILE"; then
-    fail "Custom environment variable value leaked into the log"
+    fail "OIDC client secret leaked into the log"
 fi
 [ "$(cat "$ARGS_FILE")" = "--fixture" ] || fail "Arguments were not forwarded"
 
@@ -231,6 +229,13 @@ jq '.env_vars = [{"name": "bad-name", "value": "x"}]' \
     "$OPTIONS" >"$BAD_NAME"
 if run_entrypoint "$BAD_NAME"; then
     fail "Malformed environment variable name was accepted"
+fi
+
+OIDC_OVERRIDE="${TEMP_DIR}/oidc-env.json"
+jq '.env_vars = [{"name": "OIDC_CLIENT_SECRET", "value": "override"}]' \
+    "$OPTIONS" >"$OIDC_OVERRIDE"
+if run_entrypoint "$OIDC_OVERRIDE"; then
+    fail "OIDC client secret override through env_vars was accepted"
 fi
 
 CONTROL_VALUE="${TEMP_DIR}/control-value.json"

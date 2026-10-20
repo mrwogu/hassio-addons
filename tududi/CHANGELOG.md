@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.9.4-2
+
+- Move OIDC client secret to a password option
+
 ## 1.9.4-1
 
 - Bring the latest task management and life organization updates from Tududi [1.9.4](https://github.com/chrisvel/tududi/releases/tag/v1.9.4).

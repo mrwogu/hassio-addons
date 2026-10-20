@@ -5,7 +5,7 @@ OPTIONS_PATH=${TUDUDI_OPTIONS_PATH:-/data/options.json}
 CONFIG_DIR=${TUDUDI_CONFIG_DIR:-/config}
 UPSTREAM_INIT=${TUDUDI_INIT:-/app/scripts/docker-entrypoint.sh}
 
-MANAGED_ENV="NODE_ENV HOST PORT DB_FILE TUDUDI_USER_EMAIL TUDUDI_USER_PASSWORD TUDUDI_SESSION_SECRET TUDUDI_ALLOWED_ORIGINS TUDUDI_UPLOAD_PATH TUDUDI_TRUST_PROXY COOKIE_SECURE FILE_UPLOAD_LIMIT_MB DISABLE_SCHEDULER DISABLE_TELEGRAM SWAGGER_ENABLED FF_ENABLE_BACKUPS FF_ENABLE_CALDAV CALDAV_ENABLED FF_ENABLE_MCP BASE_URL ENCRYPTION_KEY"
+MANAGED_ENV="NODE_ENV HOST PORT DB_FILE TUDUDI_USER_EMAIL TUDUDI_USER_PASSWORD TUDUDI_SESSION_SECRET TUDUDI_ALLOWED_ORIGINS TUDUDI_UPLOAD_PATH TUDUDI_TRUST_PROXY COOKIE_SECURE FILE_UPLOAD_LIMIT_MB DISABLE_SCHEDULER DISABLE_TELEGRAM SWAGGER_ENABLED FF_ENABLE_BACKUPS FF_ENABLE_CALDAV CALDAV_ENABLED FF_ENABLE_MCP BASE_URL ENCRYPTION_KEY OIDC_CLIENT_SECRET"
 PROTECTED_ENV="TUDUDI_OPTIONS_PATH TUDUDI_CONFIG_DIR TUDUDI_INIT TUDUDI_SKIP_CHOWN TUDUDI_TEST_ENV_FILE TUDUDI_TEST_ARGS_FILE TUDUDI_UPSTREAM_BACKUP_DIR PUID PGID APP_UID APP_GID PATH HOME IFS ENV BASH_ENV LD_PRELOAD LD_LIBRARY_PATH NODE_OPTIONS"
 
 log() {
@@ -88,6 +88,7 @@ if ! jq -e '
     and ((.base_url // "") |
         clean and
         (length == 0 or test("^https?://[^[:space:]]+$")))
+    and ((.oidc_client_secret // "") | clean)
     and ((.env_vars // []) |
         type == "array"
         and all(.[]; type == "object"
@@ -174,6 +175,12 @@ if [ -n "$base_url" ]; then
     export "BASE_URL=$base_url"
 else
     unset BASE_URL 2>/dev/null || true
+fi
+
+# Kept out of env_vars so Home Assistant masks it like other password fields.
+oidc_client_secret=$(jq -r '.oidc_client_secret // ""' "$OPTIONS_PATH")
+if [ -n "$oidc_client_secret" ]; then
+    export "OIDC_CLIENT_SECRET=$oidc_client_secret"
 fi
 
 env_count=$(jq -r '(.env_vars // []) | length' "$OPTIONS_PATH")
