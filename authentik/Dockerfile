@@ -1,6 +1,6 @@
 # renovate: datasource=docker depName=ghcr.io/goauthentik/server versioning=loose
-ARG UPSTREAM_VERSION="2026.8.4"
-ARG UPSTREAM_DIGEST="sha256:e7226ae116dac5aa0a5643803e735b010038f492c401e08e16b3bf1ac54c090c"
+ARG UPSTREAM_VERSION="2026.8.5"
+ARG UPSTREAM_DIGEST="sha256:602227a86455d6772e3d16b7d852713c4f864f40df5df894abd1285bb53979a5"
 FROM ghcr.io/goauthentik/server:${UPSTREAM_VERSION}@${UPSTREAM_DIGEST}
 
 LABEL \
