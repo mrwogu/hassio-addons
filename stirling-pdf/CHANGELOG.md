@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.2.1-1
+
+- Bring the latest PDF processing and document workflow fixes from Stirling-PDF [3.2.1](https://github.com/Stirling-Tools/Stirling-PDF/releases/tag/v3.2.1).
+
 ## 3.2.0-1
 
 - Bring the latest PDF processing and document workflow fixes from Stirling-PDF [3.2.0](https://github.com/Stirling-Tools/Stirling-PDF/releases/tag/v3.2.0).
