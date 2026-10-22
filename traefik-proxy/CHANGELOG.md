@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.7.16-3
+
+- Update Traefik Proxy to [v3.7.16](https://github.com/traefik/traefik/releases/tag/v3.7.16).
+
 ## 3.7.16-2
 
 - Update Traefik Proxy to [v3.7.16](https://github.com/traefik/traefik/releases/tag/v3.7.16).
