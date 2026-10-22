@@ -1,6 +1,6 @@
 # renovate: datasource=docker depName=docker.io/library/traefik versioning=docker
 ARG UPSTREAM_VERSION="v3.7.16"
-ARG UPSTREAM_DIGEST="sha256:6d3e069ee484ab1da5adfdda555a75eb9b1545ef09096a0cc7c3043101986a20"
+ARG UPSTREAM_DIGEST="sha256:22a759fb803abb5c3a7ba5d5a55a201c5fb0fc8993d5c72c47a89075e64f1953"
 FROM docker.io/library/traefik:${UPSTREAM_VERSION}@${UPSTREAM_DIGEST}
 
 LABEL \
