@@ -1,6 +1,6 @@
 # renovate: datasource=docker depName=ghcr.io/dictionarry-hub/profilarr versioning=semver
-ARG UPSTREAM_VERSION="2.2.0"
-ARG UPSTREAM_DIGEST="sha256:ddcdd0f340043c2ec0a85ca74b9a6be9be42b1c0288c75fc36a26a43f695860b"
+ARG UPSTREAM_VERSION="2.3.1"
+ARG UPSTREAM_DIGEST="sha256:352e42dec74ecfd68d13bb198fbc6d9346e3a8c55003026e1814e59319a2176d"
 FROM ghcr.io/dictionarry-hub/profilarr:${UPSTREAM_VERSION}@${UPSTREAM_DIGEST}
 
 LABEL \
