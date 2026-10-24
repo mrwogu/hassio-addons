@@ -1,0 +1,221 @@
+#!/bin/sh
+set -eu
+
+OPTIONS_PATH=${ADDON_OPTIONS_PATH:-/data/options.json}
+CONFIG_DIR=${ADDON_CONFIG_DIR:-/config}
+# ADDON_INIT is the upstream launcher; tests override it with a recorder.
+ADDON_INIT=${ADDON_INIT:-/ghostfolio/entrypoint.sh}
+# The application runs as the upstream node user; tests set it to empty.
+ADDON_USER=${ADDON_USER-node}
+
+# Structured options own these variables; custom env vars may not override them.
+MANAGED_ENV="DATABASE_URL HOST PORT REDIS_HOST REDIS_PORT REDIS_DB REDIS_PASSWORD REDIS_TLS ACCESS_TOKEN_SALT JWT_SECRET_KEY ROOT_URL LOG_LEVELS ENABLE_FEATURE_AUTH_TOKEN ENABLE_FEATURE_SECURITY_HEADERS ENABLE_FEATURE_MCP API_KEY_COINGECKO_DEMO API_KEY_COINGECKO_PRO ENABLE_FEATURE_AUTH_OIDC OIDC_ISSUER OIDC_CLIENT_ID OIDC_CLIENT_SECRET"
+PROTECTED_ENV="ADDON_OPTIONS_PATH ADDON_CONFIG_DIR ADDON_INIT ADDON_USER PATH HOME IFS ENV BASH_ENV LD_PRELOAD LD_LIBRARY_PATH NODE_OPTIONS NODE_ENV NODE_PATH"
+
+log() {
+    printf '%s\n' "[ghostfolio-addon] $*" >&2
+}
+
+fail() {
+    log "Error: $*"
+    exit 1
+}
+
+is_listed() {
+    list=$1
+    candidate=$2
+    case " $list " in
+        *" $candidate "*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+option() {
+    jq -r "$1" "$OPTIONS_PATH"
+}
+
+[ -r "$OPTIONS_PATH" ] || fail "Options file is not readable: $OPTIONS_PATH"
+command -v jq >/dev/null 2>&1 || fail "jq is required"
+
+# Validate options. The schema already constrains types, ranges, and enums;
+# here we reject empty required values, hosts that could break the connection
+# URL, and control characters so nothing unsafe reaches the environment.
+if ! jq -e '
+    def control_free: (explode | map(select(. < 32 or . == 127)) | length) == 0;
+    def nonempty_clean: type == "string" and length > 0 and control_free;
+    def optional_clean: type == "string" and control_free;
+    def host_name: type == "string" and test("^[A-Za-z0-9._:-]+$");
+    def port_number: type == "number" and floor == . and . >= 1 and . <= 65535;
+    type == "object"
+    and (.postgres_host | host_name)
+    and (.postgres_port | port_number)
+    and (.postgres_db | nonempty_clean)
+    and (.postgres_user | nonempty_clean)
+    and (.postgres_password | nonempty_clean)
+    and (.postgres_sslmode |
+        . == "disable" or . == "prefer" or . == "require")
+    and (.redis_host | host_name)
+    and (.redis_port | port_number)
+    and (.redis_db | type == "number" and floor == . and . >= 0 and . <= 15)
+    and ((.redis_password // "") | optional_clean)
+    and (.redis_tls | type == "boolean")
+    and ((.access_token_salt // "") | optional_clean)
+    and ((.jwt_secret_key // "") | optional_clean)
+    and ((.root_url // "") | type == "string"
+        and (. == "" or test("^https?://[^[:space:]]+$")))
+    and (.log_level |
+        . == "error" or . == "warn" or . == "log"
+        or . == "debug" or . == "verbose")
+    and (.enable_auth_token | type == "boolean")
+    and (.enable_security_headers | type == "boolean")
+    and (.enable_mcp | type == "boolean")
+    and ((.api_key_coingecko_demo // "") | optional_clean)
+    and ((.api_key_coingecko_pro // "") | optional_clean)
+    and (.oidc_enabled | type == "boolean")
+    and ((.oidc_issuer // "") | optional_clean)
+    and ((.oidc_client_id // "") | optional_clean)
+    and ((.oidc_client_secret // "") | optional_clean)
+    and ((.env_vars // []) |
+        type == "array"
+        and all(.[]; type == "object"
+            and (.name | type == "string")
+            and (.value | type == "string")))
+' "$OPTIONS_PATH" >/dev/null 2>&1; then
+    fail "Invalid options: check database, Redis, or secret settings"
+fi
+
+if [ "$(option '.oidc_enabled')" = "true" ]; then
+    jq -e '
+        (.oidc_issuer // "" | test("^https?://[^[:space:]]+$"))
+        and (.oidc_client_id // "" | length > 0)
+        and (.oidc_client_secret // "" | length > 0)
+    ' "$OPTIONS_PATH" >/dev/null 2>&1 ||
+        fail "OIDC needs oidc_issuer, oidc_client_id, and oidc_client_secret"
+fi
+
+umask 022
+mkdir -p "$CONFIG_DIR"
+
+# Resolve a secret: prefer the provided value, otherwise generate a stable one
+# once and persist it under /config with private permissions. The value is
+# never written to the log.
+resolve_secret() {
+    key=$1
+    value=$(option ".${key} // \"\"")
+    if [ -n "$value" ]; then
+        printf '%s' "$value"
+        return 0
+    fi
+    secret_file="${CONFIG_DIR}/${key}"
+    if [ ! -s "$secret_file" ]; then
+        (
+            umask 077
+            tmp=$(mktemp "${CONFIG_DIR}/.${key}.XXXXXX")
+            if ! openssl rand -hex 32 >"$tmp"; then
+                rm -f "$tmp"
+                exit 1
+            fi
+            chmod 0600 "$tmp"
+            mv "$tmp" "$secret_file"
+        ) || return 1
+    fi
+    tr -d '\n' <"$secret_file"
+}
+
+access_token_salt=$(resolve_secret access_token_salt) ||
+    fail "Could not generate the access token salt"
+jwt_secret_key=$(resolve_secret jwt_secret_key) ||
+    fail "Could not generate the JWT secret key"
+export ACCESS_TOKEN_SALT="$access_token_salt"
+export JWT_SECRET_KEY="$jwt_secret_key"
+
+# Build the Prisma connection URL. Credentials and the database name are
+# percent-encoded, and an IPv6 host is wrapped in brackets.
+pg_host=$(option '.postgres_host')
+case "$pg_host" in
+    *:*) pg_host="[${pg_host}]" ;;
+esac
+pg_user=$(option '.postgres_user | @uri')
+pg_password=$(option '.postgres_password | @uri')
+pg_db=$(option '.postgres_db | @uri')
+pg_port=$(option '.postgres_port')
+pg_sslmode=$(option '.postgres_sslmode')
+export "DATABASE_URL=postgresql://${pg_user}:${pg_password}@${pg_host}:${pg_port}/${pg_db}?connect_timeout=300&sslmode=${pg_sslmode}"
+
+export "REDIS_HOST=$(option '.redis_host')"
+export "REDIS_PORT=$(option '.redis_port')"
+export "REDIS_DB=$(option '.redis_db')"
+export "REDIS_PASSWORD=$(option '.redis_password // ""')"
+export "REDIS_TLS=$(option '.redis_tls')"
+
+# Fixed listener so the published port and health check stay valid.
+export HOST=0.0.0.0
+export PORT=3333
+
+root_url=$(option '.root_url // "" | rtrimstr("/")')
+[ -z "$root_url" ] || export ROOT_URL="$root_url"
+
+# Upstream takes a list of Nest log levels; the option picks the lowest level
+# and everything more severe is included.
+case "$(option '.log_level')" in
+    error) log_levels='["error"]' ;;
+    warn) log_levels='["error","warn"]' ;;
+    log) log_levels='["error","warn","log"]' ;;
+    debug) log_levels='["error","warn","log","debug"]' ;;
+    verbose) log_levels='["error","warn","log","debug","verbose"]' ;;
+esac
+export LOG_LEVELS="$log_levels"
+
+export "ENABLE_FEATURE_AUTH_TOKEN=$(option '.enable_auth_token')"
+export "ENABLE_FEATURE_SECURITY_HEADERS=$(option '.enable_security_headers')"
+export "ENABLE_FEATURE_MCP=$(option '.enable_mcp')"
+
+coingecko_demo=$(option '.api_key_coingecko_demo // ""')
+coingecko_pro=$(option '.api_key_coingecko_pro // ""')
+[ -z "$coingecko_demo" ] || export API_KEY_COINGECKO_DEMO="$coingecko_demo"
+[ -z "$coingecko_pro" ] || export API_KEY_COINGECKO_PRO="$coingecko_pro"
+
+export "ENABLE_FEATURE_AUTH_OIDC=$(option '.oidc_enabled')"
+if [ "$ENABLE_FEATURE_AUTH_OIDC" = "true" ]; then
+    export "OIDC_ISSUER=$(option '.oidc_issuer')"
+    export "OIDC_CLIENT_ID=$(option '.oidc_client_id')"
+    export "OIDC_CLIENT_SECRET=$(option '.oidc_client_secret')"
+fi
+
+# Apply advanced upstream variables. Managed and protected names are rejected,
+# names must be uppercase env-style identifiers, and values may not carry
+# control characters.
+env_count=$(option '(.env_vars // []) | length')
+index=0
+while [ "$index" -lt "$env_count" ]; do
+    name=$(option ".env_vars[$index].name")
+    value=$(option ".env_vars[$index].value")
+
+    if ! printf '%s' "$name" | grep -Eq '^[A-Z][A-Z0-9_]*$'; then
+        fail "Invalid custom environment variable name: $name"
+    fi
+    if is_listed "$MANAGED_ENV" "$name"; then
+        fail "Custom environment variable overrides managed variable: $name"
+    fi
+    if is_listed "$PROTECTED_ENV" "$name"; then
+        fail "Custom environment variable overrides protected variable: $name"
+    fi
+    if ! jq -en --arg value "$value" \
+        '$value | test("[\u0000-\u001F\u007F]") | not' \
+        >/dev/null 2>&1; then
+        fail "Custom environment variable contains control characters: $name"
+    fi
+
+    export "$name=$value"
+    log "Exported custom environment variable: $name"
+    index=$((index + 1))
+done
+
+# Supervisor keeps /data root-only, so options parsing runs as root. Drop to
+# the upstream node user only for the application. The upstream launcher
+# applies database migrations and seeds before it starts the server.
+log "Configuration validated; starting Ghostfolio"
+if [ -n "$ADDON_USER" ] && [ "$(id -u)" = "0" ]; then
+    exec gosu "$ADDON_USER" "$ADDON_INIT" "$@"
+fi
+exec "$ADDON_INIT" "$@"
