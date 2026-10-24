@@ -1,6 +1,6 @@
 ---
 name: Profilarr
-version: "2.2.0-1"
+version: "2.3.1-1"
 slug: profilarr
 description: Configuration management platform for Radarr and Sonarr
 url: https://github.com/mrwogu/hassio-addons/tree/main/profilarr
