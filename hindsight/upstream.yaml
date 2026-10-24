@@ -1,8 +1,8 @@
 ---
 image: ghcr.io/vectorize-io/hindsight
-version: 1.0.0
-digest: sha256:a88678c038b0e4340822b02a5efc566c56d8176b5bffa731bc433fd37f978e4c
-package_version: 1.0.0-1
+version: 1.1.0
+digest: sha256:50311d02b4d5d2b7c5242bd336edf8735df8374eaad496a92f49c83b37d2aa06
+package_version: 1.1.0-1
 source: https://github.com/vectorize-io/hindsight
 release_url: https://github.com/vectorize-io/hindsight/releases/tag
 release_tag_prefix: v
