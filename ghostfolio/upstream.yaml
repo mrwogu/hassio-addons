@@ -1,0 +1,10 @@
+---
+image: ghostfolio/ghostfolio
+version: 3.92.0
+digest: sha256:76415358cafb7dfc6341c463efce98fc3e5a51acbba4e6848295eb770652dc5c
+package_version: 3.92.0-1
+source: https://github.com/ghostfolio/ghostfolio
+release_url: https://github.com/ghostfolio/ghostfolio/releases/tag
+release_tag_prefix: ''
+changelog_template: Bring the latest portfolio tracking and wealth management updates
+  from Ghostfolio [{upstream_version}]({upstream_link}).

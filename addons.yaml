@@ -11,6 +11,10 @@ addons:
     image: ghcr.io/mrwogu/hassio-bonds
     dockerfile: bonds/Dockerfile
     test_script: bonds/tests/run.sh
+  ghostfolio:
+    image: ghcr.io/mrwogu/hassio-ghostfolio
+    dockerfile: ghostfolio/Dockerfile
+    test_script: ghostfolio/tests/run.sh
   gluetun:
     image: ghcr.io/mrwogu/hassio-gluetun
     dockerfile: gluetun/Dockerfile

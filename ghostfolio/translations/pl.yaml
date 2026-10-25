@@ -1,0 +1,79 @@
+---
+configuration:
+  postgres_host:
+    name: Host PostgreSQL
+    description: Nazwa hosta lub adres IP zewnętrznego serwera PostgreSQL.
+  postgres_port:
+    name: Port PostgreSQL
+    description: Port serwera PostgreSQL.
+  postgres_db:
+    name: Baza danych PostgreSQL
+    description: Nazwa bazy danych Ghostfolio.
+  postgres_user:
+    name: Użytkownik PostgreSQL
+    description: Użytkownik bazy danych, jako który łączy się Ghostfolio.
+  postgres_password:
+    name: Hasło PostgreSQL
+    description: Hasło użytkownika bazy danych.
+  postgres_sslmode:
+    name: Tryb SSL PostgreSQL
+    description: Tryb TLS połączenia z bazą danych.
+  redis_host:
+    name: Host Redis
+    description: Nazwa hosta lub adres IP zewnętrznego serwera Redis.
+  redis_port:
+    name: Port Redis
+    description: Port serwera Redis.
+  redis_db:
+    name: Baza danych Redis
+    description: Numer bazy danych Redis używanej przez Ghostfolio.
+  redis_password:
+    name: Hasło Redis
+    description: Hasło do Redis. Pozostaw puste, gdy Redis nie ma hasła.
+  redis_tls:
+    name: TLS dla Redis
+    description: Łącz się z Redis przez TLS.
+  access_token_salt:
+    name: Sól tokenów dostępu
+    description: Sól dla tokenów bezpieczeństwa. Pozostaw pustą, aby wygenerować ją automatycznie.
+  jwt_secret_key:
+    name: Klucz JWT
+    description: Klucz podpisujący sesje. Pozostaw pusty, aby wygenerować go automatycznie.
+  root_url:
+    name: Główny URL
+    description: Publiczny adres Ghostfolio, używany w linkach i callbackach OIDC.
+  log_level:
+    name: Poziom logów
+    description: Najniższy poziom zapisywany w logach.
+  enable_auth_token:
+    name: Logowanie tokenem
+    description: Pozwól logować się tokenem bezpieczeństwa.
+  enable_security_headers:
+    name: Nagłówki bezpieczeństwa
+    description: Wysyłaj nagłówki bezpieczeństwa HTTP (eksperymentalna funkcja upstream).
+  enable_mcp:
+    name: Serwer MCP
+    description: Włącz serwer Model Context Protocol pod /mcp (eksperymentalna funkcja upstream).
+  api_key_coingecko_demo:
+    name: Klucz API CoinGecko Demo
+    description: Opcjonalny klucz API CoinGecko Demo dla danych o kryptowalutach.
+  api_key_coingecko_pro:
+    name: Klucz API CoinGecko Pro
+    description: Opcjonalny klucz API CoinGecko Pro dla danych o kryptowalutach.
+  oidc_enabled:
+    name: OpenID Connect
+    description: Pozwól logować się przez dostawcę OpenID Connect (eksperymentalna funkcja upstream).
+  oidc_issuer:
+    name: Wystawca OIDC
+    description: URL wystawcy, z którego pobierana jest konfiguracja OpenID Connect.
+  oidc_client_id:
+    name: ID klienta OIDC
+    description: ID klienta zarejestrowanego u dostawcy OpenID Connect.
+  oidc_client_secret:
+    name: Sekret klienta OIDC
+    description: Sekret klienta zarejestrowanego u dostawcy OpenID Connect.
+  env_vars:
+    name: Zaawansowane zmienne środowiskowe
+    description: Dodatkowe zmienne upstream Ghostfolio. Nie można nadpisać nazw zarządzanych ani chronionych.
+network:
+  3333/tcp: Interfejs webowy Ghostfolio

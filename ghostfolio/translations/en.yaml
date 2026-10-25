@@ -1,0 +1,79 @@
+---
+configuration:
+  postgres_host:
+    name: PostgreSQL host
+    description: Hostname or IP address of the external PostgreSQL server.
+  postgres_port:
+    name: PostgreSQL port
+    description: Port of the PostgreSQL server.
+  postgres_db:
+    name: PostgreSQL database
+    description: Name of the Ghostfolio database.
+  postgres_user:
+    name: PostgreSQL user
+    description: Database user Ghostfolio connects as.
+  postgres_password:
+    name: PostgreSQL password
+    description: Password for the database user.
+  postgres_sslmode:
+    name: PostgreSQL SSL mode
+    description: TLS mode for the database connection.
+  redis_host:
+    name: Redis host
+    description: Hostname or IP address of the external Redis server.
+  redis_port:
+    name: Redis port
+    description: Port of the Redis server.
+  redis_db:
+    name: Redis database
+    description: Redis database index used by Ghostfolio.
+  redis_password:
+    name: Redis password
+    description: Password for Redis. Leave blank when Redis has no password.
+  redis_tls:
+    name: Redis TLS
+    description: Connect to Redis over TLS.
+  access_token_salt:
+    name: Access token salt
+    description: Salt for security tokens. Leave blank to generate and persist one automatically.
+  jwt_secret_key:
+    name: JWT secret key
+    description: Signing key for sessions. Leave blank to generate and persist one automatically.
+  root_url:
+    name: Root URL
+    description: Public URL of Ghostfolio, used for links and OIDC callbacks.
+  log_level:
+    name: Log level
+    description: Lowest level written to the log.
+  enable_auth_token:
+    name: Security token login
+    description: Allow sign in with a security token.
+  enable_security_headers:
+    name: Security headers
+    description: Send HTTP security headers (experimental upstream feature).
+  enable_mcp:
+    name: MCP server
+    description: Enable the Model Context Protocol server at /mcp (experimental upstream feature).
+  api_key_coingecko_demo:
+    name: CoinGecko Demo API key
+    description: Optional CoinGecko Demo API key for cryptocurrency data.
+  api_key_coingecko_pro:
+    name: CoinGecko Pro API key
+    description: Optional CoinGecko Pro API key for cryptocurrency data.
+  oidc_enabled:
+    name: OpenID Connect
+    description: Allow sign in with an OpenID Connect provider (experimental upstream feature).
+  oidc_issuer:
+    name: OIDC issuer
+    description: Issuer URL used to discover the OpenID Connect configuration.
+  oidc_client_id:
+    name: OIDC client ID
+    description: Client ID registered at the OpenID Connect provider.
+  oidc_client_secret:
+    name: OIDC client secret
+    description: Client secret registered at the OpenID Connect provider.
+  env_vars:
+    name: Advanced environment variables
+    description: Extra upstream Ghostfolio variables. Managed and protected names cannot be overridden.
+network:
+  3333/tcp: Ghostfolio web interface
