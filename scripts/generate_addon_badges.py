@@ -33,7 +33,6 @@ BRAND_COLORS = {
     "bonds": "#7C3AED",
     "ghostfolio": "#149C99",
     "gluetun": "#0E7490",
-    "hindsight": "#4F46E5",
     "n8n": "#EA4B71",
     "profilarr": "#5C7C94",
     "stirling-pdf": "#B91C1C",

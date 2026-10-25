@@ -19,10 +19,6 @@ addons:
     image: ghcr.io/mrwogu/hassio-gluetun
     dockerfile: gluetun/Dockerfile
     test_script: gluetun/tests/run.sh
-  hindsight:
-    image: ghcr.io/mrwogu/hassio-hindsight
-    dockerfile: hindsight/Dockerfile
-    test_script: hindsight/tests/run.sh
   n8n:
     image: ghcr.io/mrwogu/hassio-n8n
     dockerfile: n8n/Dockerfile
