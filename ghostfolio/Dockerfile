@@ -1,6 +1,6 @@
 # renovate: datasource=docker depName=ghostfolio/ghostfolio versioning=semver
-ARG UPSTREAM_VERSION="3.88.0"
-ARG UPSTREAM_DIGEST="sha256:256c524a6116d3b7879938b5d60884f1016c4dc04abf869532f71c5aade981db"
+ARG UPSTREAM_VERSION="3.92.0"
+ARG UPSTREAM_DIGEST="sha256:76415358cafb7dfc6341c463efce98fc3e5a51acbba4e6848295eb770652dc5c"
 FROM ghostfolio/ghostfolio:${UPSTREAM_VERSION}@${UPSTREAM_DIGEST}
 
 LABEL \

@@ -1,6 +1,6 @@
 ---
 name: Ghostfolio
-version: "3.88.0-1"
+version: "3.92.0-1"
 slug: ghostfolio
 description: Open source wealth management software for tracking stocks, ETFs, and cryptocurrencies
 url: https://github.com/mrwogu/hassio-addons/tree/main/ghostfolio

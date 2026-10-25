@@ -1,8 +1,8 @@
 # Changelog
 
-## 3.88.0-1
+## 3.92.0-1
 
-- Package Ghostfolio [3.88.0](https://github.com/ghostfolio/ghostfolio/releases/tag/3.88.0).
+- Package Ghostfolio [3.92.0](https://github.com/ghostfolio/ghostfolio/releases/tag/3.92.0).
 - Connect to an external PostgreSQL and Redis provided through add-on options.
 - Generate and persist the access token salt and JWT secret key under
   `/config` when none is given.
