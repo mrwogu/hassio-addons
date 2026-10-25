@@ -53,27 +53,17 @@ Home Assistant add-ons packaged from upstream projects with automated updates, m
       <p><sub><code>amd64</code> <code>aarch64</code> · Port <code>3002</code><br><a href="https://github.com/chrisvel/tududi">Upstream</a> · MIT</sub></p>
     </td>
     <td align="center" valign="top" width="33%">
-      <a href="hindsight/"><img src="assets/badges/hindsight.svg" alt="Hindsight" width="220"></a>
-      <p>Agent memory system with an OpenAI-compatible REST API and a web control plane.</p>
-      <p><sub><code>amd64</code> <code>aarch64</code> · Ports <code>8888</code> and <code>9999</code><br><a href="https://github.com/vectorize-io/hindsight">Upstream</a> · MIT</sub></p>
-      <p><sub>Embedded database by default. External PostgreSQL with pgvector optional.</sub></p>
-    </td>
-    <td align="center" valign="top" width="33%">
       <a href="profilarr/"><img src="assets/badges/profilarr.svg" alt="Profilarr" width="220"></a>
       <p>Configuration management for Radarr and Sonarr quality profiles, custom formats, and media settings.</p>
       <p><sub><code>amd64</code> <code>aarch64</code> · Port <code>6868</code><br><a href="https://github.com/Dictionarry-Hub/profilarr">Upstream</a> · AGPL-3.0</sub></p>
       <p><sub>Optional parser service is not bundled.</sub></p>
     </td>
-  </tr>
-  <tr>
     <td align="center" valign="top" width="33%">
       <a href="ghostfolio/"><img src="assets/badges/ghostfolio.svg" alt="Ghostfolio" width="220"></a>
       <p>Open source wealth management software for tracking stocks, ETFs, and cryptocurrencies.</p>
       <p><sub><code>amd64</code> <code>aarch64</code> · Port <code>3333</code><br><a href="https://github.com/ghostfolio/ghostfolio">Upstream</a> · AGPL-3.0</sub></p>
       <p><sub>Requires external PostgreSQL and Redis.</sub></p>
     </td>
-    <td width="33%"></td>
-    <td width="33%"></td>
   </tr>
 </table>
 

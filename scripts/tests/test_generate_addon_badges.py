@@ -60,7 +60,6 @@ class BadgeGeneratorTest(unittest.TestCase):
             "bonds",
             "ghostfolio",
             "gluetun",
-            "hindsight",
             "n8n",
             "profilarr",
             "stirling-pdf",

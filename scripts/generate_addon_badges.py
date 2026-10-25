@@ -33,7 +33,6 @@ BRAND_COLORS = {
     "bonds": "#7C3AED",
     "ghostfolio": "#149C99",
     "gluetun": "#0E7490",
-    "hindsight": "#4F46E5",
     "n8n": "#EA4B71",
     "profilarr": "#5C7C94",
     "stirling-pdf": "#B91C1C",
@@ -43,9 +42,7 @@ BRAND_COLORS = {
 
 # White chip behind the logo by default; slugs whose logo is white need a
 # dark chip to stay visible.
-CHIP_COLORS = {
-    "hindsight": "#1E1B4B",
-}
+CHIP_COLORS: dict[str, str] = {}
 
 DEFAULT_CHIP_COLOR = "#ffffff"
 
