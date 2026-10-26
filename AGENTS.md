@@ -143,7 +143,7 @@ Do not duplicate the slug in Makefiles or workflow loops.
 
 ## Autonomous release process
 
-Renovate checks upstream image tags and digests every six hours. Custom Docker
+Renovate checks upstream image tags and digests once a week, on Monday. Custom Docker
 manager updates version and digest. Renovate PRs auto-merge after required
 checks, including major updates by design because this repository distributes
 upstream applications rather than developing them.
