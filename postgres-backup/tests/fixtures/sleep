@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+
+# Returns at once so the entrypoint finishes and the restore wait is instant.
+printf '%s\n' "$*" >>"$PG_BACKUP_TEST_DIR/sleep.args"

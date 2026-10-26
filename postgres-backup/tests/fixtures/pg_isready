@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+
+printf '%s\n' "$*" >>"$PG_BACKUP_TEST_DIR/pg_isready.args"
+exit "${PG_BACKUP_TEST_READY:-0}"

@@ -1,0 +1,88 @@
+#!/bin/sh
+set -eu
+
+# shellcheck source-path=SCRIPTDIR
+# shellcheck source=../lib/postgres-backup/common.sh
+. "${PG_BACKUP_LIB:-/usr/local/lib/postgres-backup/common.sh}"
+
+# The add-on has no service of its own. It stays up so Supervisor can run
+# pg-backup inside it right before a backup, and on start it can load a dump
+# back into Postgres when the restore option is set.
+
+restore_dump() {
+    if [ "$restore" = latest ]; then
+        file=
+        # Glob results are sorted and the names carry the timestamp, so the
+        # last match is the newest dump.
+        for candidate in "$DUMP_DIR"/pg_dumpall-*.sql.gz; do
+            if [ -f "$candidate" ]; then
+                file=$candidate
+            fi
+        done
+        [ -n "$file" ] || fail "restore is latest but there is no dump in $DUMP_DIR"
+    else
+        file="${DUMP_DIR}/${restore}"
+        [ -f "$file" ] || fail "Dump to restore not found: $restore"
+    fi
+    name=${file##*/}
+
+    # A restore drops and recreates every database. The marker stops a
+    # forgotten restore option from doing it again on every restart and
+    # wiping data written after the first restore.
+    marker="${file}.restored"
+    if [ -e "$marker" ]; then
+        log "Dump $name already restored, skipping; clear the restore option"
+        return 0
+    fi
+
+    # Check the whole file before anything in the database is dropped.
+    gunzip -t "$file" 2>/dev/null || fail "Dump $name is not a valid gzip file"
+
+    # After a reboot the Postgres add-on can still be starting.
+    waited=0
+    until pg_isready -q -h "$host" -p "$port" -U "$username" -t 5; do
+        [ "$waited" -lt 300 ] ||
+            fail "Postgres at ${host}:${port} is not ready after ${waited}s; restore not run"
+        sleep 5
+        waited=$((waited + 5))
+    done
+
+    log "Restoring $name ($(($(wc -c <"$file"))) bytes compressed) into ${host}:${port}"
+    # No ON_ERROR_STOP: a --clean dump loaded into a server that already has
+    # the bootstrap role always prints a few expected errors.
+    errors=$(mktemp)
+    status=0
+    gunzip -c "$file" |
+        psql -X -q -w -h "$host" -p "$port" -U "$username" -d postgres \
+            >/dev/null 2>"$errors" || status=$?
+    sed 's/^/[psql] /' "$errors" >&2
+    error_count=$(grep -c 'ERROR:' "$errors" || true)
+    rm -f "$errors"
+    [ "$status" -eq 0 ] ||
+        fail "psql exited with status $status after $error_count errors; restore not finished"
+
+    date -u '+%Y-%m-%dT%H:%M:%SZ' >"$marker"
+    log "Restore of $name finished with $error_count psql errors (role \"postgres\" already exists and similar are expected)"
+    log "IMPORTANT: set the restore option back to empty now; backups are refused until then"
+}
+
+load_options
+mkdir -p "$DUMP_DIR"
+
+if pg_isready -q -h "$host" -p "$port" -U "$username" -t 5; then
+    log "Postgres at ${host}:${port} is accepting connections"
+else
+    # Not fatal: the Postgres add-on may start later or be restarting.
+    log "Warning: Postgres at ${host}:${port} is not ready; dumps fail until it is"
+fi
+
+if [ -n "$restore" ]; then
+    restore_dump
+fi
+
+log "Waiting for Home Assistant backups; dumps go to $DUMP_DIR"
+# Without init this shell is PID 1, and PID 1 ignores SIGTERM unless it has a
+# handler. sleep has none, so the shell stays in front of it with a trap.
+trap 'exit 0' TERM INT
+sleep infinity &
+wait "$!"

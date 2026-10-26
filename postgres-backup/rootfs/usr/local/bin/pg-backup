@@ -1,0 +1,49 @@
+#!/bin/sh
+set -eu
+
+# shellcheck source-path=SCRIPTDIR
+# shellcheck source=../lib/postgres-backup/common.sh
+. "${PG_BACKUP_LIB:-/usr/local/lib/postgres-backup/common.sh}"
+
+# Supervisor runs this with docker exec right before it archives /data and
+# /config (backup_pre). A non-zero exit fails this add-on's part of the
+# backup, so a broken dump is reported instead of stored as a good one.
+
+# Supervisor logs the hook output only at debug level. Write to the add-on
+# log instead, so the reason for a failed dump is visible there.
+LOG_TARGET=${PG_BACKUP_LOG:-/proc/1/fd/2}
+if [ -w "$LOG_TARGET" ]; then
+    exec 2>>"$LOG_TARGET"
+fi
+
+load_options
+
+# A dump taken now would be the newest file, so the next restart with
+# restore=latest would load it again and drop everything written since.
+[ -z "$restore" ] ||
+    fail "The restore option is still set; clear it so backups can run again"
+
+mkdir -p "$DUMP_DIR"
+name="pg_dumpall-$(date +%Y%m%d-%H%M%S).sql.gz"
+temporary="${DUMP_DIR}/.${name}.partial"
+dump_ok="${temporary}.ok"
+trap 'rm -f "$temporary" "$dump_ok"' EXIT
+
+log "Dumping ${host}:${port} to $name"
+# POSIX sh has no pipefail, so the pg_dumpall result comes back as a file.
+{
+    if pg_dumpall --clean --if-exists -w -h "$host" -p "$port" -U "$username"; then
+        : >"$dump_ok"
+    fi
+} | gzip -c >"$temporary" || fail "Could not compress the dump"
+[ -e "$dump_ok" ] || fail "pg_dumpall failed; no dump written"
+mv "$temporary" "${DUMP_DIR}/${name}"
+log "Wrote $name ($(($(wc -c <"${DUMP_DIR}/${name}"))) bytes)"
+
+# Names sort by time, so the glob lists the oldest dump first.
+set -- "$DUMP_DIR"/pg_dumpall-*.sql.gz
+while [ "$#" -gt "$keep" ]; do
+    rm -f -- "$1" "$1.restored"
+    log "Removed old dump ${1##*/}"
+    shift
+done

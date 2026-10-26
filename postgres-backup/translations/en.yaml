@@ -1,0 +1,20 @@
+---
+configuration:
+  host:
+    name: Postgres host
+    description: Hostname of the Postgres server. The default is the Postgres 16 add-on on the internal network.
+  port:
+    name: Postgres port
+    description: TCP port of the Postgres server.
+  username:
+    name: Username
+    description: Superuser that can read every database and role, usually postgres.
+  password:
+    name: Password
+    description: Password of that user, the same as in the Postgres 16 add-on options.
+  keep:
+    name: Dumps to keep
+    description: How many dump files stay in the dumps folder. Older ones are deleted after each backup.
+  restore:
+    name: Restore dump
+    description: latest or a file name from the dumps folder loads that dump once on start. Clear it after the restore.

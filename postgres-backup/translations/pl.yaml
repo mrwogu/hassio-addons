@@ -1,0 +1,20 @@
+---
+configuration:
+  host:
+    name: Host Postgres
+    description: Nazwa hosta serwera Postgres. Domyślnie dodatek Postgres 16 w sieci wewnętrznej.
+  port:
+    name: Port Postgres
+    description: Port TCP serwera Postgres.
+  username:
+    name: Użytkownik
+    description: Superużytkownik, który czyta wszystkie bazy i role, zwykle postgres.
+  password:
+    name: Hasło
+    description: Hasło tego użytkownika, takie samo jak w opcjach dodatku Postgres 16.
+  keep:
+    name: Liczba zrzutów
+    description: Ile plików zrzutu zostaje w folderze dumps. Starsze są usuwane po każdej kopii.
+  restore:
+    name: Przywróć zrzut
+    description: latest albo nazwa pliku z folderu dumps wczytuje ten zrzut raz przy starcie. Wyczyść po przywróceniu.

@@ -61,6 +61,7 @@ class BadgeGeneratorTest(unittest.TestCase):
             "ghostfolio",
             "gluetun",
             "n8n",
+            "postgres-backup",
             "profilarr",
             "stirling-pdf",
             "traefik-proxy",

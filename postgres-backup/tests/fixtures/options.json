@@ -1,0 +1,8 @@
+{
+  "host": "db.example.test",
+  "port": 5433,
+  "username": "backup-user",
+  "password": "dummy-postgres-password",
+  "keep": 3,
+  "restore": ""
+}

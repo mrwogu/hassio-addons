@@ -1,0 +1,10 @@
+---
+image: docker.io/library/alpine
+version: 3.24.3
+digest: sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a
+package_version: 3.24.3-1
+source: https://gitlab.alpinelinux.org/alpine/aports
+release_url: https://gitlab.alpinelinux.org/alpine/aports/-/tags
+release_tag_prefix: v
+changelog_template: Rebuild on Alpine Linux [{upstream_version}]({upstream_link}) with
+  its PostgreSQL 16 client tools.
