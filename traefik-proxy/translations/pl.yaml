@@ -6,6 +6,9 @@ configuration:
   access_log_format:
     name: Format access logu
     description: JSON Lines do analizy albo Common Log Format dla prostych filtrów.
+  access_log_headers:
+    name: Dodatkowe nagłówki w access logu
+    description: Nagłówki żądania zapisywane w access logu JSON, np. X-Authentik-Username. Bez nagłówków z danymi logowania.
   trusted_proxy_ips:
     name: Zaufane zakresy proxy
     description: Tylko zakresy CIDR lokalnego cloudflared albo zaufanego proxy.

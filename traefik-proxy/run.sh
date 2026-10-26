@@ -70,6 +70,10 @@ validate_options() {
             type == "string" and IN("error", "warn", "info", "debug"))
         and ((.access_log_format // "json") |
             type == "string" and IN("json", "common"))
+        and ((.access_log_headers // []) |
+            type == "array"
+            and all(.[]; type == "string"
+                and test("\\A[A-Za-z0-9-]{1,128}\\z")))
         and ((.trusted_proxy_ips // []) |
             type == "array"
             and all(.[]; type == "string"
@@ -165,6 +169,7 @@ PY
 prepare_runtime_options() {
     LOG_LEVEL=$(read_option '.log_level // "info"')
     ACCESS_LOG_FORMAT=$(read_option '.access_log_format // "json"')
+    ACCESS_LOG_HEADERS=$(jq -r '(.access_log_headers // []) | join(",")' "$OPTIONS_PATH")
     TRUSTED_PROXY_IPS=$(jq -r '(.trusted_proxy_ips // []) | join(",")' "$OPTIONS_PATH")
 }
 
@@ -182,6 +187,7 @@ render_static_config() {
         --access-log-path "$ACCESS_LOG" \
         --log-level "$LOG_LEVEL" \
         --access-log-format "$ACCESS_LOG_FORMAT" \
+        --access-log-headers "$ACCESS_LOG_HEADERS" \
         --trusted-proxy-ips "$TRUSTED_PROXY_IPS" \
         --acme-enabled "$ACME_ENABLED" \
         --acme-email "$ACME_EMAIL" \

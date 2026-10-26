@@ -94,6 +94,7 @@ The access log keeps:
 - `request_X-Real-Ip`
 
 Header logging is explicitly allowlisted. All other headers remain dropped.
+Add more names with `access_log_headers`, see below.
 Traefik may normalize or replace `X-Forwarded-For` while processing an
 untrusted request. Verify its final value only after the origin-side proxy
 source has been added to `trusted_proxy_ips`.
@@ -125,6 +126,28 @@ A local HA firewall cannot block a visitor by public IP after that visitor has
 entered through Cloudflare Tunnel. Apply visitor controls at Cloudflare WAF,
 Cloudflare Rate Limiting, a Cloudflare API action, or a Cloudflare-aware
 CrowdSec bouncer.
+
+## Extra access log headers
+
+`access_log_headers` adds request header names to the access log allowlist.
+The three default headers stay. Use it to log who signed in through a forward
+auth service, for example Authentik:
+
+```yaml
+access_log_headers:
+  - X-Authentik-Username
+  - X-Authentik-Email
+```
+
+List the same names in the middleware `authResponseHeaders`, see the
+`authentik` middleware in `docs/examples/middlewares.yml`. Traefik copies them
+into the request before the access log line is written, so the log gets
+`request_X-Authentik-Username` and `request_X-Authentik-Email`. Names may use
+only letters, digits, and `-`, anything else is rejected at start. Extra
+headers show up only in the JSON format.
+
+Never list `Cookie`, `Authorization`, `X-Api-Key`, or other credential headers.
+They would land in the log in clear text.
 
 ## Fail2ban
 

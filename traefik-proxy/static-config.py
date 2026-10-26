@@ -23,6 +23,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--access-log-path", required=True)
     parser.add_argument("--log-level", required=True)
     parser.add_argument("--access-log-format", required=True)
+    parser.add_argument("--access-log-headers", default="")
     parser.add_argument("--trusted-proxy-ips", default="")
     parser.add_argument("--acme-enabled", required=True)
     parser.add_argument("--acme-email", default="")
@@ -71,6 +72,16 @@ def render(args: argparse.Namespace) -> None:
     access_log = mapping(root.get("accessLog"), "accessLog")
     access_log["filePath"] = args.access_log_path
     access_log["format"] = args.access_log_format
+    extra_headers = [item for item in args.access_log_headers.split(",") if item]
+    if extra_headers:
+        fields = mapping(access_log.setdefault("fields", {}), "accessLog.fields")
+        headers = mapping(fields.setdefault("headers", {}), "accessLog.fields.headers")
+        names = mapping(
+            headers.setdefault("names", {}),
+            "accessLog.fields.headers.names",
+        )
+        for header in extra_headers:
+            names[header] = "keep"
 
     if args.acme_enabled == "true":
         root["certificatesResolvers"] = {

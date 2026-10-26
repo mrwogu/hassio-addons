@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.7.16-5
+
+- Add access_log_headers option to keep extra request headers, like forward-auth identity, in the access log.
+
 ## 3.7.16-4
 
 - Update Traefik Proxy to [v3.7.16](https://github.com/traefik/traefik/releases/tag/v3.7.16).
