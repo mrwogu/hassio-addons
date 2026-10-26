@@ -65,6 +65,14 @@ Home Assistant add-ons packaged from upstream projects with automated updates, m
       <p><sub>Requires external PostgreSQL and Redis.</sub></p>
     </td>
   </tr>
+  <tr>
+    <td align="center" valign="top" width="33%">
+      <a href="postgres-backup/"><img src="assets/badges/postgres-backup.svg" alt="Postgres Backup" width="220"></a>
+      <p>Hot SQL dumps of the Postgres 16 add-on inside Home Assistant backups, without stopping the database.</p>
+      <p><sub><code>amd64</code> <code>aarch64</code><br><a href="https://www.postgresql.org/">Upstream</a> · PostgreSQL License</sub></p>
+      <p><sub>Runs <code>pg_dumpall</code> from the backup hook. Restore with the <code>restore</code> option.</sub></p>
+    </td>
+  </tr>
 </table>
 
 ## Installation

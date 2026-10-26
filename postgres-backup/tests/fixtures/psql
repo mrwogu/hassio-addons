@@ -1,0 +1,16 @@
+#!/bin/sh
+set -eu
+
+printf '%s\n' "$*" >"$PG_BACKUP_TEST_DIR/psql.args"
+printf '%s\n' "${PGPASSWORD:-}" >"$PG_BACKUP_TEST_DIR/psql.password"
+cat >"$PG_BACKUP_TEST_DIR/psql.stdin"
+wc -c <"$PG_BACKUP_TEST_DIR/psql.stdin" | tr -d ' ' >"$PG_BACKUP_TEST_DIR/psql.bytes"
+errors=${PG_BACKUP_TEST_PSQL_ERRORS:-0}
+while [ "$errors" -gt 0 ]; do
+    printf '%s\n' "psql:<stdin>:${errors}: ERROR:  role \"postgres\" already exists" >&2
+    errors=$((errors - 1))
+done
+if [ "${PG_BACKUP_TEST_PSQL_FAIL:-}" = 1 ]; then
+    printf '%s\n' 'psql: error: connection to server was lost' >&2
+    exit 2
+fi

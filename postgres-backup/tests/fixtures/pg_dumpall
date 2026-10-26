@@ -1,0 +1,11 @@
+#!/bin/sh
+set -eu
+
+printf '%s\n' "$*" >"$PG_BACKUP_TEST_DIR/pg_dumpall.args"
+printf '%s\n' "${PGPASSWORD:-}" >"$PG_BACKUP_TEST_DIR/pg_dumpall.password"
+printf '%s\n' '-- fake pg_dumpall output' 'CREATE ROLE fixture;'
+if [ "${PG_BACKUP_TEST_DUMP_FAIL:-}" = 1 ]; then
+    printf '%s\n' 'pg_dumpall: error: query failed' >&2
+    exit 1
+fi
+printf '%s\n' '-- PostgreSQL database cluster dump complete'

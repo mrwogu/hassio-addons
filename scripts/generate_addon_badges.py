@@ -34,6 +34,7 @@ BRAND_COLORS = {
     "ghostfolio": "#149C99",
     "gluetun": "#0E7490",
     "n8n": "#EA4B71",
+    "postgres-backup": "#336791",
     "profilarr": "#5C7C94",
     "stirling-pdf": "#B91C1C",
     "traefik-proxy": "#24A1C1",

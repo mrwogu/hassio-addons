@@ -1,0 +1,33 @@
+---
+name: Postgres Backup
+version: "3.24.3-1"
+slug: postgres-backup
+description: Hot SQL dumps of the Postgres 16 add-on inside Home Assistant backups
+url: https://github.com/mrwogu/hassio-addons/tree/main/postgres-backup
+image: ghcr.io/mrwogu/hassio-postgres-backup
+arch:
+  - aarch64
+  - amd64
+init: false
+startup: services
+# Backups are hot by default. Supervisor runs the dump inside the running
+# container right before it archives /data and /config, so Postgres itself
+# never has to stop.
+backup_pre: /usr/local/bin/pg-backup
+map:
+  - type: app_config
+    read_only: false
+options:
+  host: 3b88f413-postgres-16
+  port: 5432
+  username: postgres
+  password: ""
+  keep: 3
+  restore: ""
+schema:
+  host: str
+  port: port
+  username: str
+  password: password
+  keep: int(1,)
+  restore: str?
