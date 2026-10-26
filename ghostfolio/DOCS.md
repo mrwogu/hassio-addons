@@ -144,7 +144,7 @@ directory.
 
 Ghostfolio is repackaged from the immutable upstream image. Some CVEs in its
 operating system or Node.js layers can only be resolved when the Ghostfolio
-project publishes a rebuilt image. Renovate checks upstream every six hours
+project publishes a rebuilt image. Renovate checks upstream once a week
 and opens an automatic update once a release is available, so the fastest way
 to pick up fixes is to keep the add-on updated.
 

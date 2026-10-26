@@ -97,7 +97,7 @@ templates into `/config/templates` to have authentik pick them up.
 authentik is repackaged from the immutable upstream image. That image bundles a
 full operating system, Go binaries, and a Python environment, so some HIGH
 severity CVEs in those layers can only be resolved when the authentik project
-publishes a rebuilt image. Renovate checks upstream every six hours and opens an
+publishes a rebuilt image. Renovate checks upstream once a week and opens an
 automatic update once a release is available, so the fastest way to pick up
 fixes is to keep the add-on updated. Findings without an upstream fix are
 tracked; those with an available fix are recorded as time-boxed exceptions until

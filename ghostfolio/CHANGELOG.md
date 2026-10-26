@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.93.0-2
+
+- Update docs: Renovate checks upstream once a week.
+
 ## 3.93.0-1
 
 - Bring the latest portfolio tracking and wealth management updates from Ghostfolio [3.93.0](https://github.com/ghostfolio/ghostfolio/releases/tag/3.93.0).
