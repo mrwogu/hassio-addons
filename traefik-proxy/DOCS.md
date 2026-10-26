@@ -142,9 +142,12 @@ access_log_headers:
 List the same names in the middleware `authResponseHeaders`, see the
 `authentik` middleware in `docs/examples/middlewares.yml`. Traefik copies them
 into the request before the access log line is written, so the log gets
-`request_X-Authentik-Username` and `request_X-Authentik-Email`. Names may use
-only letters, digits, and `-`, anything else is rejected at start. Extra
-headers show up only in the JSON format.
+`request_X-Authentik-Username` and `request_X-Authentik-Email`. This is a real
+identity only on routes that use the middleware and only for requests it
+accepted. On other routes, and on rejected requests, the field holds whatever
+the client sent, so do not treat it as authenticated there. Names may use only
+letters, digits, and `-`, anything else is rejected at start. Extra headers
+show up only in the JSON format.
 
 Never list `Cookie`, `Authorization`, `X-Api-Key`, or other credential headers.
 They would land in the log in clear text.

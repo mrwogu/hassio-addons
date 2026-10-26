@@ -169,8 +169,10 @@ access_log_headers:
 
 Headers set by a `forwardAuth` middleware through `authResponseHeaders` are
 logged too, so the signed-in user shows up as `request_X-Authentik-Username`.
-Names may use only letters, digits, and `-`. They show up only in the JSON
-format.
+Trust that value only on routes that use the middleware and only for accepted
+requests. On other routes, and on requests the auth service rejected, the log
+keeps whatever the client sent in that header. Names may use only letters,
+digits, and `-`. They show up only in the JSON format.
 
 Never list `Cookie`, `Authorization`, `X-Api-Key`, or other credential headers.
 They would land in the log in clear text.
