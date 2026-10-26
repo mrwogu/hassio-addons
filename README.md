@@ -77,7 +77,7 @@ Home Assistant add-ons packaged from upstream projects with automated updates, m
 
 ## Updates
 
-Renovate checks upstream releases and image digests every six hours. Updates
+Renovate checks upstream releases and image digests every Monday morning. Updates
 become eligible after three days, receive a pull request, pass adapter tests
 and changed add-on builds on `amd64` and `aarch64`, and merge without review.
 Successful merges publish immutable GHCR images and per-add-on GitHub Releases.

@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026.8.5-2
+
+- Update docs: Renovate checks upstream once a week.
+
 ## 2026.8.5-1
 
 - Refresh authentik's identity, SSO, and directory integration with [2026.8.5](https://github.com/goauthentik/authentik/releases/tag/version/2026.8.5).
