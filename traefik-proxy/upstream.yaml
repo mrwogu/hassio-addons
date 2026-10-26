@@ -1,8 +1,8 @@
 ---
 image: docker.io/library/traefik
 version: v3.7.16
-digest: sha256:c8a121e4bb1347e8fd52657fab12f2cb70b68f8a018895e2068f92c9e519b9c2
-package_version: 3.7.16-3
+digest: sha256:1336e85aaed293bd63d005086e0dd013b04078b26aaeb1c18b26a2f928af7e65
+package_version: 3.7.16-4
 source: https://github.com/traefik/traefik
 release_url: https://github.com/traefik/traefik/releases/tag
 changelog_template: Update Traefik Proxy to [{upstream_version}]({upstream_link}).
