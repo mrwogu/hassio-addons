@@ -26,7 +26,11 @@ DEFAULT_HEADERS = {
 }
 
 
-def render_header_fields(access_log_headers: str) -> dict:
+def render_config(
+    access_log_headers: str = "",
+    read_timeout: str = "60s",
+    acme_enabled: str = "false",
+) -> dict:
     with tempfile.TemporaryDirectory() as temporary:
         output = Path(temporary) / "static.yml"
         MODULE.render(
@@ -41,14 +45,18 @@ def render_header_fields(access_log_headers: str) -> dict:
                 log_level="info",
                 access_log_format="json",
                 access_log_headers=access_log_headers,
+                read_timeout=read_timeout,
                 trusted_proxy_ips="",
-                acme_enabled="false",
-                acme_email="",
+                acme_enabled=acme_enabled,
+                acme_email="admin@example.invalid",
                 acme_storage="/config/traefik/acme.json",
             )
         )
-        config = yaml.safe_load(output.read_text(encoding="utf-8"))
-    return config["accessLog"]["fields"]["headers"]
+        return yaml.safe_load(output.read_text(encoding="utf-8"))
+
+
+def render_header_fields(access_log_headers: str) -> dict:
+    return render_config(access_log_headers)["accessLog"]["fields"]["headers"]
 
 
 class StaticConfigTest(unittest.TestCase):
@@ -70,6 +78,21 @@ class StaticConfigTest(unittest.TestCase):
 
         self.assertEqual("drop", headers["defaultMode"])
         self.assertEqual(DEFAULT_HEADERS, headers["names"])
+
+    def test_read_timeout_is_set_on_public_entrypoints_only(self) -> None:
+        entrypoints = render_config(read_timeout="0s")["entryPoints"]
+
+        for name in ("web", "websecure"):
+            timeouts = entrypoints[name]["transport"]["respondingTimeouts"]
+            self.assertEqual({"readTimeout": "0s"}, timeouts)
+        self.assertNotIn("transport", entrypoints["health"])
+
+    def test_acme_resolver_uses_ec256_keys(self) -> None:
+        acme = render_config(acme_enabled="true")["certificatesResolvers"][
+            "letsencrypt"
+        ]["acme"]
+
+        self.assertEqual("EC256", acme["keyType"])
 
 
 if __name__ == "__main__":

@@ -152,6 +152,22 @@ show up only in the JSON format.
 Never list `Cookie`, `Authorization`, `X-Api-Key`, or other credential headers.
 They would land in the log in clear text.
 
+## Request read timeout
+
+Traefik gives a client `60s` to send a whole request, body included. A big
+upload over a slow link, for example a long video sent to Immich, is cut after
+that. `read_timeout` sets the limit on both `web` and `websecure`:
+
+```yaml
+read_timeout: 10m
+```
+
+Use a Go duration with a unit (`90s`, `10m`, `1h`). `0s` removes the limit, so
+a client can keep a connection open as long as it likes. Pick the smallest value
+that fits your largest upload. The default `60s` is the Traefik default.
+Response writes are not limited by Traefik (`writeTimeout` is `0s`), so video
+streaming is not affected.
+
 ## Fail2ban
 
 Fail2ban is not installed in this App. The App has no host firewall access and
@@ -198,6 +214,10 @@ the file with mode `0600`. The adapter copies its value atomically to an
 internal runtime file, passes its path to Traefik through
 `CF_DNS_API_TOKEN_FILE`, and never logs its value. Paths are limited to
 `/config` and `/share/traefik`.
+
+New certificates get EC256 keys. Traefik defaults to RSA4096, which makes every
+TLS handshake much more expensive on small hardware. A certificate that is
+already stored keeps its old key until it is issued again.
 
 ACME storage:
 
@@ -298,6 +318,18 @@ Typical messages:
 - `Error while building configuration`: new dynamic file was rejected; old
   valid state remains active.
 - `entryPoint ... already in use`: NPM or another proxy still owns 80/443.
+
+## Request header and path hardening
+
+All entrypoints use `aliasHeadersStrategy: delete`. A client header like
+`X_Authentik_Username` or `X.Authentik.Username` is dropped. Backends built on
+CGI, WSGI or PHP read such a name as `X-Authentik-Username`, so without this a
+client could fake a header that a `forwardAuth` middleware sets.
+
+Encoded characters in the path are allowed, as in nginx, except `%5C` (backslash)
+and `%00` (NUL). Those two get `400 Bad Request`, they have no use in a normal
+path and are common in traversal tricks. The static configuration is not
+user-editable, so this is fixed in the add-on.
 
 ## Security boundary
 

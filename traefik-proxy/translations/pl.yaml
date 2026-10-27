@@ -9,6 +9,9 @@ configuration:
   access_log_headers:
     name: Dodatkowe nagłówki w access logu
     description: Nagłówki żądania zapisywane w access logu JSON, np. X-Authentik-Username. Bez nagłówków z danymi logowania.
+  read_timeout:
+    name: Limit czasu odczytu requestu
+    description: Czas na odczyt całego requestu z body, np. 60s, 10m, 0s bez limitu. Zwiększ przy dużych uploadach.
   trusted_proxy_ips:
     name: Zaufane zakresy proxy
     description: Tylko zakresy CIDR lokalnego cloudflared albo zaufanego proxy.

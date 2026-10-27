@@ -9,6 +9,9 @@ configuration:
   access_log_headers:
     name: Extra access log headers
     description: Request header names to keep in the JSON access log, e.g. X-Authentik-Username. Never list credential headers.
+  read_timeout:
+    name: Request read timeout
+    description: Time to read a whole request, body included, e.g. 60s, 10m, 0s for no limit. Raise it for big uploads.
   trusted_proxy_ips:
     name: Trusted proxy IP ranges
     description: CIDR ranges of the local cloudflared or reverse proxy source only.

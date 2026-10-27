@@ -9,6 +9,15 @@ entryPoints:
     forwardedHeaders:
       insecure: false
     http:
+      aliasHeadersStrategy: delete
+      encodedCharacters:
+        allowEncodedSlash: true
+        allowEncodedBackSlash: false
+        allowEncodedNullCharacter: false
+        allowEncodedSemicolon: true
+        allowEncodedPercent: true
+        allowEncodedQuestionMark: true
+        allowEncodedHash: true
       redirections:
         entryPoint:
           to: websecure
@@ -18,8 +27,20 @@ entryPoints:
     address: ":443"
     forwardedHeaders:
       insecure: false
+    http:
+      aliasHeadersStrategy: delete
+      encodedCharacters:
+        allowEncodedSlash: true
+        allowEncodedBackSlash: false
+        allowEncodedNullCharacter: false
+        allowEncodedSemicolon: true
+        allowEncodedPercent: true
+        allowEncodedQuestionMark: true
+        allowEncodedHash: true
   health:
     address: "127.0.0.1:8082"
+    http:
+      aliasHeadersStrategy: delete
 
 api:
   dashboard: true

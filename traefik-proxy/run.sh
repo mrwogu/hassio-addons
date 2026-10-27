@@ -74,6 +74,9 @@ validate_options() {
             type == "array"
             and all(.[]; type == "string"
                 and test("\\A[A-Za-z0-9-]{1,128}\\z")))
+        and ((.read_timeout // "60s") |
+            type == "string"
+            and test("\\A([0-9]+(\\.[0-9]+)?(ms|s|m|h))+\\z"))
         and ((.trusted_proxy_ips // []) |
             type == "array"
             and all(.[]; type == "string"
@@ -88,7 +91,7 @@ validate_options() {
             and (.cloudflare_api_token_file | optional_clean))
         and ((.log_level // "info") | clean)
     ' "$OPTIONS_PATH" >/dev/null 2>&1 ||
-        fail "Invalid options: check logging, trusted proxy, and ACME settings"
+        fail "Invalid options: check logging, access log headers, read timeout, trusted proxy, and ACME settings"
 }
 
 read_option() {
@@ -170,6 +173,7 @@ prepare_runtime_options() {
     LOG_LEVEL=$(read_option '.log_level // "info"')
     ACCESS_LOG_FORMAT=$(read_option '.access_log_format // "json"')
     ACCESS_LOG_HEADERS=$(jq -r '(.access_log_headers // []) | join(",")' "$OPTIONS_PATH")
+    READ_TIMEOUT=$(read_option '.read_timeout // "60s"')
     TRUSTED_PROXY_IPS=$(jq -r '(.trusted_proxy_ips // []) | join(",")' "$OPTIONS_PATH")
 }
 
@@ -177,17 +181,19 @@ render_static_config() {
     WEB_ADDRESS=$1
     WEBSECURE_ADDRESS=$2
     HEALTH_ADDRESS=$3
+    DYNAMIC_DIRECTORY=${4:-$ACTIVE_DYNAMIC_DIR}
     python3 "$STATIC_RENDERER" \
         --source "$STATIC_CONFIG" \
         --output "$RUNTIME_STATIC_CONFIG" \
         --web-address "$WEB_ADDRESS" \
         --websecure-address "$WEBSECURE_ADDRESS" \
         --health-address "$HEALTH_ADDRESS" \
-        --dynamic-directory "$ACTIVE_DYNAMIC_DIR" \
+        --dynamic-directory "$DYNAMIC_DIRECTORY" \
         --access-log-path "$ACCESS_LOG" \
         --log-level "$LOG_LEVEL" \
         --access-log-format "$ACCESS_LOG_FORMAT" \
         --access-log-headers "$ACCESS_LOG_HEADERS" \
+        --read-timeout "$READ_TIMEOUT" \
         --trusted-proxy-ips "$TRUSTED_PROXY_IPS" \
         --acme-enabled "$ACME_ENABLED" \
         --acme-email "$ACME_EMAIL" \
@@ -217,10 +223,17 @@ run_traefik() {
 
 preflight() {
     log "Validating Traefik static configuration"
+    # Empty dynamic directory: with real routers the short lived Traefik would
+    # start ACME orders and be killed in the middle, leaving DNS challenge records.
+    preflight_dynamic_dir="${DATA_DIR}/dynamic-preflight"
+    rm -rf "$preflight_dynamic_dir"
+    mkdir -p "$preflight_dynamic_dir"
+    chmod 0700 "$preflight_dynamic_dir"
     render_static_config \
         "127.0.0.1:0" \
         "127.0.0.1:0" \
-        "127.0.0.1:0"
+        "127.0.0.1:0" \
+        "$preflight_dynamic_dir"
     start_log_forwarder
     "$TRAEFIK_BIN" "--configFile=${RUNTIME_STATIC_CONFIG}" >"$LOG_PIPE" 2>&1 &
     preflight_pid=$!
@@ -235,6 +248,7 @@ preflight() {
         preflight_status=$?
     fi
     stop_log_forwarder
+    rm -rf "$preflight_dynamic_dir"
     [ "$preflight_status" -eq 0 ] ||
         fail "Traefik configuration validation failed; inspect ${APP_LOG}"
 }
