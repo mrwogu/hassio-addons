@@ -196,6 +196,22 @@ render_logrotate_config() {
         printf '  compress\n  missingok\n  notifempty\n  copytruncate\n  su root root\n}\n'
     } >"$LOGROTATE_CONFIG"
     chmod 0644 "$LOGROTATE_CONFIG"
+    prune_old_archives
+}
+
+# logrotate never removes archives above a lowered "rotate" count
+prune_old_archives() {
+    for log in "$ACCESS_LOG" "$APP_LOG"; do
+        for archive in "$log".[0-9]*; do
+            [ -e "$archive" ] || continue
+            number=${archive#"$log".}
+            number=${number%%.*}
+            case $number in
+                '' | *[!0-9]*) continue ;;
+            esac
+            [ "$number" -le "$LOG_KEEP" ] || rm -f "$archive"
+        done
+    done
 }
 
 render_static_config() {

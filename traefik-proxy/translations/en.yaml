@@ -23,7 +23,7 @@ configuration:
     description: How many compressed old files to keep for each log. Older ones are deleted.
   log_max_age:
     name: Log max age in days
-    description: Also delete rotated logs older than this many days. 0 means keep by count only.
+    description: Rotated logs older than this are deleted on rotation only (approximate). 0 means keep by count only.
   trusted_proxy_ips:
     name: Trusted proxy IP ranges
     description: CIDR ranges of the local cloudflared or reverse proxy source only.

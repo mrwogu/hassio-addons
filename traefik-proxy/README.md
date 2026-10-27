@@ -192,7 +192,7 @@ stays in place so `tail` and external log readers keep working. Tune it with:
 ```yaml
 log_max_size: 50M   # rotate above this size (k, M, G)
 log_keep: 14        # old files kept per log
-log_max_age: 0      # also delete old files after N days, 0 = off
+log_max_age: 0      # old files older than N days go on next rotation, 0 = off
 ```
 
 ## Request read timeout

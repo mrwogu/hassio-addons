@@ -181,8 +181,9 @@ log_max_age: 0
 ```
 
 `log_max_size` accepts `k`, `M` or `G`. `log_keep` is the number of old files
-kept for each log. `log_max_age` also deletes old files after that many days,
-`0` turns it off. The worst case is about `log_keep` compressed files per log
+kept for each log. `log_max_age` marks old files older than that many days for
+deletion. It only happens when a rotation runs, so the age is approximate and
+a log that stays small is never cleaned by age. `0` turns it off. The worst case is about `log_keep` compressed files per log
 plus the active one, so the defaults stay well under a few GB. The rotated
 config is rendered to `/config/traefik/logrotate.conf` on every start.
 
