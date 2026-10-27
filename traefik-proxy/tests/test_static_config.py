@@ -26,7 +26,11 @@ DEFAULT_HEADERS = {
 }
 
 
-def render_config(access_log_headers: str = "", read_timeout: str = "60s") -> dict:
+def render_config(
+    access_log_headers: str = "",
+    read_timeout: str = "60s",
+    acme_enabled: str = "false",
+) -> dict:
     with tempfile.TemporaryDirectory() as temporary:
         output = Path(temporary) / "static.yml"
         MODULE.render(
@@ -43,8 +47,8 @@ def render_config(access_log_headers: str = "", read_timeout: str = "60s") -> di
                 access_log_headers=access_log_headers,
                 read_timeout=read_timeout,
                 trusted_proxy_ips="",
-                acme_enabled="false",
-                acme_email="",
+                acme_enabled=acme_enabled,
+                acme_email="admin@example.invalid",
                 acme_storage="/config/traefik/acme.json",
             )
         )
@@ -82,6 +86,13 @@ class StaticConfigTest(unittest.TestCase):
             timeouts = entrypoints[name]["transport"]["respondingTimeouts"]
             self.assertEqual({"readTimeout": "0s"}, timeouts)
         self.assertNotIn("transport", entrypoints["health"])
+
+    def test_acme_resolver_uses_ec256_keys(self) -> None:
+        acme = render_config(acme_enabled="true")["certificatesResolvers"][
+            "letsencrypt"
+        ]["acme"]
+
+        self.assertEqual("EC256", acme["keyType"])
 
 
 if __name__ == "__main__":

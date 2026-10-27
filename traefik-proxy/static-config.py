@@ -99,6 +99,7 @@ def render(args: argparse.Namespace) -> None:
                 "acme": {
                     "email": args.acme_email,
                     "storage": args.acme_storage,
+                    "keyType": "EC256",
                     "dnsChallenge": {"provider": "cloudflare"},
                 }
             }

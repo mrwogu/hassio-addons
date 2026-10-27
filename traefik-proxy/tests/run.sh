@@ -308,6 +308,7 @@ jq --arg token_file "$ACME_TOKEN_FILE" \
 run_adapter "$ACME_OPTIONS"
 acme_config=$(find "$CONFIG_DUMPS" -name 'config-*.yml' -print | sort | tail -n 1)
 assert_contains 'certificatesResolvers:' "$acme_config"
+assert_contains 'keyType: EC256' "$acme_config"
 assert_contains 'storage: '"${DATA_DIR}"'/acme.json' "$acme_config"
 assert_contains "CF_DNS_API_TOKEN_FILE=${SECRET_DIR}/cloudflare_api_token" "$ENV_FILE"
 assert_not_contains 'CF_DNS_API_TOKEN=fixture-acme-token' "$ENV_FILE"

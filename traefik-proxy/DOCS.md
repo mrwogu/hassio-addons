@@ -215,6 +215,10 @@ internal runtime file, passes its path to Traefik through
 `CF_DNS_API_TOKEN_FILE`, and never logs its value. Paths are limited to
 `/config` and `/share/traefik`.
 
+New certificates get EC256 keys. Traefik defaults to RSA4096, which makes every
+TLS handshake much more expensive on small hardware. A certificate that is
+already stored keeps its old key until it is issued again.
+
 ACME storage:
 
 ```text

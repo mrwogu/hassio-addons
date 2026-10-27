@@ -3,6 +3,7 @@
 ## 3.7.16-6
 
 - Add read_timeout option for the request read timeout of public entrypoints.
+- Issue ACME certificates with EC256 keys instead of the Traefik default RSA4096, TLS handshakes are cheaper.
 - Set aliasHeadersStrategy to delete and explicit encodedCharacters on all entrypoints, this also removes the startup warnings about them.
 
 ## 3.7.16-5
