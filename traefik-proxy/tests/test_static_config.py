@@ -30,6 +30,7 @@ def render_config(
     access_log_headers: str = "",
     read_timeout: str = "60s",
     acme_enabled: str = "false",
+    metrics_enabled: str = "false",
 ) -> dict:
     with tempfile.TemporaryDirectory() as temporary:
         output = Path(temporary) / "static.yml"
@@ -46,6 +47,8 @@ def render_config(
                 access_log_format="json",
                 access_log_headers=access_log_headers,
                 read_timeout=read_timeout,
+                metrics_enabled=metrics_enabled,
+                metrics_address=":8083",
                 trusted_proxy_ips="",
                 acme_enabled=acme_enabled,
                 acme_email="admin@example.invalid",
@@ -93,6 +96,25 @@ class StaticConfigTest(unittest.TestCase):
         ]["acme"]
 
         self.assertEqual("EC256", acme["keyType"])
+
+    def test_metrics_enabled_adds_prometheus_entrypoint(self) -> None:
+        config = render_config(metrics_enabled="true")
+
+        self.assertEqual(":8083", config["entryPoints"]["metrics"]["address"])
+        self.assertEqual(
+            "delete", config["entryPoints"]["metrics"]["http"]["aliasHeadersStrategy"]
+        )
+        self.assertEqual("metrics", config["metrics"]["prometheus"]["entryPoint"])
+        for name in ("web", "websecure"):
+            self.assertTrue(config["entryPoints"][name]["asDefault"])
+        self.assertNotIn("asDefault", config["entryPoints"]["health"])
+
+    def test_metrics_disabled_leaves_no_trace(self) -> None:
+        config = render_config()
+
+        self.assertNotIn("metrics", config)
+        self.assertNotIn("metrics", config["entryPoints"])
+        self.assertNotIn("asDefault", config["entryPoints"]["websecure"])
 
 
 if __name__ == "__main__":

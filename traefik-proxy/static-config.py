@@ -25,6 +25,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--access-log-format", required=True)
     parser.add_argument("--access-log-headers", default="")
     parser.add_argument("--read-timeout", default="60s")
+    parser.add_argument("--metrics-enabled", default="false")
+    parser.add_argument("--metrics-address", default=":8083")
     parser.add_argument("--trusted-proxy-ips", default="")
     parser.add_argument("--acme-enabled", required=True)
     parser.add_argument("--acme-email", default="")
@@ -69,6 +71,27 @@ def render(args: argparse.Namespace) -> None:
                 f"entryPoints.{name}.transport.respondingTimeouts",
             )
             timeouts["readTimeout"] = args.read_timeout
+
+    if args.metrics_enabled == "true":
+        entrypoints["metrics"] = {
+            "address": args.metrics_address,
+            "http": {"aliasHeadersStrategy": "delete"},
+        }
+        # Routers without entryPoints would listen on every entrypoint,
+        # including the unauthenticated metrics one.
+        for name in ("web", "websecure"):
+            entrypoints[name]["asDefault"] = True
+        root["metrics"] = {
+            "prometheus": {
+                "entryPoint": "metrics",
+                "addEntryPointsLabels": True,
+                "addRoutersLabels": True,
+                "addServicesLabels": True,
+            }
+        }
+    else:
+        entrypoints.pop("metrics", None)
+        root.pop("metrics", None)
 
     providers = mapping(root.get("providers"), "providers")
     file_provider = mapping(providers.get("file"), "providers.file")

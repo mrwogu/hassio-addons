@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.7.16-7
+
+- Add metrics_enabled option for Prometheus metrics on an internal port.
+
 ## 3.7.16-6
 
 - Add read_timeout option for the request read timeout of public entrypoints.
