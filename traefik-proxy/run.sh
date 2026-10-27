@@ -5,7 +5,7 @@ OPTIONS_PATH=${TRAEFIK_OPTIONS_PATH:-/data/options.json}
 SHARE_DIR=${TRAEFIK_SHARE_DIR:-/share/traefik}
 DATA_DIR=${TRAEFIK_DATA_DIR:-/config/traefik}
 STATIC_CONFIG=${TRAEFIK_STATIC_CONFIG:-/etc/traefik/traefik.yml}
-LOGROTATE_CONFIG=${TRAEFIK_LOGROTATE_CONFIG:-/etc/logrotate.d/traefik}
+LOGROTATE_CONFIG=${TRAEFIK_LOGROTATE_CONFIG:-${DATA_DIR}/logrotate.conf}
 LOGROTATE_STATE=${TRAEFIK_LOGROTATE_STATE:-${DATA_DIR}/logrotate.status}
 TRAEFIK_BIN=${TRAEFIK_BIN:-/usr/local/bin/traefik}
 LOGROTATE_BIN=${TRAEFIK_LOGROTATE_BIN:-/usr/sbin/logrotate}
@@ -75,6 +75,12 @@ validate_options() {
             and all(.[]; type == "string"
                 and test("\\A[A-Za-z0-9-]{1,128}\\z")))
         and ((.metrics_enabled // false) | type == "boolean")
+        and ((.log_max_size // "50M") |
+            type == "string" and test("\\A[1-9][0-9]{0,5}[kMG]\\z"))
+        and ((.log_keep // 14) |
+            type == "number" and . == floor and . >= 1 and . <= 365)
+        and ((.log_max_age // 0) |
+            type == "number" and . == floor and . >= 0 and . <= 3650)
         and ((.read_timeout // "60s") |
             type == "string"
             and test("\\A([0-9]+(\\.[0-9]+)?(ms|s|m|h))+\\z"))
@@ -92,7 +98,7 @@ validate_options() {
             and (.cloudflare_api_token_file | optional_clean))
         and ((.log_level // "info") | clean)
     ' "$OPTIONS_PATH" >/dev/null 2>&1 ||
-        fail "Invalid options: check logging, access log headers, read timeout, metrics, trusted proxy, and ACME settings"
+        fail "Invalid options: check logging, log rotation, access log headers, read timeout, metrics, trusted proxy, and ACME settings"
 }
 
 read_option() {
@@ -176,7 +182,20 @@ prepare_runtime_options() {
     ACCESS_LOG_HEADERS=$(jq -r '(.access_log_headers // []) | join(",")' "$OPTIONS_PATH")
     READ_TIMEOUT=$(read_option '.read_timeout // "60s"')
     METRICS_ENABLED=$(read_option '.metrics_enabled // false')
+    LOG_MAX_SIZE=$(read_option '.log_max_size // "50M"')
+    LOG_KEEP=$(read_option '.log_keep // 14')
+    LOG_MAX_AGE=$(read_option '.log_max_age // 0')
     TRUSTED_PROXY_IPS=$(jq -r '(.trusted_proxy_ips // []) | join(",")' "$OPTIONS_PATH")
+}
+
+render_logrotate_config() {
+    {
+        printf '%s %s {\n' "$ACCESS_LOG" "$APP_LOG"
+        printf '  size %s\n  rotate %s\n' "$LOG_MAX_SIZE" "$LOG_KEEP"
+        [ "$LOG_MAX_AGE" -eq 0 ] || printf '  maxage %s\n' "$LOG_MAX_AGE"
+        printf '  compress\n  missingok\n  notifempty\n  copytruncate\n  su root root\n}\n'
+    } >"$LOGROTATE_CONFIG"
+    chmod 0644 "$LOGROTATE_CONFIG"
 }
 
 render_static_config() {
@@ -308,6 +327,7 @@ trap on_exit EXIT
 validate_options
 prepare_storage
 prepare_runtime_options
+render_logrotate_config
 prepare_acme
 
 python3 "$WATCHER_BIN" \

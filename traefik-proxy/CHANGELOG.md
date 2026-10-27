@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.7.16-8
+
+- Add log_max_size, log_keep and log_max_age options for log rotation.
+- Fix log rotation: logrotate failed with "Could not lock file" under AppArmor and logs were never rotated. The config is now rendered under /config.
+
 ## 3.7.16-7
 
 - Add metrics_enabled option for Prometheus metrics on an internal port.

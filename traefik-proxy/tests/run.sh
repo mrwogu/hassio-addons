@@ -318,6 +318,27 @@ for earlier_config in $(find "$CONFIG_DUMPS" -name 'config-*.yml' -print | sort 
 done
 pass "Adapter renders the Prometheus entrypoint when metrics_enabled is true"
 
+BAD_LOG_OPTIONS="${TMP_DIR}/bad-log-options.json"
+for bad in '.log_max_size = "50 MB"' '.log_keep = 0' '.log_max_age = -1' '.log_keep = 1.5'; do
+    jq "$bad" "${FIXTURES}/options.json" >"$BAD_LOG_OPTIONS"
+    run_failure "$BAD_LOG_OPTIONS"
+    assert_contains "Invalid options" "$RUN_LOG"
+done
+pass "Adapter rejects malformed log rotation options"
+
+LOG_OPTIONS="${TMP_DIR}/log-options.json"
+jq '.log_max_size = "1G" | .log_keep = 3 | .log_max_age = 7' \
+    "${FIXTURES}/options.json" >"$LOG_OPTIONS"
+run_adapter "$LOG_OPTIONS"
+assert_contains 'size 1G' "${TMP_DIR}/logrotate.conf"
+assert_contains 'rotate 3' "${TMP_DIR}/logrotate.conf"
+assert_contains 'maxage 7' "${TMP_DIR}/logrotate.conf"
+run_adapter "${FIXTURES}/options.json"
+assert_contains 'size 50M' "${TMP_DIR}/logrotate.conf"
+assert_contains 'rotate 14' "${TMP_DIR}/logrotate.conf"
+if grep -q maxage "${TMP_DIR}/logrotate.conf"; then fail "maxage set by default"; fi
+pass "Adapter renders log rotation options"
+
 FRACTION_TIMEOUT_OPTIONS="${TMP_DIR}/fraction-timeout-options.json"
 jq '.read_timeout = "1.5h"' \
     "${FIXTURES}/options.json" >"$FRACTION_TIMEOUT_OPTIONS"

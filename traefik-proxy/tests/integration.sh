@@ -335,7 +335,7 @@ grep -Eiq 'error|invalid|configuration' "$WORK_DIR/share/traefik/logs/traefik.lo
 wait_for_route hot.localhost 200
 
 "$CONTAINER_RUNTIME" exec "$CONTAINER" logrotate -f \
-    -s /config/forced-logrotate.status /etc/logrotate.d/traefik
+    -s /config/forced-logrotate.status /config/traefik/logrotate.conf
 [ -f "$WORK_DIR/share/traefik/logs/access.jsonl" ] ||
     fail "Active access log missing after rotation"
 [ -f "$WORK_DIR/share/traefik/logs/traefik.log" ] ||
