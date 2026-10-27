@@ -76,7 +76,7 @@ validate_options() {
                 and test("\\A[A-Za-z0-9-]{1,128}\\z")))
         and ((.read_timeout // "60s") |
             type == "string"
-            and test("\\A([0-9]+(ms|s|m|h))+\\z"))
+            and test("\\A([0-9]+(\\.[0-9]+)?(ms|s|m|h))+\\z"))
         and ((.trusted_proxy_ips // []) |
             type == "array"
             and all(.[]; type == "string"
@@ -91,7 +91,7 @@ validate_options() {
             and (.cloudflare_api_token_file | optional_clean))
         and ((.log_level // "info") | clean)
     ' "$OPTIONS_PATH" >/dev/null 2>&1 ||
-        fail "Invalid options: check logging, trusted proxy, and ACME settings"
+        fail "Invalid options: check logging, access log headers, read timeout, trusted proxy, and ACME settings"
 }
 
 read_option() {

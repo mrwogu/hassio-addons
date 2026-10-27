@@ -285,6 +285,14 @@ run_failure "$BAD_TIMEOUT_OPTIONS"
 assert_contains "Invalid options" "$RUN_LOG"
 pass "Adapter rejects malformed read timeout"
 
+FRACTION_TIMEOUT_OPTIONS="${TMP_DIR}/fraction-timeout-options.json"
+jq '.read_timeout = "1.5h"' \
+    "${FIXTURES}/options.json" >"$FRACTION_TIMEOUT_OPTIONS"
+run_adapter "$FRACTION_TIMEOUT_OPTIONS"
+fraction_config=$(find "$CONFIG_DUMPS" -name 'config-*.yml' -print | sort | tail -n 1)
+assert_contains 'readTimeout: 1.5h' "$fraction_config"
+pass "Adapter accepts fractional Go duration for read timeout"
+
 ACME_OPTIONS="${TMP_DIR}/acme-options.json"
 ACME_TOKEN_FILE="${CONFIG_ROOT}/cloudflare-token"
 ACME_SOURCE_VALUE=fixture-acme-token
