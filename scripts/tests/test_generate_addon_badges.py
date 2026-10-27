@@ -58,7 +58,6 @@ class BadgeGeneratorTest(unittest.TestCase):
         expected = {
             "authentik",
             "bonds",
-            "ghostfolio",
             "gluetun",
             "n8n",
             "postgres-backup",
