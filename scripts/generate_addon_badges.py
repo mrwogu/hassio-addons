@@ -31,7 +31,6 @@ LOGO_BOX_WIDTH = 44
 BRAND_COLORS = {
     "authentik": "#FD4B2A",
     "bonds": "#7C3AED",
-    "ghostfolio": "#149C99",
     "gluetun": "#0E7490",
     "n8n": "#EA4B71",
     "postgres-backup": "#336791",

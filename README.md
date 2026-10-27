@@ -58,12 +58,6 @@ Home Assistant add-ons packaged from upstream projects with automated updates, m
       <p><sub><code>amd64</code> <code>aarch64</code> · Port <code>6868</code><br><a href="https://github.com/Dictionarry-Hub/profilarr">Upstream</a> · AGPL-3.0</sub></p>
       <p><sub>Optional parser service is not bundled.</sub></p>
     </td>
-    <td align="center" valign="top" width="33%">
-      <a href="ghostfolio/"><img src="assets/badges/ghostfolio.svg" alt="Ghostfolio" width="220"></a>
-      <p>Open source wealth management software for tracking stocks, ETFs, and cryptocurrencies.</p>
-      <p><sub><code>amd64</code> <code>aarch64</code> · Port <code>3333</code><br><a href="https://github.com/ghostfolio/ghostfolio">Upstream</a> · AGPL-3.0</sub></p>
-      <p><sub>Requires external PostgreSQL and Redis.</sub></p>
-    </td>
   </tr>
   <tr>
     <td align="center" valign="top" width="33%">
