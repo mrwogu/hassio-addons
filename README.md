@@ -58,8 +58,6 @@ Home Assistant add-ons packaged from upstream projects with automated updates, m
       <p><sub><code>amd64</code> <code>aarch64</code> · Port <code>6868</code><br><a href="https://github.com/Dictionarry-Hub/profilarr">Upstream</a> · AGPL-3.0</sub></p>
       <p><sub>Optional parser service is not bundled.</sub></p>
     </td>
-  </tr>
-  <tr>
     <td align="center" valign="top" width="33%">
       <a href="postgres-backup/"><img src="assets/badges/postgres-backup.svg" alt="Postgres Backup" width="220"></a>
       <p>Hot SQL dumps of the Postgres 16 add-on inside Home Assistant backups, without stopping the database.</p>
