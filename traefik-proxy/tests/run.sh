@@ -258,6 +258,8 @@ assert_contains '172.30.33.0/24' "$static_config"
 assert_contains 'CF-Connecting-IP: keep' "$static_config"
 assert_contains 'X-Authentik-Username: keep' "$static_config"
 assert_contains 'readTimeout: 10m' "$static_config"
+assert_contains 'aliasHeadersStrategy: delete' "$static_config"
+assert_contains 'allowEncodedNullCharacter: false' "$static_config"
 assert_contains 'directory: '"${DATA_DIR}"'/dynamic-active' "$static_config"
 [ "$(grep -v '^--- invocation$' "$ARGS_FILE" | grep -c '^--configFile=')" -ge 1 ] ||
     fail "Adapter did not pass configFile to Traefik"

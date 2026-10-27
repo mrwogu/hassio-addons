@@ -315,6 +315,18 @@ Typical messages:
   valid state remains active.
 - `entryPoint ... already in use`: NPM or another proxy still owns 80/443.
 
+## Request header and path hardening
+
+All entrypoints use `aliasHeadersStrategy: delete`. A client header like
+`X_Authentik_Username` or `X.Authentik.Username` is dropped. Backends built on
+CGI, WSGI or PHP read such a name as `X-Authentik-Username`, so without this a
+client could fake a header that a `forwardAuth` middleware sets.
+
+Encoded characters in the path are allowed, as in nginx, except `%5C` (backslash)
+and `%00` (NUL). Those two get `400 Bad Request`, they have no use in a normal
+path and are common in traversal tricks. The static configuration is not
+user-editable, so this is fixed in the add-on.
+
 ## Security boundary
 
 No privileged mode, host networking, Docker API, Docker provider, `NET_ADMIN`,
