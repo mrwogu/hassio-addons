@@ -32,7 +32,6 @@ profile ADDON_SLUG flags=(attach_disconnected,mediate_deleted) {
   /usr/sbin/** mr,
 
   /etc/traefik/traefik.yml r,
-  /etc/logrotate.d/traefik r,
   /etc/** r,
   /proc/** r,
   /run/ rw,

@@ -102,6 +102,8 @@ chmod 0755 "$WATCHER_BIN" "$STATIC_RENDERER"
 
 run_adapter() {
     options=$1
+    # a previous adapter would keep running against the shared test paths
+    [ -z "${RUN_PID:-}" ] || stop_adapter
     rm -rf "$DATA_DIR" "$SHARE_DIR" "$SECRET_DIR" "$CONFIG_ROOT"
     rm -rf "$CONFIG_DUMPS"
     mkdir -p "$CONFIG_DUMPS" "$SECRET_DIR"
@@ -111,6 +113,10 @@ run_adapter() {
     fi
     : >"$ARGS_FILE"
     : >"$ENV_FILE"
+    if [ -n "${SEED_ARCHIVES:-}" ]; then
+        mkdir -p "${SHARE_DIR}/logs"
+        for seeded in $SEED_ARCHIVES; do : >"${SHARE_DIR}/logs/${seeded}"; done
+    fi
     TRAEFIK_OPTIONS_PATH="$options" \
     TRAEFIK_SHARE_DIR="$SHARE_DIR" \
     TRAEFIK_DATA_DIR="$DATA_DIR" \
@@ -317,6 +323,33 @@ for earlier_config in $(find "$CONFIG_DUMPS" -name 'config-*.yml' -print | sort 
     fi
 done
 pass "Adapter renders the Prometheus entrypoint when metrics_enabled is true"
+
+BAD_LOG_OPTIONS="${TMP_DIR}/bad-log-options.json"
+for bad in '.log_max_size = "50 MB"' '.log_keep = 0' '.log_max_age = -1' '.log_keep = 1.5'; do
+    jq "$bad" "${FIXTURES}/options.json" >"$BAD_LOG_OPTIONS"
+    run_failure "$BAD_LOG_OPTIONS"
+    assert_contains "Invalid options" "$RUN_LOG"
+done
+pass "Adapter rejects malformed log rotation options"
+
+LOG_OPTIONS="${TMP_DIR}/log-options.json"
+jq '.log_max_size = "1G" | .log_keep = 3 | .log_max_age = 7' \
+    "${FIXTURES}/options.json" >"$LOG_OPTIONS"
+SEED_ARCHIVES="access.jsonl.1.gz access.jsonl.3.gz access.jsonl.4.gz traefik.log.5"
+run_adapter "$LOG_OPTIONS"
+SEED_ARCHIVES=
+[ -e "${SHARE_DIR}/logs/access.jsonl.1.gz" ] || fail "Archive within log_keep was removed"
+[ -e "${SHARE_DIR}/logs/access.jsonl.3.gz" ] || fail "Archive at log_keep was removed"
+[ ! -e "${SHARE_DIR}/logs/access.jsonl.4.gz" ] || fail "Archive above log_keep was kept"
+[ ! -e "${SHARE_DIR}/logs/traefik.log.5" ] || fail "Archive above log_keep was kept"
+assert_contains 'size 1G' "${TMP_DIR}/logrotate.conf"
+assert_contains 'rotate 3' "${TMP_DIR}/logrotate.conf"
+assert_contains 'maxage 7' "${TMP_DIR}/logrotate.conf"
+run_adapter "${FIXTURES}/options.json"
+assert_contains 'size 50M' "${TMP_DIR}/logrotate.conf"
+assert_contains 'rotate 14' "${TMP_DIR}/logrotate.conf"
+if grep -q maxage "${TMP_DIR}/logrotate.conf"; then fail "maxage set by default"; fi
+pass "Adapter renders log rotation options"
 
 FRACTION_TIMEOUT_OPTIONS="${TMP_DIR}/fraction-timeout-options.json"
 jq '.read_timeout = "1.5h"' \

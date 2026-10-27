@@ -168,6 +168,25 @@ that fits your largest upload. The default `60s` is the Traefik default.
 Response writes are not limited by Traefik (`writeTimeout` is `0s`), so video
 streaming is not affected.
 
+## Log rotation
+
+`access.jsonl` and `traefik.log` are rotated by logrotate, checked every 5
+minutes. Old files are gzipped, the active file is truncated in place
+(`copytruncate`). Three options control the disk use:
+
+```yaml
+log_max_size: 50M
+log_keep: 14
+log_max_age: 0
+```
+
+`log_max_size` accepts `k`, `M` or `G`. `log_keep` is the number of old files
+kept for each log. `log_max_age` marks old files older than that many days for
+deletion. It only happens when a rotation runs, so the age is approximate and
+a log that stays small is never cleaned by age. `0` turns it off. The worst case is about `log_keep` compressed files per log
+plus the active one, so the defaults stay well under a few GB. The rotated
+config is rendered to `/config/traefik/logrotate.conf` on every start.
+
 ## Fail2ban
 
 Fail2ban is not installed in this App. The App has no host firewall access and

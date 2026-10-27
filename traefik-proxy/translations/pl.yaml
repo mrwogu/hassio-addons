@@ -15,6 +15,15 @@ configuration:
   metrics_enabled:
     name: Metryki Prometheus
     description: Metryki na porcie 8083 dla innych aplikacji w sieci Supervisora. Bez uwierzytelniania, nie na hoście.
+  log_max_size:
+    name: Rozmiar rotacji logów
+    description: Rotuj plik logu po przekroczeniu tego rozmiaru, np. 50M, 1G. Sprawdzane co 5 minut.
+  log_keep:
+    name: Liczba starych logów
+    description: Ile skompresowanych starych plików trzymać dla każdego logu. Starsze są usuwane.
+  log_max_age:
+    name: Maksymalny wiek logów w dniach
+    description: Logi starsze niż tyle dni są usuwane tylko przy rotacji (w przybliżeniu). 0 to tylko limit liczby plików.
   trusted_proxy_ips:
     name: Zaufane zakresy proxy
     description: Tylko zakresy CIDR lokalnego cloudflared albo zaufanego proxy.
