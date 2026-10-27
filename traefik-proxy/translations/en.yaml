@@ -6,6 +6,9 @@ configuration:
   access_log_format:
     name: Access log format
     description: JSON Lines for analysis or Common Log Format for simple filters.
+  access_log_headers:
+    name: Extra access log headers
+    description: Request header names to keep in the JSON access log, e.g. X-Authentik-Username. Never list credential headers.
   trusted_proxy_ips:
     name: Trusted proxy IP ranges
     description: CIDR ranges of the local cloudflared or reverse proxy source only.

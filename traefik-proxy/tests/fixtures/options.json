@@ -1,6 +1,7 @@
 {
   "log_level": "debug",
   "access_log_format": "json",
+  "access_log_headers": ["X-Authentik-Username"],
   "trusted_proxy_ips": ["172.30.33.0/24"],
   "acme": {
     "enabled": false,

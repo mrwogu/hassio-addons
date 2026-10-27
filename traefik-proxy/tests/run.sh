@@ -198,6 +198,7 @@ done
 sh -n "${ADDON_DIR}/run.sh"
 sh -n "${ADDON_DIR}/rootfs/usr/local/bin/addon-entrypoint"
 python3 "${SCRIPT_DIR}/test_dynamic_watcher.py"
+python3 "${SCRIPT_DIR}/test_static_config.py"
 python3 -m py_compile "${ADDON_DIR}/dynamic-watcher.py" "${ADDON_DIR}/static-config.py"
 jq -e . "${FIXTURES}/options.json" >/dev/null
 jq -e . "${FIXTURES}/access.jsonl" >/dev/null
@@ -254,6 +255,8 @@ assert_contains 'format: json' "$static_config"
 assert_contains 'address: :80' "$static_config"
 assert_contains 'address: :443' "$static_config"
 assert_contains '172.30.33.0/24' "$static_config"
+assert_contains 'CF-Connecting-IP: keep' "$static_config"
+assert_contains 'X-Authentik-Username: keep' "$static_config"
 assert_contains 'directory: '"${DATA_DIR}"'/dynamic-active' "$static_config"
 [ "$(grep -v '^--- invocation$' "$ARGS_FILE" | grep -c '^--configFile=')" -ge 1 ] ||
     fail "Adapter did not pass configFile to Traefik"
@@ -266,6 +269,13 @@ pass "Adapter renders effective static options and forwards only configFile"
 run_failure "${FIXTURES}/invalid-options.json"
 assert_contains "Invalid options" "$RUN_LOG"
 pass "Adapter rejects invalid options"
+
+BAD_HEADER_OPTIONS="${TMP_DIR}/bad-header-options.json"
+jq '.access_log_headers = ["X-Authentik-Username,Cookie"]' \
+    "${FIXTURES}/options.json" >"$BAD_HEADER_OPTIONS"
+run_failure "$BAD_HEADER_OPTIONS"
+assert_contains "Invalid options" "$RUN_LOG"
+pass "Adapter rejects unsafe access log header names"
 
 ACME_OPTIONS="${TMP_DIR}/acme-options.json"
 ACME_TOKEN_FILE="${CONFIG_ROOT}/cloudflare-token"

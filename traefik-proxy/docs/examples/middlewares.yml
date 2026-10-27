@@ -20,3 +20,11 @@ http:
         authResponseHeaders:
           - X-Forwarded-User
           - X-Forwarded-Email
+
+    authentik:
+      forwardAuth:
+        address: "http://<AUTH_SERVICE_ORIGIN>:9000/outpost.goauthentik.io/auth/traefik"
+        trustForwardHeader: false
+        authResponseHeaders:
+          - X-Authentik-Username
+          - X-Authentik-Email

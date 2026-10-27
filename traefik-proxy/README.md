@@ -158,6 +158,25 @@ access tokens, and passwords are not configured for logging. Query parameters
 are dropped by default, including query-string credentials. Do not put secrets
 in URL paths or referrer URLs.
 
+To keep more request headers, list them in `access_log_headers`. They are added
+to the allowlist next to the three default headers. For Authentik forward auth:
+
+```yaml
+access_log_headers:
+  - X-Authentik-Username
+  - X-Authentik-Email
+```
+
+Headers set by a `forwardAuth` middleware through `authResponseHeaders` are
+logged too, so the signed-in user shows up as `request_X-Authentik-Username`.
+Trust that value only on routes that use the middleware and only for accepted
+requests. On other routes, and on requests the auth service rejected, the log
+keeps whatever the client sent in that header. Names may use only letters,
+digits, and `-`. They show up only in the JSON format.
+
+Never list `Cookie`, `Authorization`, `X-Api-Key`, or other credential headers.
+They would land in the log in clear text.
+
 Set `access_log_format` to `common` only when a simple CLF-compatible filter is
 more useful than structured analysis. JSON remains recommended.
 

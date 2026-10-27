@@ -274,10 +274,17 @@ curl --silent --insecure --output /dev/null \
     -H 'CF-Connecting-IP: 198.51.100.24' \
     -H 'X-Forwarded-For: 198.51.100.24' \
     -H 'X-Real-IP: 198.51.100.24' \
+    -H 'X-Authentik-Username: fixture-user' \
+    -H 'X-Not-Logged: fixture-not-logged' \
     "https://127.0.0.1:${HTTPS_PORT}/"
 sleep 1
 grep -Fq '"request_Cf-Connecting-Ip":"198.51.100.24"' "$log_file" ||
     fail "Cloudflare client-IP header was not retained"
+grep -Fq '"request_X-Authentik-Username":"fixture-user"' "$log_file" ||
+    fail "Configured access_log_headers entry was not retained"
+if grep -Fq 'fixture-not-logged' "$log_file"; then
+    fail "Header outside the allowlist leaked into access log"
+fi
 
 curl --silent --insecure --output /dev/null \
     -H 'Host: plain.localhost' \
