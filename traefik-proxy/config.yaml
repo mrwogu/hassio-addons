@@ -1,6 +1,6 @@
 ---
 name: Traefik Proxy
-version: "3.7.16-5"
+version: "3.7.16-6"
 slug: traefik-proxy
 description: Secure file-configured reverse proxy for Home Assistant
 url: https://github.com/mrwogu/hassio-addons/tree/main/traefik-proxy
@@ -25,6 +25,7 @@ options:
   log_level: info
   access_log_format: json
   access_log_headers: []
+  read_timeout: 60s
   trusted_proxy_ips: []
   acme:
     enabled: false
@@ -36,6 +37,7 @@ schema:
   access_log_format: list(json|common)
   access_log_headers:
     - str
+  read_timeout: str?
   trusted_proxy_ips:
     - str
   acme:

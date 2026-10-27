@@ -74,6 +74,9 @@ validate_options() {
             type == "array"
             and all(.[]; type == "string"
                 and test("\\A[A-Za-z0-9-]{1,128}\\z")))
+        and ((.read_timeout // "60s") |
+            type == "string"
+            and test("\\A([0-9]+(ms|s|m|h))+\\z"))
         and ((.trusted_proxy_ips // []) |
             type == "array"
             and all(.[]; type == "string"
@@ -170,6 +173,7 @@ prepare_runtime_options() {
     LOG_LEVEL=$(read_option '.log_level // "info"')
     ACCESS_LOG_FORMAT=$(read_option '.access_log_format // "json"')
     ACCESS_LOG_HEADERS=$(jq -r '(.access_log_headers // []) | join(",")' "$OPTIONS_PATH")
+    READ_TIMEOUT=$(read_option '.read_timeout // "60s"')
     TRUSTED_PROXY_IPS=$(jq -r '(.trusted_proxy_ips // []) | join(",")' "$OPTIONS_PATH")
 }
 
@@ -188,6 +192,7 @@ render_static_config() {
         --log-level "$LOG_LEVEL" \
         --access-log-format "$ACCESS_LOG_FORMAT" \
         --access-log-headers "$ACCESS_LOG_HEADERS" \
+        --read-timeout "$READ_TIMEOUT" \
         --trusted-proxy-ips "$TRUSTED_PROXY_IPS" \
         --acme-enabled "$ACME_ENABLED" \
         --acme-email "$ACME_EMAIL" \

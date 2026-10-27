@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.7.16-6
+
+- Add read_timeout option for the request read timeout of public entrypoints.
+
 ## 3.7.16-5
 
 - Add access_log_headers option to keep extra request headers, like forward-auth identity, in the access log.

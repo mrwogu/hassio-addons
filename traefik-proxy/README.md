@@ -189,6 +189,19 @@ Application log:
 Rotation: 50 MiB per file, 14 rotations, gzip, `copytruncate`. The active file
 stays in place so `tail` and external log readers keep working.
 
+## Request read timeout
+
+Traefik gives a client `60s` to send a whole request, body included. A big
+upload over a slow link is cut after that. Raise the limit with `read_timeout`
+(Go duration with a unit, `0s` means no limit):
+
+```yaml
+read_timeout: 10m
+```
+
+The default stays `60s`. Response writes are not limited, so streaming works.
+See [DOCS.md](DOCS.md) for details.
+
 ## Dashboard and API
 
 `api.insecure` is false. No dashboard or API port is published. `/api` and

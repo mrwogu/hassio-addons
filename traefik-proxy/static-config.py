@@ -24,6 +24,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--log-level", required=True)
     parser.add_argument("--access-log-format", required=True)
     parser.add_argument("--access-log-headers", default="")
+    parser.add_argument("--read-timeout", default="60s")
     parser.add_argument("--trusted-proxy-ips", default="")
     parser.add_argument("--acme-enabled", required=True)
     parser.add_argument("--acme-email", default="")
@@ -59,6 +60,15 @@ def render(args: argparse.Namespace) -> None:
             forwarded.pop("trustedIPs", None)
             if trusted:
                 forwarded["trustedIPs"] = trusted
+            transport = mapping(
+                entrypoint.setdefault("transport", {}),
+                f"entryPoints.{name}.transport",
+            )
+            timeouts = mapping(
+                transport.setdefault("respondingTimeouts", {}),
+                f"entryPoints.{name}.transport.respondingTimeouts",
+            )
+            timeouts["readTimeout"] = args.read_timeout
 
     providers = mapping(root.get("providers"), "providers")
     file_provider = mapping(providers.get("file"), "providers.file")

@@ -257,6 +257,7 @@ assert_contains 'address: :443' "$static_config"
 assert_contains '172.30.33.0/24' "$static_config"
 assert_contains 'CF-Connecting-IP: keep' "$static_config"
 assert_contains 'X-Authentik-Username: keep' "$static_config"
+assert_contains 'readTimeout: 10m' "$static_config"
 assert_contains 'directory: '"${DATA_DIR}"'/dynamic-active' "$static_config"
 [ "$(grep -v '^--- invocation$' "$ARGS_FILE" | grep -c '^--configFile=')" -ge 1 ] ||
     fail "Adapter did not pass configFile to Traefik"
@@ -276,6 +277,13 @@ jq '.access_log_headers = ["X-Authentik-Username,Cookie"]' \
 run_failure "$BAD_HEADER_OPTIONS"
 assert_contains "Invalid options" "$RUN_LOG"
 pass "Adapter rejects unsafe access log header names"
+
+BAD_TIMEOUT_OPTIONS="${TMP_DIR}/bad-timeout-options.json"
+jq '.read_timeout = "10 minutes"' \
+    "${FIXTURES}/options.json" >"$BAD_TIMEOUT_OPTIONS"
+run_failure "$BAD_TIMEOUT_OPTIONS"
+assert_contains "Invalid options" "$RUN_LOG"
+pass "Adapter rejects malformed read timeout"
 
 ACME_OPTIONS="${TMP_DIR}/acme-options.json"
 ACME_TOKEN_FILE="${CONFIG_ROOT}/cloudflare-token"

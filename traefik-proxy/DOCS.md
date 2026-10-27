@@ -152,6 +152,22 @@ show up only in the JSON format.
 Never list `Cookie`, `Authorization`, `X-Api-Key`, or other credential headers.
 They would land in the log in clear text.
 
+## Request read timeout
+
+Traefik gives a client `60s` to send a whole request, body included. A big
+upload over a slow link, for example a long video sent to Immich, is cut after
+that. `read_timeout` sets the limit on both `web` and `websecure`:
+
+```yaml
+read_timeout: 10m
+```
+
+Use a Go duration with a unit (`90s`, `10m`, `1h`). `0s` removes the limit, so
+a client can keep a connection open as long as it likes. Pick the smallest value
+that fits your largest upload. The default `60s` is the Traefik default.
+Response writes are not limited by Traefik (`writeTimeout` is `0s`), so video
+streaming is not affected.
+
 ## Fail2ban
 
 Fail2ban is not installed in this App. The App has no host firewall access and
