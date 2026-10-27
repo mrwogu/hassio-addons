@@ -257,6 +257,15 @@ assert_contains 'address: :443' "$static_config"
 assert_contains '172.30.33.0/24' "$static_config"
 assert_contains 'CF-Connecting-IP: keep' "$static_config"
 assert_contains 'X-Authentik-Username: keep' "$static_config"
+# Every config but the last one is a preflight run, it must not see real routers.
+# The preflight dump can be missing on a slow machine, so only check what exists.
+for earlier_config in $(find "$CONFIG_DUMPS" -name 'config-*.yml' -print | sort | sed '$d'); do
+    if grep -Fq 'dynamic-active' "$earlier_config"; then
+        fail "Preflight used the active dynamic directory: $earlier_config"
+    fi
+done
+[ ! -d "${DATA_DIR}/dynamic-preflight" ] ||
+    fail "Preflight dynamic directory was not removed"
 assert_contains 'readTimeout: 10m' "$static_config"
 assert_contains 'aliasHeadersStrategy: delete' "$static_config"
 assert_contains 'allowEncodedNullCharacter: false' "$static_config"
