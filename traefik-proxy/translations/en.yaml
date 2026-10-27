@@ -12,6 +12,9 @@ configuration:
   read_timeout:
     name: Request read timeout
     description: Time to read a whole request, body included, e.g. 60s, 10m, 0s for no limit. Raise it for big uploads.
+  metrics_enabled:
+    name: Prometheus metrics
+    description: Metrics on port 8083 for other apps in the Supervisor network. No authentication, not published on the host.
   trusted_proxy_ips:
     name: Trusted proxy IP ranges
     description: CIDR ranges of the local cloudflared or reverse proxy source only.

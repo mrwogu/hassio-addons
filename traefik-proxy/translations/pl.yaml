@@ -12,6 +12,9 @@ configuration:
   read_timeout:
     name: Limit czasu odczytu requestu
     description: Czas na odczyt całego requestu z body, np. 60s, 10m, 0s bez limitu. Zwiększ przy dużych uploadach.
+  metrics_enabled:
+    name: Metryki Prometheus
+    description: Metryki na porcie 8083 dla innych aplikacji w sieci Supervisora. Bez uwierzytelniania, nie na hoście.
   trusted_proxy_ips:
     name: Zaufane zakresy proxy
     description: Tylko zakresy CIDR lokalnego cloudflared albo zaufanego proxy.

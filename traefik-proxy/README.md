@@ -202,6 +202,13 @@ read_timeout: 10m
 The default stays `60s`. Response writes are not limited, so streaming works.
 See [DOCS.md](DOCS.md) for details.
 
+## Prometheus metrics
+
+`metrics_enabled: true` serves Traefik metrics on port `8083` for other apps on
+the Supervisor network, for example the Prometheus app. The port is not
+published on the host and has no authentication. It is off by default. See
+[DOCS.md](DOCS.md) for the scrape job and the details.
+
 ## Dashboard and API
 
 `api.insecure` is false. No dashboard or API port is published. `/api` and

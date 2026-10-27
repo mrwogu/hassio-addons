@@ -296,6 +296,28 @@ run_failure "$BAD_TIMEOUT_OPTIONS"
 assert_contains "Invalid options" "$RUN_LOG"
 pass "Adapter rejects malformed read timeout"
 
+BAD_METRICS_OPTIONS="${TMP_DIR}/bad-metrics-options.json"
+jq '.metrics_enabled = "yes"' \
+    "${FIXTURES}/options.json" >"$BAD_METRICS_OPTIONS"
+run_failure "$BAD_METRICS_OPTIONS"
+assert_contains "Invalid options" "$RUN_LOG"
+pass "Adapter rejects non-boolean metrics_enabled"
+
+METRICS_OPTIONS="${TMP_DIR}/metrics-options.json"
+jq '.metrics_enabled = true' "${FIXTURES}/options.json" >"$METRICS_OPTIONS"
+run_adapter "$METRICS_OPTIONS"
+metrics_config=$(find "$CONFIG_DUMPS" -name 'config-*.yml' -print | sort | tail -n 1)
+assert_contains 'address: :8083' "$metrics_config"
+assert_contains 'entryPoint: metrics' "$metrics_config"
+assert_contains 'asDefault: true' "$metrics_config"
+# The preflight run must not bind the real metrics port.
+for earlier_config in $(find "$CONFIG_DUMPS" -name 'config-*.yml' -print | sort | sed '$d'); do
+    if grep -Fq 'address: :8083' "$earlier_config"; then
+        fail "Preflight bound the real metrics port: $earlier_config"
+    fi
+done
+pass "Adapter renders the Prometheus entrypoint when metrics_enabled is true"
+
 FRACTION_TIMEOUT_OPTIONS="${TMP_DIR}/fraction-timeout-options.json"
 jq '.read_timeout = "1.5h"' \
     "${FIXTURES}/options.json" >"$FRACTION_TIMEOUT_OPTIONS"

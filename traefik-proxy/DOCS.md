@@ -319,6 +319,38 @@ Typical messages:
   valid state remains active.
 - `entryPoint ... already in use`: NPM or another proxy still owns 80/443.
 
+## Prometheus metrics
+
+Set `metrics_enabled: true` to serve Traefik metrics on port `8083`:
+
+```yaml
+metrics_enabled: true
+```
+
+The port is not published on the host. Other apps on the Supervisor network
+reach it as `http://<APP_HOSTNAME>:8083/metrics`, where `<APP_HOSTNAME>` is the
+hostname on the app's Info page (like `<repository>-traefik-proxy`). There is no
+authentication and no TLS, so turn it on only when you trust the other apps.
+Metrics carry router, service and entrypoint labels, not paths or client
+addresses. Example scrape job for the Prometheus app:
+
+```yaml
+scrape_configs:
+  - job_name: traefik
+    static_configs:
+      - targets: ["<APP_HOSTNAME>:8083"]
+```
+
+Useful series: `traefik_entrypoint_requests_total`,
+`traefik_router_request_duration_seconds`, `traefik_service_requests_total` and
+`traefik_tls_certs_not_after` (certificate expiry). `traefik_service_server_up`
+shows up only for services that have a health check.
+
+A router without `entryPoints` normally listens on every entrypoint, which
+would put it on the unauthenticated metrics port. With metrics on, `web` and
+`websecure` are marked as default entrypoints, so such a router stays on those
+two. Name `entryPoints` in your routers anyway.
+
 ## Request header and path hardening
 
 All entrypoints use `aliasHeadersStrategy: delete`. A client header like
