@@ -1,0 +1,2 @@
+#!/bin/sh
+printf '%s\n' "$@" >"$ALLOY_TEST_ARGS_FILE"

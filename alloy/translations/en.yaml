@@ -1,0 +1,16 @@
+---
+configuration:
+  loki_url:
+    name: Loki push URL
+    description: Full push endpoint, e.g. http://ad52851a-loki:3100/loki/api/v1/push. Host is on the Loki add-on page.
+  log_level:
+    name: Log level
+    description: Verbosity of the Alloy application log.
+  traefik_logs:
+    name: Ship Traefik logs
+    description: Tail access.jsonl and traefik.log from /share/traefik/logs.
+  extra_files:
+    name: Extra log files
+    description: More files under /share. Each entry has a path (globs allowed) and a job label.
+network:
+  12345/tcp: Alloy debug UI (no authentication)

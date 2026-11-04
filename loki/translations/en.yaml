@@ -1,0 +1,10 @@
+---
+configuration:
+  retention_days:
+    name: Retention in days
+    description: Logs older than this are deleted by the compactor. Between 1 and 3650.
+  log_level:
+    name: Log level
+    description: Verbosity of the Loki application log.
+network:
+  3100/tcp: Loki HTTP API (push and query, no authentication)

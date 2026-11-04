@@ -1,0 +1,4 @@
+{
+  "retention_days": 30,
+  "log_level": "info"
+}

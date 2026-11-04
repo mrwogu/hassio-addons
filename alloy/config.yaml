@@ -1,0 +1,32 @@
+---
+name: Alloy
+version: "1.21.3-1"
+slug: alloy
+description: Log shipper that sends Traefik and other log files to Loki
+url: https://github.com/mrwogu/hassio-addons/tree/main/alloy
+image: ghcr.io/mrwogu/hassio-alloy
+arch:
+  - aarch64
+  - amd64
+init: false
+map:
+  - type: app_config
+    read_only: false
+  - type: share
+    read_only: true
+ports:
+  12345/tcp: null
+ports_description:
+  12345/tcp: Alloy debug UI (no authentication)
+options:
+  loki_url: http://ad52851a-loki:3100/loki/api/v1/push
+  log_level: info
+  traefik_logs: true
+  extra_files: []
+schema:
+  loki_url: str
+  log_level: list(debug|info|warn|error)
+  traefik_logs: bool
+  extra_files:
+    - path: str
+      job: str

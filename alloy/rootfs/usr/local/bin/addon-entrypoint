@@ -1,0 +1,102 @@
+#!/bin/sh
+set -eu
+
+OPTIONS_PATH=${ALLOY_OPTIONS_PATH:-/data/options.json}
+DATA_DIR=${ALLOY_DATA_DIR:-/config}
+ALLOY_BIN=${ALLOY_BIN:-/bin/alloy}
+
+log() {
+    printf '%s\n' "[alloy-addon] $*" >&2
+}
+
+fail() {
+    log "Error: $*"
+    exit 1
+}
+
+[ -r "$OPTIONS_PATH" ] || fail "Options file is not readable: $OPTIONS_PATH"
+command -v jq >/dev/null 2>&1 || fail "jq is required"
+
+# Values end up inside quoted Alloy strings, so the patterns below are
+# strict on purpose: no quotes, spaces, backslashes or control characters.
+if ! jq -e '
+    type == "object"
+    and (.loki_url | type == "string" and test("^https?://[A-Za-z0-9._:/-]+$"))
+    and (.log_level | IN("debug", "info", "warn", "error"))
+    and (.traefik_logs | type == "boolean")
+    and ((.extra_files // []) | type == "array" and all(.[];
+        type == "object"
+        and (.path | type == "string"
+            and test("^/share/[A-Za-z0-9._/*-]+$")
+            and (contains("..") | not))
+        and (.job | type == "string" and test("^[A-Za-z_][A-Za-z0-9_]{0,62}$"))))
+    and (.traefik_logs or ((.extra_files // []) | length > 0))
+' "$OPTIONS_PATH" >/dev/null 2>&1; then
+    fail "Invalid options: check loki_url, log_level, extra_files, and that at least one log source is enabled"
+fi
+
+loki_url=$(jq -r '.loki_url' "$OPTIONS_PATH")
+log_level=$(jq -r '.log_level' "$OPTIONS_PATH")
+targets=$(jq -r '
+    [ (if .traefik_logs then
+          {p: "/share/traefik/logs/access.jsonl", j: "traefik", t: "access"},
+          {p: "/share/traefik/logs/traefik.log", j: "traefik", t: "app"}
+       else empty end),
+      ((.extra_files // [])[] | {p: .path, j: .job, t: "file"}) ]
+    | .[]
+    | "    {\"__path__\" = \"\(.p)\", \"job\" = \"\(.j)\", \"log_type\" = \"\(.t)\"},"
+' "$OPTIONS_PATH")
+
+mkdir -p "$DATA_DIR/data"
+config="$DATA_DIR/config.alloy"
+tmp="${config}.tmp"
+
+# Rendered at every start so option changes always win over a stale file.
+{
+    printf 'logging {\n  level  = "%s"\n  format = "logfmt"\n}\n\n' "$log_level"
+    printf 'loki.write "default" {\n  endpoint {\n    url = "%s"\n  }\n}\n\n' "$loki_url"
+    printf 'local.file_match "files" {\n  path_targets = [\n%s\n  ]\n}\n\n' "$targets"
+    cat <<'EOF'
+loki.source.file "files" {
+  targets    = local.file_match.files.targets
+  forward_to = [loki.process.files.receiver]
+}
+
+// Traefik access lines are JSON. Only low cardinality fields become labels;
+// everything else stays in the line and is read with `| json` in LogQL.
+loki.process "files" {
+  stage.match {
+    selector = "{log_type=\"access\"}"
+
+    stage.json {
+      expressions = {
+        status = "DownstreamStatus",
+        host   = "RequestHost",
+        ts     = "StartUTC",
+      }
+    }
+
+    stage.timestamp {
+      source = "ts"
+      format = "RFC3339Nano"
+    }
+
+    stage.labels {
+      values = {
+        status = "",
+        host   = "",
+      }
+    }
+  }
+
+  forward_to = [loki.write.default.receiver]
+}
+EOF
+} >"$tmp"
+mv "$tmp" "$config"
+
+log "Shipping logs to ${loki_url}"
+exec "$ALLOY_BIN" run "$config" \
+    "--storage.path=${DATA_DIR}/data" \
+    --server.http.listen-addr=0.0.0.0:12345 \
+    --disable-reporting

@@ -29,9 +29,11 @@ LOGO_BOX_WIDTH = 44
 
 # Brand accent per add-on slug; the rest of the layout is uniform.
 BRAND_COLORS = {
+    "alloy": "#C2410C",
     "authentik": "#FD4B2A",
     "bonds": "#7C3AED",
     "gluetun": "#0E7490",
+    "loki": "#B45309",
     "n8n": "#EA4B71",
     "postgres-backup": "#336791",
     "profilarr": "#5C7C94",

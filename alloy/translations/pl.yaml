@@ -1,0 +1,16 @@
+---
+configuration:
+  loki_url:
+    name: Adres zapisu do Loki
+    description: Pełny adres push, np. http://ad52851a-loki:3100/loki/api/v1/push. Użyj nazwy hosta ze strony dodatku Loki.
+  log_level:
+    name: Poziom logu
+    description: Szczegółowość logu aplikacji Alloy.
+  traefik_logs:
+    name: Wysyłaj logi Traefika
+    description: Czyta access.jsonl i traefik.log z /share/traefik/logs.
+  extra_files:
+    name: Dodatkowe pliki logów
+    description: Kolejne pliki w /share. Każdy wpis ma ścieżkę (dozwolone wzorce glob) i etykietę job.
+network:
+  12345/tcp: Panel diagnostyczny Alloy (bez uwierzytelniania)

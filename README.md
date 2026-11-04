@@ -65,6 +65,20 @@ Home Assistant add-ons packaged from upstream projects with automated updates, m
       <p><sub>Runs <code>pg_dumpall</code> from the backup hook. Restore with the <code>restore</code> option.</sub></p>
     </td>
   </tr>
+  <tr>
+    <td align="center" valign="top" width="33%">
+      <a href="loki/"><img src="assets/badges/loki.svg" alt="Loki" width="220"></a>
+      <p>Log aggregation backend for Grafana, with bounded retention on local disk.</p>
+      <p><sub><code>amd64</code> <code>aarch64</code> · Port <code>3100</code> (internal)<br><a href="https://github.com/grafana/loki">Upstream</a> · AGPL-3.0</sub></p>
+      <p><sub>API is not published and has no authentication.</sub></p>
+    </td>
+    <td align="center" valign="top" width="33%">
+      <a href="alloy/"><img src="assets/badges/alloy.svg" alt="Alloy" width="220"></a>
+      <p>Log shipper that sends Traefik and other log files from <code>/share</code> to Loki.</p>
+      <p><sub><code>amd64</code> <code>aarch64</code><br><a href="https://github.com/grafana/alloy">Upstream</a> · Apache-2.0</sub></p>
+      <p><sub>Replaces Promtail, which is end of life.</sub></p>
+    </td>
+  </tr>
 </table>
 
 ## Installation

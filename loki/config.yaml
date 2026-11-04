@@ -1,0 +1,25 @@
+---
+name: Loki
+version: "3.7.9-1"
+slug: loki
+description: Log aggregation backend for Grafana, with bounded retention
+url: https://github.com/mrwogu/hassio-addons/tree/main/loki
+image: ghcr.io/mrwogu/hassio-loki
+arch:
+  - aarch64
+  - amd64
+init: false
+startup: services
+map:
+  - type: app_config
+    read_only: false
+ports:
+  3100/tcp: null
+ports_description:
+  3100/tcp: Loki HTTP API (push and query, no authentication)
+options:
+  retention_days: 30
+  log_level: info
+schema:
+  retention_days: int(1,3650)
+  log_level: list(debug|info|warn|error)
