@@ -2,8 +2,8 @@
 image: docker.io/grafana/alloy
 version: v1.21.3
 digest: sha256:8ab871206bd2d8f89277f53abffee5f452a293980788d52f85fa183a87a505a4
-package_version: 1.21.3-1
+package_version: 1.21.3-3
 source: https://github.com/grafana/alloy
 release_url: https://github.com/grafana/alloy/releases/tag
-release_tag_prefix: ""
+release_tag_prefix: ''
 changelog_template: Bring the latest log collection updates from Alloy [{upstream_version}]({upstream_link}).

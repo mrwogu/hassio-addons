@@ -2,7 +2,7 @@
 image: docker.io/grafana/loki
 version: 3.7.9
 digest: sha256:0db216b630ae1f348a1584c67f3cead8b4c1fc839169a39501db664744158e28
-package_version: 3.7.9-1
+package_version: 3.7.9-3
 source: https://github.com/grafana/loki
 release_url: https://github.com/grafana/loki/releases/tag
 release_tag_prefix: v

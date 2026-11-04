@@ -21,15 +21,15 @@ command -v jq >/dev/null 2>&1 || fail "jq is required"
 # strict on purpose: no quotes, spaces, backslashes or control characters.
 if ! jq -e '
     type == "object"
-    and (.loki_url | type == "string" and test("^https?://[A-Za-z0-9._:/-]+$"))
+    and (.loki_url | type == "string" and test("^https?://[A-Za-z0-9._:/-]+\\z"))
     and (.log_level | IN("debug", "info", "warn", "error"))
     and (.traefik_logs | type == "boolean")
     and ((.extra_files // []) | type == "array" and all(.[];
         type == "object"
         and (.path | type == "string"
-            and test("^/share/[A-Za-z0-9._/*-]+$")
+            and test("^/share/[A-Za-z0-9._/*-]+\\z")
             and (contains("..") | not))
-        and (.job | type == "string" and test("^[A-Za-z_][A-Za-z0-9_]{0,62}$"))))
+        and (.job | type == "string" and test("^[A-Za-z_][A-Za-z0-9_]{0,62}\\z"))))
     and (.traefik_logs or ((.extra_files // []) | length > 0))
 ' "$OPTIONS_PATH" >/dev/null 2>&1; then
     fail "Invalid options: check loki_url, log_level, extra_files, and that at least one log source is enabled"
@@ -71,7 +71,6 @@ loki.process "files" {
     stage.json {
       expressions = {
         status = "DownstreamStatus",
-        host   = "RequestHost",
         ts     = "StartUTC",
       }
     }
@@ -84,7 +83,6 @@ loki.process "files" {
     stage.labels {
       values = {
         status = "",
-        host   = "",
       }
     }
   }

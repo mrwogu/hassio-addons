@@ -8,7 +8,8 @@ Promtail, which is end of life.
 
 1. Add `https://github.com/mrwogu/hassio-addons` to the Home Assistant app store.
 2. Install and start the Loki add-on first.
-3. Install Alloy and set `loki_url` to the Loki hostname shown on the Loki page.
+3. Install Alloy and set `loki_url` to
+   `http://<hostname>:3100/loki/api/v1/push`, with the hostname from the Loki page.
 4. Start Alloy. Traefik logs are collected by default.
 
 ## Documentation
@@ -21,6 +22,12 @@ queries.
 Alloy is distributed under the Apache License 2.0. See
 [LICENSE.upstream](LICENSE.upstream). The image is built from the unmodified
 upstream image.
+
+The entrypoint also ships BusyBox (GPL-2.0), jq (MIT), Oniguruma (BSD-2-Clause)
+and musl libc (MIT) from Alpine 3.22, unmodified. Package, license and
+homepage data is in `/opt/addon/NOTICE` inside the image. Their source is
+referenced by the APKBUILD recipes for the `busybox`, `jq`, `oniguruma` and
+`musl` packages in the [aports tree](https://wiki.alpinelinux.org/wiki/Aports_tree).
 
 This add-on is independent packaging and is not officially supported by
 Grafana Labs.
