@@ -3,6 +3,10 @@ architectures:
   - aarch64
   - amd64
 addons:
+  alloy:
+    image: ghcr.io/mrwogu/hassio-alloy
+    dockerfile: alloy/Dockerfile
+    test_script: alloy/tests/run.sh
   authentik:
     image: ghcr.io/mrwogu/hassio-authentik
     dockerfile: authentik/Dockerfile
@@ -15,6 +19,10 @@ addons:
     image: ghcr.io/mrwogu/hassio-gluetun
     dockerfile: gluetun/Dockerfile
     test_script: gluetun/tests/run.sh
+  loki:
+    image: ghcr.io/mrwogu/hassio-loki
+    dockerfile: loki/Dockerfile
+    test_script: loki/tests/run.sh
   n8n:
     image: ghcr.io/mrwogu/hassio-n8n
     dockerfile: n8n/Dockerfile

@@ -1,0 +1,82 @@
+#!/bin/sh
+set -eu
+
+OPTIONS_PATH=${LOKI_OPTIONS_PATH:-/data/options.json}
+DATA_DIR=${LOKI_DATA_DIR:-/config}
+LOKI_BIN=${LOKI_BIN:-/usr/bin/loki}
+
+log() {
+    printf '%s\n' "[loki-addon] $*" >&2
+}
+
+fail() {
+    log "Error: $*"
+    exit 1
+}
+
+[ -r "$OPTIONS_PATH" ] || fail "Options file is not readable: $OPTIONS_PATH"
+command -v jq >/dev/null 2>&1 || fail "jq is required"
+
+if ! jq -e '
+    type == "object"
+    and (.retention_days | type == "number" and . == floor and . >= 1 and . <= 3650)
+    and (.log_level | IN("debug", "info", "warn", "error"))
+' "$OPTIONS_PATH" >/dev/null 2>&1; then
+    fail "Invalid options: check retention_days (1-3650) and log_level"
+fi
+
+retention_hours=$(jq -r '.retention_days * 24' "$OPTIONS_PATH")
+log_level=$(jq -r '.log_level' "$OPTIONS_PATH")
+
+mkdir -p "$DATA_DIR/data"
+config="$DATA_DIR/loki.yaml"
+tmp="${config}.tmp"
+
+# Rendered at every start so option changes always win over a stale file.
+cat >"$tmp" <<EOF
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+  log_level: ${log_level}
+
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: ${DATA_DIR}/data
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+  storage:
+    filesystem:
+      chunks_directory: ${DATA_DIR}/data/chunks
+      rules_directory: ${DATA_DIR}/data/rules
+
+schema_config:
+  configs:
+    - from: "2024-04-01"
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+limits_config:
+  retention_period: ${retention_hours}h
+
+compactor:
+  working_directory: ${DATA_DIR}/data/compactor
+  retention_enabled: true
+  delete_request_store: filesystem
+  compaction_interval: 10m
+  retention_delete_delay: 2h
+
+analytics:
+  reporting_enabled: false
+EOF
+mv "$tmp" "$config"
+
+log "Retention ${retention_hours}h, data in ${DATA_DIR}/data"
+exec "$LOKI_BIN" "-config.file=$config"

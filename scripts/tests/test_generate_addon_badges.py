@@ -56,9 +56,11 @@ class BadgeGeneratorTest(unittest.TestCase):
 
     def test_every_registered_addon_has_brand_color(self) -> None:
         expected = {
+            "alloy",
             "authentik",
             "bonds",
             "gluetun",
+            "loki",
             "n8n",
             "postgres-backup",
             "profilarr",

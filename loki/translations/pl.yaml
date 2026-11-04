@@ -1,0 +1,10 @@
+---
+configuration:
+  retention_days:
+    name: Retencja w dniach
+    description: Starsze logi usuwa compactor. Od 1 do 3650.
+  log_level:
+    name: Poziom logu
+    description: Szczegółowość logu aplikacji Loki.
+network:
+  3100/tcp: API HTTP Loki (zapis i zapytania, bez uwierzytelniania)

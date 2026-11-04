@@ -1,0 +1,11 @@
+{
+  "loki_url": "http://ad52851a-loki:3100/loki/api/v1/push",
+  "log_level": "info",
+  "traefik_logs": true,
+  "extra_files": [
+    {
+      "path": "/share/example/app.log",
+      "job": "example"
+    }
+  ]
+}
