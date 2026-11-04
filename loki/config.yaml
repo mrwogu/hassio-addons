@@ -1,6 +1,6 @@
 ---
 name: Loki
-version: "3.7.9-1"
+version: "3.7.9-2"
 slug: loki
 description: Log aggregation backend for Grafana, with bounded retention
 url: https://github.com/mrwogu/hassio-addons/tree/main/loki

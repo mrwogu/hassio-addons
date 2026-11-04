@@ -1,6 +1,6 @@
 ---
 name: Alloy
-version: "1.21.3-1"
+version: "1.21.3-2"
 slug: alloy
 description: Log shipper that sends Traefik and other log files to Loki
 url: https://github.com/mrwogu/hassio-addons/tree/main/alloy

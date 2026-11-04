@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.21.3-2
+
+- Fix storage docs, drop host label, strict option patterns
+
 ## 1.21.3-1
 
 - Package Alloy [v1.21.3](https://github.com/grafana/alloy/releases/tag/v1.21.3).

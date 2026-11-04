@@ -35,10 +35,11 @@ At least one source must be enabled. The add-on refuses to start otherwise.
 For the Traefik access log Alloy parses the JSON line and sets:
 
 - the entry timestamp from `StartUTC`
-- label `host` from `RequestHost`
 - label `status` from `DownstreamStatus`
 
-Everything else stays in the line. Request headers that the Traefik add-on
+Everything else stays in the line, including `RequestHost`. It is not a label
+because clients control it and every new value would open a new Loki stream.
+Use `| json` to filter on it. Request headers that the Traefik add-on
 logs through `access_log_headers` appear as `request_<Header>`, and LogQL's
 `json` parser turns `request_X-Media-User` into `request_X_Media_User`.
 
@@ -56,7 +57,9 @@ sum by (request_X_Media_User) (
 Server errors by host:
 
 ```logql
-sum by (host) (count_over_time({job="traefik", log_type="access", status=~"5.."} [1h]))
+sum by (RequestHost) (
+  count_over_time({job="traefik", log_type="access", status=~"5.."} | json [1h])
+)
 ```
 
 Items opened by one user:
@@ -70,7 +73,9 @@ Items opened by one user:
 ## Storage
 
 `config.alloy` is rendered at every start from the options. Read positions are
-kept in `data/`, so a restart neither repeats nor skips lines. Deleting `data/`
+kept in `data/`, so a restart resumes from the saved position. Positions and
+delivery to Loki are not committed together, so lines that Loki did not accept
+before a restart can be lost, and a restart can repeat lines. Deleting `data/`
 makes Alloy read all matching files again from the start.
 
 ## Debug UI

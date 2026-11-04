@@ -11,6 +11,7 @@ from scripts.generate_addon_badges import (
     PILL_WIDTH,
     build_badge_svg,
     estimate_text_width,
+    load_slugs,
     logo_geometry,
     png_dimensions,
 )
@@ -55,20 +56,7 @@ class BadgeGeneratorTest(unittest.TestCase):
         self.assertEqual((width, height), (44.0, 11.0))
 
     def test_every_registered_addon_has_brand_color(self) -> None:
-        expected = {
-            "alloy",
-            "authentik",
-            "bonds",
-            "gluetun",
-            "loki",
-            "n8n",
-            "postgres-backup",
-            "profilarr",
-            "stirling-pdf",
-            "traefik-proxy",
-            "tududi",
-        }
-        self.assertEqual(set(BRAND_COLORS), expected)
+        self.assertEqual(set(BRAND_COLORS), set(load_slugs()))
 
     def test_badge_svg_is_fixed_size_and_embeds_logo(self) -> None:
         svg = build_badge_svg("Hindsight", "#4F46E5", make_png(10, 10))

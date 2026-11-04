@@ -16,7 +16,7 @@ The API has no authentication and no host port by default. Keep it that way.
 
 ## Documentation
 
-See [DOCS.md](DOCS.md) for retention, storage, and example queries.
+See [DOCS.md](DOCS.md) for retention and storage.
 
 ## License
 
@@ -24,6 +24,10 @@ Loki is distributed under the GNU Affero General Public License v3.0. See
 [LICENSE.upstream](LICENSE.upstream). The image is built from the unmodified
 upstream image; the corresponding source is available in the
 [upstream repository](https://github.com/grafana/loki).
+
+The entrypoint also ships BusyBox (GPL-2.0), jq (MIT), Oniguruma (BSD-2-Clause)
+and musl libc (MIT) from Alpine 3.22, unmodified. Their sources are in the
+Alpine packages `busybox`, `jq`, `oniguruma` and `musl`.
 
 This add-on is independent packaging and is not officially supported by
 Grafana Labs.
