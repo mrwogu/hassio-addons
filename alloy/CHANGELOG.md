@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.21.3-3
+
+- Ship helper package notice in the image
+
 ## 1.21.3-2
 
 - Fix storage docs, drop host label, strict option patterns

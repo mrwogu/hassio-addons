@@ -26,8 +26,10 @@ upstream image; the corresponding source is available in the
 [upstream repository](https://github.com/grafana/loki).
 
 The entrypoint also ships BusyBox (GPL-2.0), jq (MIT), Oniguruma (BSD-2-Clause)
-and musl libc (MIT) from Alpine 3.22, unmodified. Their sources are in the
-Alpine packages `busybox`, `jq`, `oniguruma` and `musl`.
+and musl libc (MIT) from Alpine 3.22, unmodified. Package, license and
+homepage data is in `/opt/addon/NOTICE` inside the image. Their source is
+referenced by the APKBUILD recipes for the `busybox`, `jq`, `oniguruma` and
+`musl` packages in the [aports tree](https://wiki.alpinelinux.org/wiki/Aports_tree).
 
 This add-on is independent packaging and is not officially supported by
 Grafana Labs.

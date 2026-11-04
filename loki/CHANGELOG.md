@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.7.9-3
+
+- Ship helper package notice in the image
+
 ## 3.7.9-2
 
 - Document bundled helper licenses

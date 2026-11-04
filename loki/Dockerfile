@@ -19,6 +19,7 @@ RUN set -eu; \
     loader=$(basename /lib/ld-musl-*.so.1); \
     printf '#!/opt/addon/bin/sh\nexec /opt/addon/lib/%s --library-path /opt/addon/lib /opt/addon/libexec/jq "$@"\n' "$loader" > "$root/bin/jq"; \
     chmod 0755 "$root/bin/jq"; \
+    apk info -a busybox-static jq oniguruma musl > "$root/NOTICE"; \
     ln -s "$root" /opt/addon; \
     /opt/addon/bin/jq --version
 
