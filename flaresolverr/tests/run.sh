@@ -100,6 +100,8 @@ expect_rejected "Python path override" \
     '.env_vars = [{"name": "PYTHONPATH", "value": "/tmp"}]'
 expect_rejected "Malformed environment variable name" \
     '.env_vars = [{"name": "bad-name", "value": "x"}]'
+expect_rejected "Trailing newline in variable name" \
+    '.env_vars = [{"name": "SAFE\n", "value": "x"}]'
 expect_rejected "Control character in custom value" \
     '.env_vars = [{"name": "PROXY_URL", "value": "a\u0009b"}]'
 
