@@ -78,7 +78,7 @@ if ! jq -e \
     and ((.env_vars // []) |
         type == "array"
         and all(.[]; type == "object"
-            and (.name | type == "string" and test("^[A-Z][A-Z0-9_]*$"))
+            and (.name | type == "string" and control_free and test("^[A-Z][A-Z0-9_]*$"))
             and (.value | type == "string")))
 ' "$OPTIONS_PATH" >/dev/null 2>&1; then
     fail "Invalid options: check database, Redis, PostgreSQL, or runtime settings"

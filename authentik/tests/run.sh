@@ -191,6 +191,13 @@ for wrapper_var in MANAGED_ENV PROTECTED_ENV OPTIONS_PATH; do
     fi
 done
 
+# A trailing newline in a name must not be stripped and accepted.
+NEWLINE_NAME="${TEMP_DIR}/newline-name.json"
+jq '.env_vars = [{"name": "SAFE\n", "value": "x"}]' "$OPTIONS" >"$NEWLINE_NAME"
+if run_entrypoint "$NEWLINE_NAME"; then
+    fail "Environment variable name with trailing newline was accepted"
+fi
+
 # A malformed custom variable name is rejected.
 BAD_NAME="${TEMP_DIR}/bad-name.json"
 jq '.env_vars = [{"name": "bad-name", "value": "x"}]' "$OPTIONS" >"$BAD_NAME"

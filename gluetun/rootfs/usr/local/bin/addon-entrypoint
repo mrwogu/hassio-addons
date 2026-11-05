@@ -135,7 +135,7 @@ if ! jq -e '
     ((.env_vars // []) |
         type == "array" and
         all(.[]; type == "object" and
-            (.name | type == "string") and
+            (.name | type == "string" and (test("[\u0000-\u001F\u007F]") | not)) and
             (.value | type == "string")))
 ' "$OPTIONS_PATH" >/dev/null 2>&1; then
     fail "Invalid options structure"
