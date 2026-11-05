@@ -124,6 +124,8 @@ expect_rejected "Deno runtime override" \
     '.env_vars = [{"name": "DENO_DIR", "value": "/tmp"}]'
 expect_rejected "Malformed environment variable name" \
     '.env_vars = [{"name": "bad-name", "value": "x"}]'
+expect_rejected "Trailing newline in variable name" \
+    '.env_vars = [{"name": "PARSER_HOST\n", "value": "x"}]'
 expect_rejected "Control character in custom value" \
     '.env_vars = [{"name": "PARSER_HOST", "value": "a\u0009b"}]'
 
