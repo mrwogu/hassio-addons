@@ -90,6 +90,10 @@ expect_rejected "Managed environment override" \
     '.env_vars = [{"name": "PORT", "value": "9"}]'
 expect_rejected "Protected environment override" \
     '.env_vars = [{"name": "PATH", "value": "/tmp"}]'
+expect_rejected "Wrapper list override" \
+    '.env_vars = [{"name": "MANAGED_ENV", "value": "X"}, {"name": "PORT", "value": "9"}]'
+expect_rejected "Wrapper options path override" \
+    '.env_vars = [{"name": "OPTIONS_PATH", "value": "/tmp/x"}]'
 expect_rejected "Library preload" \
     '.env_vars = [{"name": "LD_PRELOAD", "value": "/tmp/x.so"}]'
 expect_rejected "Python path override" \

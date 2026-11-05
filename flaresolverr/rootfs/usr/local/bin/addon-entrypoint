@@ -4,7 +4,9 @@ set -eu
 OPTIONS_PATH=${FLARESOLVERR_OPTIONS_PATH:-/data/options.json}
 
 MANAGED_ENV="LOG_LEVEL LOG_HTML DISABLE_MEDIA HOST PORT HEADLESS LOG_FILE"
-PROTECTED_ENV="FLARESOLVERR_OPTIONS_PATH FLARESOLVERR_TEST_ENV_FILE FLARESOLVERR_TEST_ARGS_FILE PATH HOME IFS ENV BASH_ENV LD_PRELOAD LD_LIBRARY_PATH PYTHONPATH PYTHONHOME PYTHONSTARTUP"
+# The wrapper variables are listed too: exporting one would overwrite the shell
+# variable and weaken the checks for the entries after it.
+PROTECTED_ENV="MANAGED_ENV PROTECTED_ENV OPTIONS_PATH FLARESOLVERR_OPTIONS_PATH FLARESOLVERR_TEST_ENV_FILE FLARESOLVERR_TEST_ARGS_FILE PATH HOME IFS ENV BASH_ENV LD_PRELOAD LD_LIBRARY_PATH PYTHONPATH PYTHONHOME PYTHONSTARTUP"
 
 log() {
     printf '%s\n' "[flaresolverr-addon] $*" >&2
@@ -65,7 +67,7 @@ while [ "$index" -lt "$env_count" ]; do
     esac
 
     export "$name=$value"
-    # Values can hold proxy passwords, so only the name is logged.
+    # Only the name is logged, values may be secrets.
     log "Exported custom environment variable: $name"
     index=$((index + 1))
 done

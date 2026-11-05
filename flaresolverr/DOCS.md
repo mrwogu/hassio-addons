@@ -28,11 +28,17 @@ challenges may stop working.
 
 ### `env_vars`
 
-Extra upstream environment variables, for example `PROXY_URL`,
-`PROXY_USERNAME` and `PROXY_PASSWORD` for a default proxy. Names must be
-uppercase environment identifiers. Managed adapter variables, `PATH`,
-`LD_*`, `PYTHON*` and control characters are rejected. Values are never
-logged, only the names.
+Extra upstream environment variables, for example `PROXY_URL` for a default
+proxy. Names must be uppercase environment identifiers. Managed adapter
+variables, `PATH`, `LD_*`, `PYTHON*` and control characters are rejected. The
+add-on log shows only the names of these variables, never the values.
+
+Do not put proxy credentials here. When `PROXY_URL` is set with
+`PROXY_USERNAME` or `PROXY_PASSWORD`, FlareSolverr 3.5.2 copies them into every
+`/v1` request that has no proxy of its own, and then writes the whole request
+to its own log at `info` level. The password ends up in the log in clear text.
+Use a proxy without credentials, or send the proxy with each request from the
+client.
 
 ## Storage
 
