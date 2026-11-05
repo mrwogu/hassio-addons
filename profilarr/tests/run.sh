@@ -114,6 +114,10 @@ expect_rejected "Managed environment override" \
     '.env_vars = [{"name": "APP_BASE_PATH", "value": "/tmp"}]'
 expect_rejected "Protected environment override" \
     '.env_vars = [{"name": "PUID", "value": "0"}]'
+expect_rejected "Wrapper list override" \
+    '.env_vars = [{"name": "MANAGED_ENV", "value": "X"}, {"name": "APP_BASE_PATH", "value": "/tmp"}]'
+expect_rejected "Wrapper init override" \
+    '.env_vars = [{"name": "UPSTREAM_INIT", "value": "/bin/sh"}]'
 expect_rejected "Upstream secret file indirection" \
     '.env_vars = [{"name": "OIDC_CLIENT_SECRET_FILE", "value": "/etc/shadow"}]'
 expect_rejected "Deno runtime override" \

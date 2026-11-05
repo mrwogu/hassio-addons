@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.3.1-2
+
+- Protect wrapper variables from custom environment overrides
+
 ## 2.3.1-1
 
 - Bring the latest Radarr and Sonarr configuration management updates from Profilarr [2.3.1](https://github.com/Dictionarry-Hub/profilarr/releases/tag/v2.3.1).
