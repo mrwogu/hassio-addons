@@ -1,0 +1,10 @@
+---
+image: ghcr.io/flaresolverr/flaresolverr
+version: 3.5.2
+digest: sha256:c80ae007ce2ccdcd217a12426e4f039ef763ff90738c808d38810c3e59323767
+package_version: 3.5.2-1
+source: https://github.com/FlareSolverr/FlareSolverr
+release_url: https://github.com/FlareSolverr/FlareSolverr/releases/tag
+release_tag_prefix: v
+changelog_template: Bring the latest Cloudflare challenge solver updates from FlareSolverr
+  [{upstream_version}]({upstream_link}).
