@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.41.3-3
+
+- Protect wrapper variables from custom environment overrides
+
 ## 3.41.3-2
 
 - Use app_config mapping for supervisor compatibility

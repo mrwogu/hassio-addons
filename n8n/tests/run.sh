@@ -189,6 +189,17 @@ if run_entrypoint "$PROTECTED_OVERRIDE"; then
     fail "Protected environment override was accepted"
 fi
 
+# Wrapper variables cannot be overwritten through env_vars.
+for wrapper_var in MANAGED_ENV PROTECTED_ENV OPTIONS_PATH SU_EXEC RUN_AS_USER; do
+    WRAPPER_OVERRIDE="${TEMP_DIR}/wrapper-env.json"
+    jq --arg name "$wrapper_var" \
+        '.env_vars = [{"name": "MANAGED_ENV", "value": "X"}, {"name": $name, "value": "/tmp/x"}]' \
+        "$OPTIONS" >"$WRAPPER_OVERRIDE"
+    if run_entrypoint "$WRAPPER_OVERRIDE"; then
+        fail "Wrapper variable override was accepted: $wrapper_var"
+    fi
+done
+
 BAD_NAME="${TEMP_DIR}/bad-name.json"
 jq '.env_vars = [{"name": "bad-name", "value": "x"}]' "$OPTIONS" >"$BAD_NAME"
 if run_entrypoint "$BAD_NAME"; then

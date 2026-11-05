@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.1-3
+
+- Protect wrapper variables from custom environment overrides
+
 ## 3.0.1-2
 
 - Refresh packaging dependency

@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026.8.5-3
+
+- Protect wrapper variables from custom environment overrides
+
 ## 2026.8.5-2
 
 - Update docs: Renovate checks upstream once a week.
