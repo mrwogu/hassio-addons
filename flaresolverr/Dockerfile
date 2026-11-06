@@ -9,13 +9,12 @@ LABEL \
     org.opencontainers.image.source="https://github.com/mrwogu/hassio-addons" \
     org.opencontainers.image.licenses="MIT"
 
-# jq parses the add-on options. The upstream image runs as an unprivileged
-# user, so switch to root only for the install.
+# Stays root: /data/options.json is only readable by root. The wrapper drops
+# to the upstream flaresolverr user right before it execs the application.
 USER root
 RUN apt-get update \
     && apt-get install -y --no-install-recommends jq \
     && rm -rf /var/lib/apt/lists/*
-USER flaresolverr
 
 COPY --chmod=0755 rootfs/usr/local/bin/addon-entrypoint /usr/local/bin/addon-entrypoint
 
@@ -24,5 +23,7 @@ COPY --chmod=0755 rootfs/usr/local/bin/addon-entrypoint /usr/local/bin/addon-ent
 ENTRYPOINT ["/usr/bin/dumb-init", "--", "/usr/local/bin/addon-entrypoint"]
 CMD ["/usr/local/bin/python", "-u", "/app/flaresolverr.py"]
 
+# Runs unprivileged and isolated (-I): the service user can write to /app, so
+# the check must not import its code as root.
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
-    CMD ["/usr/local/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8191/health', timeout=5)"]
+    CMD ["/usr/bin/setpriv", "--reuid=flaresolverr", "--regid=flaresolverr", "--init-groups", "/usr/local/bin/python", "-I", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8191/health', timeout=5)"]

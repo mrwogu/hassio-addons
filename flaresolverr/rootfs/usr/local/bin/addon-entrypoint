@@ -2,11 +2,13 @@
 set -eu
 
 OPTIONS_PATH=${FLARESOLVERR_OPTIONS_PATH:-/data/options.json}
+SETPRIV=${FLARESOLVERR_SETPRIV:-setpriv}
+RUN_AS_USER=flaresolverr
 
 MANAGED_ENV="LOG_LEVEL LOG_HTML DISABLE_MEDIA HOST PORT HEADLESS LOG_FILE"
 # The wrapper variables are listed too: exporting one would overwrite the shell
 # variable and weaken the checks for the entries after it.
-PROTECTED_ENV="MANAGED_ENV PROTECTED_ENV OPTIONS_PATH FLARESOLVERR_OPTIONS_PATH FLARESOLVERR_TEST_ENV_FILE FLARESOLVERR_TEST_ARGS_FILE PATH HOME IFS ENV BASH_ENV LD_PRELOAD LD_LIBRARY_PATH PYTHONPATH PYTHONHOME PYTHONSTARTUP"
+PROTECTED_ENV="MANAGED_ENV PROTECTED_ENV OPTIONS_PATH SETPRIV RUN_AS_USER FLARESOLVERR_OPTIONS_PATH FLARESOLVERR_SETPRIV FLARESOLVERR_TEST_ENV_FILE FLARESOLVERR_TEST_ARGS_FILE PATH HOME IFS ENV BASH_ENV LD_PRELOAD LD_LIBRARY_PATH PYTHONPATH PYTHONHOME PYTHONSTARTUP"
 
 log() {
     printf '%s\n' "[flaresolverr-addon] $*" >&2
@@ -26,6 +28,7 @@ is_listed() {
 
 [ -r "$OPTIONS_PATH" ] || fail "Options file is not readable: $OPTIONS_PATH"
 command -v jq >/dev/null 2>&1 || fail "jq is required"
+command -v "$SETPRIV" >/dev/null 2>&1 || fail "setpriv is required"
 
 if ! jq -e '
     def control_free: (explode | map(select(. < 32 or . == 127)) | length) == 0;
@@ -73,4 +76,6 @@ while [ "$index" -lt "$env_count" ]; do
 done
 
 log "Configuration validated; starting FlareSolverr"
-exec "$@"
+# Upstream expects to run unprivileged; its home is /app.
+export HOME=/app
+exec "$SETPRIV" --reuid="$RUN_AS_USER" --regid="$RUN_AS_USER" --init-groups "$@"
