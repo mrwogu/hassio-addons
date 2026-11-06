@@ -174,6 +174,18 @@ grep -Fq "control characters" "$LOG_OUTPUT" ||
     fail "Control character error missing"
 pass "Custom environment control characters rejected"
 
+run_failure newline-env-value.json
+grep -Fq "control characters" "$LOG_OUTPUT" ||
+    fail "Trailing newline error missing"
+assert_log_excludes fixture-newline-value
+pass "Trailing newline in custom environment value rejected"
+
+run_failure newline-env-second-value.json
+grep -Fq "control characters" "$LOG_OUTPUT" ||
+    fail "Later trailing newline error missing"
+assert_log_excludes fixture-newline-second
+pass "Trailing newline in a later custom value rejected"
+
 run_failure managed-env-override.json
 grep -Fq "VPN_TYPE" "$LOG_OUTPUT" || fail "Managed override error missing"
 assert_log_excludes fixture-managed-override

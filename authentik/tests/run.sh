@@ -184,11 +184,13 @@ fi
 for wrapper_var in MANAGED_ENV PROTECTED_ENV OPTIONS_PATH; do
     WRAPPER_OVERRIDE="${TEMP_DIR}/wrapper-env.json"
     jq --arg name "$wrapper_var" \
-        '.env_vars = [{"name": "MANAGED_ENV", "value": "X"}, {"name": $name, "value": "/tmp/x"}]' \
+        '.env_vars = [{"name": $name, "value": "/tmp/x"}]' \
         "$OPTIONS" >"$WRAPPER_OVERRIDE"
     if run_entrypoint "$WRAPPER_OVERRIDE"; then
         fail "Wrapper variable override was accepted: $wrapper_var"
     fi
+    grep -Fq "overrides protected variable: $wrapper_var" "$LOG_FILE" ||
+        fail "Wrapper variable override reported the wrong error: $wrapper_var"
 done
 
 # A trailing newline in a name must not be stripped and accepted.
@@ -214,5 +216,25 @@ if run_entrypoint "$CONTROL_VALUE"; then
 fi
 grep -Fq "control characters" "$LOG_FILE" ||
     fail "Control character value did not report the expected error"
+
+# A trailing newline in a custom value is rejected, not stripped.
+NEWLINE_VALUE="${TEMP_DIR}/newline-value.json"
+jq '.env_vars = [{"name": "AUTHENTIK_EXTRA", "value": "x\n"}]' \
+    "$OPTIONS" >"$NEWLINE_VALUE"
+if run_entrypoint "$NEWLINE_VALUE"; then
+    fail "Custom value with trailing newline was accepted"
+fi
+grep -Fq "control characters" "$LOG_FILE" ||
+    fail "Trailing newline value did not report the expected error"
+
+# The check must cover later entries, not only the first one.
+NEWLINE_SECOND="${TEMP_DIR}/newline-second.json"
+jq '.env_vars = [{"name": "AUTHENTIK_EXTRA", "value": "ok"}, {"name": "AUTHENTIK_EXTRA_2", "value": "x\n"}]' \
+    "$OPTIONS" >"$NEWLINE_SECOND"
+if run_entrypoint "$NEWLINE_SECOND"; then
+    fail "Trailing newline in a later custom value was accepted"
+fi
+grep -Fq "control characters" "$LOG_FILE" ||
+    fail "Later trailing newline value did not report the expected error"
 
 printf '%s\n' "authentik adapter tests passed"

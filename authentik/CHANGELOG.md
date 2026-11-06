@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026.8.5-4
+
+- Reject trailing newlines in custom environment values
+
 ## 2026.8.5-3
 
 - Protect wrapper variables from custom environment overrides

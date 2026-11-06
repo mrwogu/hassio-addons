@@ -125,9 +125,11 @@ while [ "$index" -lt "$env_count" ]; do
     if is_listed "$PROTECTED_ENV" "$name"; then
         fail "Custom environment variable overrides protected variable: $name"
     fi
-    if ! jq -en --arg value "$value" \
-        '$value | test("[\u0000-\u001F\u007F]") | not' \
-        >/dev/null 2>&1; then
+    # Check the raw JSON value: the command substitution above drops trailing
+    # newlines, so a copy in $value would hide them.
+    if ! jq -e --argjson index "$index" \
+        '.env_vars[$index].value | test("[\u0000-\u001F\u007F]") | not' \
+        "$OPTIONS_PATH" >/dev/null 2>&1; then
         fail "Custom environment variable contains control characters: $name"
     fi
 
