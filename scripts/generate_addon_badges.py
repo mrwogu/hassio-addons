@@ -32,6 +32,7 @@ BRAND_COLORS = {
     "alloy": "#C2410C",
     "authentik": "#FD4B2A",
     "bonds": "#7C3AED",
+    "flaresolverr": "#2E7D32",
     "gluetun": "#0E7490",
     "loki": "#B45309",
     "n8n": "#EA4B71",

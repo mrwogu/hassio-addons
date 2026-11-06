@@ -78,6 +78,12 @@ Home Assistant add-ons packaged from upstream projects with automated updates, m
       <p><sub><code>amd64</code> <code>aarch64</code><br><a href="https://github.com/grafana/alloy">Upstream</a> · Apache-2.0</sub></p>
       <p><sub>Replaces Promtail, which is end of life.</sub></p>
     </td>
+    <td align="center" valign="top" width="33%">
+      <a href="flaresolverr/"><img src="assets/badges/flaresolverr.svg" alt="FlareSolverr" width="220"></a>
+      <p>Proxy server that solves Cloudflare challenges with a real browser, for Prowlarr and similar tools.</p>
+      <p><sub><code>amd64</code> <code>aarch64</code> · Port <code>8191</code><br><a href="https://github.com/FlareSolverr/FlareSolverr">Upstream</a> · MIT</sub></p>
+      <p><sub>API has no authentication. Keep it on a trusted network.</sub></p>
+    </td>
   </tr>
 </table>
 

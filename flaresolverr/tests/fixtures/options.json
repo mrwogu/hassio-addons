@@ -1,0 +1,15 @@
+{
+  "log_level": "debug",
+  "log_html": true,
+  "disable_media": true,
+  "env_vars": [
+    {
+      "name": "PROXY_URL",
+      "value": "http://proxy.example.com:3128"
+    },
+    {
+      "name": "PROXY_PASSWORD",
+      "value": "dummy-proxy-password"
+    }
+  ]
+}

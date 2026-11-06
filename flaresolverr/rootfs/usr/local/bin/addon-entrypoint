@@ -1,0 +1,76 @@
+#!/bin/sh
+set -eu
+
+OPTIONS_PATH=${FLARESOLVERR_OPTIONS_PATH:-/data/options.json}
+
+MANAGED_ENV="LOG_LEVEL LOG_HTML DISABLE_MEDIA HOST PORT HEADLESS LOG_FILE"
+# The wrapper variables are listed too: exporting one would overwrite the shell
+# variable and weaken the checks for the entries after it.
+PROTECTED_ENV="MANAGED_ENV PROTECTED_ENV OPTIONS_PATH FLARESOLVERR_OPTIONS_PATH FLARESOLVERR_TEST_ENV_FILE FLARESOLVERR_TEST_ARGS_FILE PATH HOME IFS ENV BASH_ENV LD_PRELOAD LD_LIBRARY_PATH PYTHONPATH PYTHONHOME PYTHONSTARTUP"
+
+log() {
+    printf '%s\n' "[flaresolverr-addon] $*" >&2
+}
+
+fail() {
+    log "Error: $*"
+    exit 1
+}
+
+is_listed() {
+    case " $1 " in
+        *" $2 "*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+[ -r "$OPTIONS_PATH" ] || fail "Options file is not readable: $OPTIONS_PATH"
+command -v jq >/dev/null 2>&1 || fail "jq is required"
+
+if ! jq -e '
+    def control_free: (explode | map(select(. < 32 or . == 127)) | length) == 0;
+    type == "object"
+    and (.log_level | IN("debug", "info"))
+    and (.log_html | type == "boolean")
+    and (.disable_media | type == "boolean")
+    and ((.env_vars // []) |
+        type == "array"
+        and all(.[]; type == "object"
+            and (.name | type == "string" and control_free and test("^[A-Z][A-Z0-9_]*$"))
+            and (.value | type == "string" and control_free)))
+' "$OPTIONS_PATH" >/dev/null 2>&1; then
+    fail "Invalid options: check log_level, log_html, disable_media, or environment variables"
+fi
+
+export HOST=0.0.0.0
+export PORT=8191
+export "LOG_LEVEL=$(jq -r '.log_level' "$OPTIONS_PATH")"
+export "LOG_HTML=$(jq -r '.log_html' "$OPTIONS_PATH")"
+export "DISABLE_MEDIA=$(jq -r '.disable_media' "$OPTIONS_PATH")"
+
+env_count=$(jq -r '(.env_vars // []) | length' "$OPTIONS_PATH")
+index=0
+while [ "$index" -lt "$env_count" ]; do
+    name=$(jq -r ".env_vars[$index].name" "$OPTIONS_PATH")
+    value=$(jq -r ".env_vars[$index].value" "$OPTIONS_PATH")
+
+    if is_listed "$MANAGED_ENV" "$name"; then
+        fail "Custom environment variable overrides managed variable: $name"
+    fi
+    if is_listed "$PROTECTED_ENV" "$name"; then
+        fail "Custom environment variable overrides protected variable: $name"
+    fi
+    case "$name" in
+        ADDON_* | LD_* | DYLD_* | PYTHON*)
+            fail "Custom environment variable uses protected namespace: $name"
+            ;;
+    esac
+
+    export "$name=$value"
+    # Only the name is logged, values may be secrets.
+    log "Exported custom environment variable: $name"
+    index=$((index + 1))
+done
+
+log "Configuration validated; starting FlareSolverr"
+exec "$@"
