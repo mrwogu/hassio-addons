@@ -5,7 +5,9 @@ OPTIONS_PATH=${PROFILARR_OPTIONS_PATH:-/data/options.json}
 UPSTREAM_INIT=${PROFILARR_INIT:-/entrypoint.sh}
 
 MANAGED_ENV="PORT HOST APP_BASE_PATH AUTH ORIGIN PROFILARR_API_KEY OIDC_DISCOVERY_URL OIDC_CLIENT_ID OIDC_CLIENT_SECRET"
-PROTECTED_ENV="PROFILARR_OPTIONS_PATH PROFILARR_INIT PROFILARR_TEST_ENV_FILE PROFILARR_TEST_ARGS_FILE PUID PGID UMASK PATH HOME IFS ENV BASH_ENV LD_PRELOAD LD_LIBRARY_PATH"
+# Wrapper variables are listed too: exporting one would overwrite the shell
+# variable (the checks below, or the final exec target).
+PROTECTED_ENV="MANAGED_ENV PROTECTED_ENV OPTIONS_PATH UPSTREAM_INIT PROFILARR_OPTIONS_PATH PROFILARR_INIT PROFILARR_TEST_ENV_FILE PROFILARR_TEST_ARGS_FILE PUID PGID UMASK PATH HOME IFS ENV BASH_ENV LD_PRELOAD LD_LIBRARY_PATH"
 
 log() {
     printf '%s\n' "[profilarr-addon] $*" >&2
@@ -48,7 +50,7 @@ if ! jq -e '
     and ((.env_vars // []) |
         type == "array"
         and all(.[]; type == "object"
-            and (.name | type == "string" and test("^[A-Z][A-Z0-9_]*$"))
+            and (.name | type == "string" and control_free and test("^[A-Z][A-Z0-9_]*$"))
             and (.value | type == "string" and control_free)))
 ' "$OPTIONS_PATH" >/dev/null 2>&1; then
     fail "Invalid options: check auth mode, URLs, API key, OIDC settings, or environment variables"
