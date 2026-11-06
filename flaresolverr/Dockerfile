@@ -23,5 +23,7 @@ COPY --chmod=0755 rootfs/usr/local/bin/addon-entrypoint /usr/local/bin/addon-ent
 ENTRYPOINT ["/usr/bin/dumb-init", "--", "/usr/local/bin/addon-entrypoint"]
 CMD ["/usr/local/bin/python", "-u", "/app/flaresolverr.py"]
 
+# Runs unprivileged and isolated (-I): the service user can write to /app, so
+# the check must not import its code as root.
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
-    CMD ["/usr/local/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8191/health', timeout=5)"]
+    CMD ["/usr/bin/setpriv", "--reuid=flaresolverr", "--regid=flaresolverr", "--init-groups", "/usr/local/bin/python", "-I", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8191/health', timeout=5)"]

@@ -73,6 +73,12 @@ if grep -Fq "dummy-proxy-password" "$LOG_FILE"; then
 fi
 [ "$(cat "$ARGS_FILE")" = "--fixture" ] || fail "Arguments were not forwarded"
 
+# The healthcheck must not run Python as root from the writable /app.
+grep -F 'HEALTHCHECK' -A1 "$ADDON_DIR/Dockerfile" | grep -Fq '"--reuid=flaresolverr"' ||
+    fail "Healthcheck does not drop privileges"
+grep -F 'HEALTHCHECK' -A1 "$ADDON_DIR/Dockerfile" | grep -Fq '"-I"' ||
+    fail "Healthcheck Python is not isolated"
+
 # The upstream process must not keep root.
 grep -Fqx -- "--reuid=flaresolverr" "$SETPRIV_FILE" ||
     fail "Upstream is not started as the flaresolverr user"
