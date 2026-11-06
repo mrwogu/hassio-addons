@@ -37,8 +37,11 @@ Do not put proxy credentials here. When `PROXY_URL` is set with
 `PROXY_USERNAME` or `PROXY_PASSWORD`, FlareSolverr 3.5.2 copies them into every
 `/v1` request that has no proxy of its own, and then writes the whole request
 to its own log at `info` level. The password ends up in the log in clear text.
-Use a proxy without credentials, or send the proxy with each request from the
-client.
+
+Sending the proxy with each request from the client does not help: the request
+body is logged the same way, including any proxy credentials in it. Use a proxy
+that needs no credentials, for example one that allows your server by IP
+address. FlareSolverr has no option to turn this logging off.
 
 ## Storage
 
