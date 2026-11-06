@@ -227,4 +227,14 @@ fi
 grep -Fq "control characters" "$LOG_FILE" ||
     fail "Trailing newline value did not report the expected error"
 
+# The check must cover later entries, not only the first one.
+NEWLINE_SECOND="${TEMP_DIR}/newline-second.json"
+jq '.env_vars = [{"name": "AUTHENTIK_EXTRA", "value": "ok"}, {"name": "AUTHENTIK_EXTRA_2", "value": "x\n"}]' \
+    "$OPTIONS" >"$NEWLINE_SECOND"
+if run_entrypoint "$NEWLINE_SECOND"; then
+    fail "Trailing newline in a later custom value was accepted"
+fi
+grep -Fq "control characters" "$LOG_FILE" ||
+    fail "Later trailing newline value did not report the expected error"
+
 printf '%s\n' "authentik adapter tests passed"
