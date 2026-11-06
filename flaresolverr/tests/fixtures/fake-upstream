@@ -1,3 +1,0 @@
-#!/bin/sh
-env | sort >"$FLARESOLVERR_TEST_ENV_FILE"
-printf '%s\n' "$*" >"$FLARESOLVERR_TEST_ARGS_FILE"

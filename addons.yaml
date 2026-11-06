@@ -15,10 +15,6 @@ addons:
     image: ghcr.io/mrwogu/hassio-bonds
     dockerfile: bonds/Dockerfile
     test_script: bonds/tests/run.sh
-  flaresolverr:
-    image: ghcr.io/mrwogu/hassio-flaresolverr
-    dockerfile: flaresolverr/Dockerfile
-    test_script: flaresolverr/tests/run.sh
   gluetun:
     image: ghcr.io/mrwogu/hassio-gluetun
     dockerfile: gluetun/Dockerfile

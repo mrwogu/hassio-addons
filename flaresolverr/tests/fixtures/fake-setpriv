@@ -1,8 +1,0 @@
-#!/bin/sh
-# Records the privilege drop and runs the rest, like setpriv would.
-: >"$FLARESOLVERR_TEST_SETPRIV_FILE"
-while [ "${1#--}" != "$1" ]; do
-    printf '%s\n' "$1" >>"$FLARESOLVERR_TEST_SETPRIV_FILE"
-    shift
-done
-exec "$@"
