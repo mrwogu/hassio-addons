@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.5.2-2
+
+- Start as root to read options, drop to flaresolverr before exec
+
 ## 3.5.2-1
 
 - Package FlareSolverr [v3.5.2](https://github.com/FlareSolverr/FlareSolverr/releases/tag/v3.5.2).

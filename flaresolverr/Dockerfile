@@ -9,13 +9,12 @@ LABEL \
     org.opencontainers.image.source="https://github.com/mrwogu/hassio-addons" \
     org.opencontainers.image.licenses="MIT"
 
-# jq parses the add-on options. The upstream image runs as an unprivileged
-# user, so switch to root only for the install.
+# Stays root: /data/options.json is only readable by root. The wrapper drops
+# to the upstream flaresolverr user right before it execs the application.
 USER root
 RUN apt-get update \
     && apt-get install -y --no-install-recommends jq \
     && rm -rf /var/lib/apt/lists/*
-USER flaresolverr
 
 COPY --chmod=0755 rootfs/usr/local/bin/addon-entrypoint /usr/local/bin/addon-entrypoint
 

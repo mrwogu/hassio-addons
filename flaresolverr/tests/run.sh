@@ -6,6 +6,7 @@ ADDON_DIR=$(CDPATH='' cd -- "${SCRIPT_DIR}/.." && pwd)
 ENTRYPOINT="${ADDON_DIR}/rootfs/usr/local/bin/addon-entrypoint"
 OPTIONS="${SCRIPT_DIR}/fixtures/options.json"
 FAKE_UPSTREAM="${SCRIPT_DIR}/fixtures/fake-upstream"
+FAKE_SETPRIV="${SCRIPT_DIR}/fixtures/fake-setpriv"
 TEMP_DIR=$(mktemp -d)
 
 cleanup() {
@@ -22,13 +23,16 @@ assert_env() {
     grep -Fqx -- "$1" "$ENV_FILE" || fail "Missing environment value: $1"
 }
 
-chmod 0755 "$FAKE_UPSTREAM"
+chmod 0755 "$FAKE_UPSTREAM" "$FAKE_SETPRIV"
+SETPRIV_FILE="${TEMP_DIR}/setpriv"
 ENV_FILE="${TEMP_DIR}/env"
 ARGS_FILE="${TEMP_DIR}/args"
 LOG_FILE="${TEMP_DIR}/log"
 
 run_entrypoint() {
     FLARESOLVERR_OPTIONS_PATH="$1" \
+    FLARESOLVERR_SETPRIV="$FAKE_SETPRIV" \
+    FLARESOLVERR_TEST_SETPRIV_FILE="$SETPRIV_FILE" \
     FLARESOLVERR_TEST_ENV_FILE="$ENV_FILE" \
     FLARESOLVERR_TEST_ARGS_FILE="$ARGS_FILE" \
         sh "$ENTRYPOINT" "$FAKE_UPSTREAM" --fixture >"$LOG_FILE" 2>&1
@@ -68,6 +72,13 @@ if grep -Fq "dummy-proxy-password" "$LOG_FILE"; then
     fail "Secret value leaked into the log"
 fi
 [ "$(cat "$ARGS_FILE")" = "--fixture" ] || fail "Arguments were not forwarded"
+
+# The upstream process must not keep root.
+grep -Fqx -- "--reuid=flaresolverr" "$SETPRIV_FILE" ||
+    fail "Upstream is not started as the flaresolverr user"
+grep -Fqx -- "--regid=flaresolverr" "$SETPRIV_FILE" ||
+    fail "Upstream group was not dropped"
+assert_env "HOME=/app"
 
 # Defaults.
 DEFAULT_OPTIONS="${TEMP_DIR}/default.json"

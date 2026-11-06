@@ -1,6 +1,6 @@
 ---
 name: FlareSolverr
-version: "3.5.2-1"
+version: "3.5.2-2"
 slug: flaresolverr
 description: Proxy server that solves Cloudflare challenges for Prowlarr and others
 url: https://github.com/mrwogu/hassio-addons/tree/main/flaresolverr
