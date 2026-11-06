@@ -184,6 +184,16 @@ grep -Fq "LD_PRELOAD" "$LOG_OUTPUT" || fail "Protected override error missing"
 assert_log_excludes fixture-protected-override
 pass "Protected environment override rejected"
 
+for fixture in wrapper-env-managed-env.json wrapper-env-gluetun-bin.json; do
+    run_failure "$fixture"
+    assert_log_excludes fixture-wrapper-override
+done
+pass "Wrapper variable override rejected"
+
+run_failure newline-env-name.json
+assert_log_excludes fixture-newline-name
+pass "Environment variable name with trailing newline rejected"
+
 expected_entrypoint_tail=$(printf 'exec "$%s" "$%s"' GLUETUN_BIN @)
 tail -n 1 "$ENTRYPOINT" | grep -Fq "$expected_entrypoint_tail" ||
     fail "Entrypoint does not exec Gluetun"

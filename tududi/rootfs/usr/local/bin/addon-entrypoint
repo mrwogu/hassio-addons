@@ -6,7 +6,9 @@ CONFIG_DIR=${TUDUDI_CONFIG_DIR:-/config}
 UPSTREAM_INIT=${TUDUDI_INIT:-/app/scripts/docker-entrypoint.sh}
 
 MANAGED_ENV="NODE_ENV HOST PORT DB_FILE TUDUDI_USER_EMAIL TUDUDI_USER_PASSWORD TUDUDI_SESSION_SECRET TUDUDI_ALLOWED_ORIGINS TUDUDI_UPLOAD_PATH TUDUDI_TRUST_PROXY COOKIE_SECURE FILE_UPLOAD_LIMIT_MB DISABLE_SCHEDULER DISABLE_TELEGRAM SWAGGER_ENABLED FF_ENABLE_BACKUPS FF_ENABLE_CALDAV CALDAV_ENABLED FF_ENABLE_MCP BASE_URL ENCRYPTION_KEY OIDC_CLIENT_SECRET"
-PROTECTED_ENV="TUDUDI_OPTIONS_PATH TUDUDI_CONFIG_DIR TUDUDI_INIT TUDUDI_SKIP_CHOWN TUDUDI_TEST_ENV_FILE TUDUDI_TEST_ARGS_FILE TUDUDI_UPSTREAM_BACKUP_DIR PUID PGID APP_UID APP_GID PATH HOME IFS ENV BASH_ENV LD_PRELOAD LD_LIBRARY_PATH NODE_OPTIONS"
+# Wrapper variables are listed too: exporting one would overwrite the shell
+# variable (the checks below, or the final exec target).
+PROTECTED_ENV="MANAGED_ENV PROTECTED_ENV OPTIONS_PATH UPSTREAM_INIT TUDUDI_OPTIONS_PATH TUDUDI_CONFIG_DIR TUDUDI_INIT TUDUDI_SKIP_CHOWN TUDUDI_TEST_ENV_FILE TUDUDI_TEST_ARGS_FILE TUDUDI_UPSTREAM_BACKUP_DIR PUID PGID APP_UID APP_GID PATH HOME IFS ENV BASH_ENV LD_PRELOAD LD_LIBRARY_PATH NODE_OPTIONS"
 
 log() {
     printf '%s\n' "[tududi-addon] $*" >&2
@@ -92,7 +94,7 @@ if ! jq -e '
     and ((.env_vars // []) |
         type == "array"
         and all(.[]; type == "object"
-            and (.name | type == "string" and test("^[A-Z][A-Z0-9_]*$"))
+            and (.name | type == "string" and control_free and test("^[A-Z][A-Z0-9_]*$"))
             and (.value | type == "string" and control_free)))
 ' "$OPTIONS_PATH" >/dev/null 2>&1; then
     fail "Invalid options: check credentials, URLs, feature flags, or environment variables"
