@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.24.4-1
+
+- Rebuild on Alpine Linux [3.24.4](https://gitlab.alpinelinux.org/alpine/aports/-/tags/v3.24.4) with its PostgreSQL 16 client tools.
+
 ## 3.24.3-1
 
 - Dump the Postgres 16 add-on with `pg_dumpall` from the Supervisor
