@@ -1,6 +1,6 @@
 ---
 name: Postgres Backup
-version: "3.24.3-1"
+version: "3.24.4-1"
 slug: postgres-backup
 description: Hot SQL dumps of the Postgres 16 add-on inside Home Assistant backups
 url: https://github.com/mrwogu/hassio-addons/tree/main/postgres-backup
