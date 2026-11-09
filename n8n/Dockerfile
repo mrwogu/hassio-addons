@@ -23,10 +23,10 @@ USER root
 # The Docker Hardened Alpine base omits the package manager. Bootstrap the
 # pinned Alpine package manager before installing the small adapter tools.
 # renovate: datasource=repology depName=alpine_3_24/apk-tools-static versioning=loose
-ARG APK_TOOLS_VERSION="3.0.8-r0"
+ARG APK_TOOLS_VERSION="3.0.9-r0"
 ARG ALPINE_VERSION="v3.24"
-ARG APK_TOOLS_SHA256_X86_64="c8e2c88c13ba12a12269b79a3543e1190ff8c0ab0beb32b58cadfd5881c619e3"
-ARG APK_TOOLS_SHA256_AARCH64="7e86f8258f3a97ea1c279105950ebf6c9af960891eb499f731b7e5f0af26ff63"
+ARG APK_TOOLS_SHA256_X86_64="0a1a0682375f66a83b7b903f6e4638ccfe312547d50d336b5f2be9fc391281be"
+ARG APK_TOOLS_SHA256_AARCH64="1f4c822fd14e8eb51ba27e17d5a1649aef33c91611c77eddeb318e8f2cb57fb1"
 RUN set -eux; \
     cd /tmp; \
     arch=$(uname -m); \

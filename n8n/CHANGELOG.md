@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.1-5
+
+- Refresh packaging dependency
+
 ## 3.0.1-4
 
 - Reject trailing newlines in custom environment values
