@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.2.0-1
+
+- Refresh n8n workflow automation and task-runner support with [3.2.0](https://github.com/n8n-io/n8n/releases/tag/n8n@3.2.0).
+
 ## 3.0.1-5
 
 - Refresh packaging dependency
