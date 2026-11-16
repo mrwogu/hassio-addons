@@ -1,8 +1,8 @@
 ARG TOOLS_VERSION="3.22.7"
 ARG TOOLS_DIGEST="sha256:2e0b81d60597f449baa56dc25d355367869d2dca4cd57e866f1e2b52af3eb55f"
 # renovate: datasource=docker depName=docker.io/grafana/loki versioning=semver
-ARG UPSTREAM_VERSION="3.7.9"
-ARG UPSTREAM_DIGEST="sha256:0db216b630ae1f348a1584c67f3cead8b4c1fc839169a39501db664744158e28"
+ARG UPSTREAM_VERSION="3.7.10"
+ARG UPSTREAM_DIGEST="sha256:b43c257ccfc925d4a50b8717cac61a3b51df8c48d01847936057e5c4075a24a7"
 
 # The upstream image has no jq (and no shell). A pinned Alpine stage supplies a
 # static busybox and jq with its musl loader under /opt/addon. jq runs through

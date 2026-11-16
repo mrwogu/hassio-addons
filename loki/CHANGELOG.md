@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.7.10-1
+
+- Bring the latest log aggregation updates from Loki [3.7.10](https://github.com/grafana/loki/releases/tag/v3.7.10).
+
 ## 3.7.9-3
 
 - Ship helper package notice in the image
