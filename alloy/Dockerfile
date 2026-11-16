@@ -1,8 +1,8 @@
 ARG TOOLS_VERSION="3.22.7"
 ARG TOOLS_DIGEST="sha256:2e0b81d60597f449baa56dc25d355367869d2dca4cd57e866f1e2b52af3eb55f"
 # renovate: datasource=docker depName=docker.io/grafana/alloy versioning=semver
-ARG UPSTREAM_VERSION="v1.21.3"
-ARG UPSTREAM_DIGEST="sha256:8ab871206bd2d8f89277f53abffee5f452a293980788d52f85fa183a87a505a4"
+ARG UPSTREAM_VERSION="v1.22.0"
+ARG UPSTREAM_DIGEST="sha256:9acc2529bc1edb7f5b2bd801dd8334ebc80c158e3a9e5526ecd7c9a273d43189"
 
 # The upstream image has no jq (and no apt). A pinned Alpine stage supplies a
 # static busybox and jq with its musl loader under /opt/addon. jq runs through
