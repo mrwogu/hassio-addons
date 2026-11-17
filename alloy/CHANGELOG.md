@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.22.0-1
+
+- Bring the latest log collection updates from Alloy [v1.22.0](https://github.com/grafana/alloy/releases/tag/v1.22.0).
+
 ## 1.21.3-3
 
 - Ship helper package notice in the image
