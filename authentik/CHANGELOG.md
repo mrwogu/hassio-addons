@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026.8.6-1
+
+- Refresh authentik's identity, SSO, and directory integration with [2026.8.6](https://github.com/goauthentik/authentik/releases/tag/version/2026.8.6).
+
 ## 2026.8.5-4
 
 - Reject trailing newlines in custom environment values
